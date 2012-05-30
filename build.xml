@@ -10,8 +10,8 @@
 	<property name="build.dir" location="${project.location}/bin" />
 	<property name="lib.dir" location="${project.location}/lib" />
 	
-	<property name="flexfile.name" value="m2j" />
-	<property name="cupfile.name" value="m2j" />
+	<property name="flexfile.name" value="minic2jasmin" />
+	<property name="cupfile.name" value="minic2jasmin" />
 	<property name="mainclass.name" value="Main" />
 	
 	<property name="targetfile" location="bubble.c" />
