@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Latex2MathML" default="build" basedir=".">
+	<property name="conflicts.expected" value="300" />
+	<property name="project.location" location="." />
+	<property name="project.packagepath" value="it/m2j" />
+	<property name="project.packagename" value="it/m2j" />
+
+	<property name="src.dir" location="${project.location}/src" />
+	<property name="gen.dir" location="${project.location}/generated-src" />
+	<property name="build.dir" location="${project.location}/bin" />
+	<property name="lib.dir" location="${project.location}/lib" />
+	
+	<property name="flexfile.name" value="m2j" />
+	<property name="cupfile.name" value="m2j" />
+	<property name="mainclass.name" value="Main" />
+	
+	<property name="targetfile" location="bubble.c" />
+
+	<property name="debug" value="on" />
+	<property name="debuglevel" value="source,lines,vars" />
+	<property name="target" value="1.5" />
+	<property name="source" value="1.5" />
+
+	<path id="jflex.classpath">
+		<pathelement location="${lib.dir}/JFlex.jar" />
+	</path>
+
+	<path id="cup.classpath">
+		<pathelement location="${lib.dir}/java_cup_v10k_drawTree.jar" />
+	</path>
+
+	<path id="cup-rt.classpath">
+		<pathelement location="${lib.dir}/java_cup_v10k_drawTree_runtime.jar" />
+	</path>
+
+	<target name="init">
+		<mkdir dir="${gen.dir}/${project.packagepath}" />
+		<mkdir dir="${build.dir}" />
+	</target>
+
+	<target name="-chk-jflex">
+		<uptodate property="run-jflex.notRequired" targetfile="${gen.dir}/${project.packagepath}/.jflex" >
+			<srcfiles dir="${src.dir}" includes="${project.packagepath}/*.flex" />
+		</uptodate>
+	</target>
+
+	<target name="-chk-cup">
+		<uptodate property="run-cup.notRequired" targetfile="${gen.dir}/${project.packagepath}/.cup" >
+			<srcfiles dir="${src.dir}" includes="${project.packagepath}/*.cup" />
+		</uptodate>
+	</target>
+
+	<target name="-chk-cup-tree">
+		<uptodate property="run-cup-tree.notRequired" targetfile="${gen.dir}/${project.packagepath}/.cup-tree" >
+			<srcfiles dir="${src.dir}" includes="${project.packagepath}/*.cup" />
+		</uptodate>
+	</target>
+
+	<target name="run-jflex" unless="run-jflex.notRequired" depends="init,-chk-jflex">
+		<echo>Running JFlex...</echo>
+		<java classname="JFlex.Main" failonerror="true" fork="yes">
+			<classpath>
+				<path refid="jflex.classpath" />
+			</classpath>
+			<arg value="-nobak" />
+			<arg value="-d" />
+			<arg path="${gen.dir}/${project.packagepath}" />
+			<arg path="${src.dir}/${project.packagepath}/${flexfile.name}.flex" />
+		</java>
+		<touch file="${gen.dir}/${project.packagepath}/.jflex" />
+		<echo>Done.</echo>
+	</target>
+
+	<target name="run-cup"  unless="run-cup.notRequired" depends="init,-chk-cup">
+		<echo>Running CUP...</echo>
+		<java classname="java_cup.Main" failonerror="true" fork="yes" dir="${gen.dir}/${project.packagepath}">
+			<classpath>
+				<path refid="cup.classpath" />
+			</classpath>
+			<arg value="-expect" />
+			<arg value="${conflicts.expected}"/>
+			<arg value="-package" />
+			<arg value="${project.packagename}" />
+			<arg value="-parser" />
+			<arg value="${cupfile.name}Parser" />
+			<arg value="-symbols" />
+			<arg value="${cupfile.name}Sym" />
+			<arg path="${src.dir}/${project.packagepath}/${cupfile.name}.cup" />
+		</java>
+		<delete file="${gen.dir}/${project.packagepath}/.cup-tree" />
+		<touch file="${gen.dir}/${project.packagepath}/.cup" />
+		<echo>Done.</echo>
+	</target>
+
+	<target name="run-cup-tree" unless="run-cup-tree.notRequired" depends="init,-chk-cup-tree">
+		<echo>Running CUP...</echo>
+		<java classname="java_cup.MainDrawTree" failonerror="true" fork="yes" dir="${gen.dir}/${project.packagepath}">
+			<classpath>
+				<path refid="cup.classpath" />
+			</classpath>
+			<arg value="-expect" />
+			<arg value="${conflicts.expected}"/>
+			<arg value="-package" />
+			<arg value="${project.packagename}" />
+			<arg value="-parser" />
+			<arg value="${cupfile.name}Parser" />
+			<arg value="-symbols" />
+			<arg value="${cupfile.name}Sym" />
+			<arg path="${src.dir}/${project.packagepath}/${cupfile.name}.cup" />
+		</java>
+		<delete file="${gen.dir}/${project.packagepath}/.cup" />
+		<touch file="${gen.dir}/${project.packagepath}/.cup-tree" />
+		<echo>Done.</echo>
+	</target>
+
+	<target name="build" depends="init,run-jflex,run-cup, compile" description="Builds the project">
+	</target>
+
+	<target name="compile">
+		<echo>Compiling java files (if needed)...</echo>
+		<javac destdir="${build.dir}" debug="${debug}" debuglevel="${debuglevel}" source="${source}" target="${target}">
+			<src path="${src.dir}"/>
+			<src path="${gen.dir}"/>
+			<include name="${project.packagepath}/**" />
+			<exclude name="${project.packagepath}/DisegnaAlbero.java" />
+ 			<classpath>
+				<path refid="cup-rt.classpath" />
+			</classpath>
+		</javac>
+		<echo>Done.</echo>
+	</target>
+
+	<target name="draw-parse-tree" depends="init,run-jflex,run-cup-tree" description="Draws parse tree">
+		<echo>Building parser with tree support (if needed)...</echo>
+		<javac destdir="${build.dir}" debug="${debug}" debuglevel="${debuglevel}" source="${source}" target="${target}">
+			<src path="${src.dir}"/>
+			<src path="${gen.dir}"/>
+			<include name="${project.packagepath}/**" />
+ 			<classpath>
+				<path refid="cup.classpath" />
+			</classpath>
+		</javac>
+		<echo>Running perser on selected file...</echo>
+		<java classname="${project.packagename}.${mainclass.name}" failonerror="true" fork="yes">
+			<classpath>
+				<path location="${build.dir}" />
+				<path refid="cup-rt.classpath" />
+			</classpath>
+			<arg path="${targetfile}" />
+		</java>
+		<echo>Done.</echo>
+	</target>
+	
+	<target name="run" depends="build" description="Runs parser">
+		<echo>Running perser on selected file...</echo>
+		<java classname="${project.packagename}.${mainclass.name}" failonerror="true" fork="yes">
+			<classpath>
+				<path location="${build.dir}" />
+				<path refid="cup-rt.classpath" />
+			</classpath>
+			<arg path="${targetfile}" />
+		</java>
+		<echo>Done.</echo>
+	</target>
+
+	<target name="standalone-scanner" depends="init,run-jflex,run-cup-tree,compile" description="Runs scanner in standalone mode" >
+		<echo>Running scanner in standalone mode on selected file...</echo>
+		<java classname="${project.packagename}.${flexfile.name}Lex" failonerror="true" fork="yes">
+			<classpath>
+				<path location="${build.dir}" />
+				<path refid="cup-rt.classpath" />
+			</classpath>
+			<arg path="${targetfile}" />
+		</java>
+		<echo>Done.</echo>
+	</target>
+
+	<target name="clean" description="Cleans compiled classes">
+		<echo>Cleaning compiled classes...</echo>
+		<delete failonerror="false" includeEmptyDirs="true" >
+			<fileset dir="${build.dir}" includes="**" />
+		</delete>
+		<echo>Done.</echo>
+	</target>
+
+	<target name="veryclean" depends="clean" description="Cleans compiled and generated files">
+		<echo>Cleaning generated source files...</echo>
+		<delete failonerror="false" includeEmptyDirs="true" >
+			<fileset dir="${gen.dir}" includes="**" />
+		</delete>
+		<echo>Done.</echo>
+	</target>
+	
+
+		
+</project>
