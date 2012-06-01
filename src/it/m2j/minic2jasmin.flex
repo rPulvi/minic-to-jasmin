@@ -15,7 +15,6 @@ import static it.m2j.m2jSym.*;
 
 %class m2jLex
 %public
-%standalone
 %unicode
 
 %line
@@ -26,6 +25,6 @@ import static it.m2j.m2jSym.*;
 
 %% //----------------------------------------------------------------------------------------
 
-"ciao" { Location.HelloWorld(); }
+"/*"   { Location.loc_token(yylength); yy_push_state(comment); }
 
 /* EOF scanner.lex */
