@@ -25,6 +25,6 @@ import static it.m2j.m2jSym.*;
 
 %% //----------------------------------------------------------------------------------------
 
-"/*"   { Location.loc_token(yylength); yy_push_state(comment); }
+"/*"   { Location.locToken(yylength()); }
 
 /* EOF scanner.lex */

@@ -14,7 +14,7 @@ public class Location {
 	}
 
 	// Set location with generic new token
-	void locToken(int len)
+	public static void locToken(int len)
 	{
 	    yylloc.firstLine = yylloc.lastLine;
 	    yylloc.firstColumn = yylloc.lastColumn + 1;
@@ -22,7 +22,7 @@ public class Location {
 	}
 
 	// Increase location with generic new lines
-	void loc_newline()
+	public static void loc_newline()
 	{
 	    yylloc.firstLine = yylloc.lastLine++;
 	    yylloc.firstColumn = yylloc.lastColumn + 1;
@@ -30,14 +30,14 @@ public class Location {
 	}
 
 	// Increase location with nested new lines
-	void loc_nest_newline()
+	public static void loc_nest_newline()
 	{
 	    yylloc.lastLine++;
 	    yylloc.lastColumn = 0;
 	}
 
 	// Increase location with nested tokens
-	void loc_nest_token(int len)
+	public static void loc_nest_token(int len)
 	{
 	    yylloc.lastColumn += len;
 	}
