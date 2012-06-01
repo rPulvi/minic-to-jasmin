@@ -14,6 +14,7 @@ import static it.m2j.m2jSym.*;
 %% //----------------------------------------------------------------------------------------
 
 %class m2jLex
+%public
 %standalone
 %unicode
 
