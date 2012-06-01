@@ -20,6 +20,8 @@ import static it.m2j.m2jSym.*;
 %line
 %column
 
+%standalone
+
 //%cupsym it.m2j.m2jSym
 //%cup
 
