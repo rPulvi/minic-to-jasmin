@@ -6,10 +6,10 @@ import java.io.*;
 import java_cup.runtime.*;
 import java.io.IOException;
 
-/* TODO
-import it.m2j.m2jSym;
-import static it.m2j.m2jSym.*;
-*/
+
+import it.m2j.minic2jasminSym;
+import static it.m2j.minic2jasminSym.*;
+
 
 %% //----------------------------------------------------------------------------------------
 
@@ -22,8 +22,8 @@ import static it.m2j.m2jSym.*;
 
 %standalone
 
-//%cupsym it.m2j.m2jSym
-//%cup
+%cupsym it.m2j.minic2jasminSym
+%cup
 
 %xstate comment
 %xstate singleline_comment
@@ -34,6 +34,7 @@ Float = ([1-9]{1,1}[0-9]*"."[0-9]+)|(0"."[0-9]+)
 Identifier = [a-zA-Z_]+[a-zA-Z0-9_]*
 
 %{
+	
 	private Symbol sym(int type)
 	{
 		return sym(type, yytext());
@@ -80,7 +81,7 @@ Identifier = [a-zA-Z_]+[a-zA-Z0-9_]*
 
 "bool"              { return sym(TYPE_BOOL); }
 "int"               { return sym(TYPE_INT); }
-"float"             { return sym(YPE_FLOAT); }
+"float"             { return sym(TYPE_FLOAT); }
 "string"            { return sym(TYPE_STRING); }
 "void"              { return sym(TYPE_VOID); }
 "extern"            { return sym(EXTERN); }
@@ -121,12 +122,12 @@ Identifier = [a-zA-Z_]+[a-zA-Z0-9_]*
 "{"		    		{ return sym(BRA_OG); }
 "}"		    		{ return sym(BRA_CG); }
 
-"true"              { return CONST_BOOL; }
-"false"             { return CONST_BOOL; }
+"true"              { return sym(CONST_BOOL); }
+"false"             { return sym(CONST_BOOL); }
 
-{Integer}           { return CONST_INT; }
-{Float}             { return CONST_FLOAT; }
-{Identifier}        { return ID; }
+{Integer}           { return sym(CONST_INT); }
+{Float}             { return sym(CONST_FLOAT); }
+{Identifier}        { return sym(ID); }
 
 "\n"                { ; }
 

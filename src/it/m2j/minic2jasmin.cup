@@ -1,15 +1,16 @@
 import java_cup.runtime.*;
 import java.io.*;
 
+//init with {: scanner.init();              :};
+//scan with {: return scanner.next_token(); :};
+
 parser code {:
 
     :};
 
-
 action code {:
         
 :}
-
 
 // Terminal tokens
 terminal TYPE_BOOL, TYPE_INT, TYPE_STRING, TYPE_VOID, TYPE_FLOAT;
