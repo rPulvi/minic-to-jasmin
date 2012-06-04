@@ -29,7 +29,7 @@ import static it.m2j.minic2jasminSym.*;
 %xstate singleline_comment
 %xstate quote
 
-Integer = ([1-9][0-9])*|0
+Integer = ([1-9][0-9]*|0)
 Float = ([1-9]{1,1}[0-9]*"."[0-9]+)|(0"."[0-9]+)
 Identifier = [a-zA-Z_]+[a-zA-Z0-9_]*
 
@@ -50,7 +50,7 @@ Identifier = [a-zA-Z_]+[a-zA-Z0-9_]*
 
 	private void error(String errMsg) throws IOException
 	{
-		throw new IOException("Error at (" + yyline + "," + yycolumn +"). " + errMsg + " " + yytext() );
+		throw new IOException("Error at (" + ++yyline + "," + ++yycolumn +"). " + errMsg + " " + yytext() );
 	}
 
 %}
@@ -65,7 +65,7 @@ Identifier = [a-zA-Z_]+[a-zA-Z0-9_]*
 <comment><<EOF>>    { error("Manca il token di fine commento '*/'"); }
 <comment>.          { ; }
 
-"*/"             	{ error("Fine inattesa del commento '*/'"); }
+"*/"             	{ error("Fine inattesa del commento"); }
                     
 "//"				{ yybegin(singleline_comment);}
 <singleline_comment>.       { ; }
@@ -76,7 +76,7 @@ Identifier = [a-zA-Z_]+[a-zA-Z0-9_]*
 <quote>"\""         { yybegin(YYINITIAL); }
 
 
-<quote>"\\".        { ; } // gestire sequenza di escape all'interno di una stringa quotata
+<quote>"\\".        { System.out.println("Ci SIAMO!!!" + " " + yytext()); } // gestire sequenza di escape all'interno di una stringa quotata
 <quote><<EOF>>      { error("Fine inattesa della stringa"); }
 <quote>[^\\\n\"]+    { ; }
 
@@ -128,9 +128,10 @@ Identifier = [a-zA-Z_]+[a-zA-Z0-9_]*
 
 {Integer}           { return sym(CONST_INT); }
 {Float}             { return sym(CONST_FLOAT); }
-{Identifier}        { System.out.println("Trovato identificatore"); return sym(ID); }
+{Identifier}        { return sym(ID); }
 
 "\n"                { ; }
 " "					{ ; }
+[0-9]+{Identifier}	{ error("identificatore non valido"); }
 
 .                   { error("Simbolo sconosciuto"); } // ERROR: unknown token
