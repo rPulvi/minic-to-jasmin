@@ -34,6 +34,7 @@ Float = ([1-9]{1,1}[0-9]*"."[0-9]+)|(0"."[0-9]+)
 Identifier = [a-zA-Z_]+[a-zA-Z0-9_]*
 
 %{
+	minic2jasminSym symClass;
 	
 	private Symbol sym(int type)
 	{
@@ -42,14 +43,14 @@ Identifier = [a-zA-Z_]+[a-zA-Z0-9_]*
 
 	private Symbol sym(int type, Object value)
 	{
-	/*	System.out.println("Symbol found: "+ type + ", symbol name: " + symClass.getTT(type) +
-							", text: \"" + yytext() + "\""); */
+		//System.out.println("Symbol found: "+ type + ", symbol name: " + symClass.getTT(type) +
+		//					", text: \"" + yytext() + "\"");
 		return new Symbol(type, yyline, yycolumn, value); 
 	}
 
-	private void error() throws IOException
+	private void error(String errMsg) throws IOException
 	{
-		throw new IOException("illegal text at line = "+yyline+", column = "+yycolumn+", text = '"+yytext()+"'");
+		throw new IOException("Error at (" + yyline + "," + yycolumn +"). " + errMsg + " " + yytext() );
 	}
 
 %}
@@ -61,10 +62,10 @@ Identifier = [a-zA-Z_]+[a-zA-Z0-9_]*
 <comment>"/*"       { yybegin(comment); }
 <comment>"*/"       { yybegin(YYINITIAL); }
 <comment>"\n"       { ; }
-<comment><<EOF>>    { System.out.println("Errore lessicale: manca il token di fine commento '*/'"); }
+<comment><<EOF>>    { error("Manca il token di fine commento '*/'"); }
 <comment>.          { ; }
 
-"*/"             	{ System.out.println("Errore lessicale: Fine inattesa del commento '*/'"); }
+"*/"             	{ error("Fine inattesa del commento '*/'"); }
                     
 "//"				{ yybegin(singleline_comment);}
 <singleline_comment>.       { ; }
@@ -76,7 +77,7 @@ Identifier = [a-zA-Z_]+[a-zA-Z0-9_]*
 
 
 <quote>"\\".        { ; } // gestire sequenza di escape all'interno di una stringa quotata
-<quote><<EOF>>      { System.out.println("Errore lessicale: Fine inattesa della stringa"); }
+<quote><<EOF>>      { error("Fine inattesa della stringa"); }
 <quote>[^\\\n\"]+    { ; }
 
 "bool"              { return sym(TYPE_BOOL); }
@@ -127,8 +128,9 @@ Identifier = [a-zA-Z_]+[a-zA-Z0-9_]*
 
 {Integer}           { return sym(CONST_INT); }
 {Float}             { return sym(CONST_FLOAT); }
-{Identifier}        { return sym(ID); }
+{Identifier}        { System.out.println("Trovato identificatore"); return sym(ID); }
 
 "\n"                { ; }
+" "					{ ; }
 
-.                   { error(); } // ERROR: unknown token
+.                   { error("Simbolo sconosciuto"); } // ERROR: unknown token

@@ -113,7 +113,7 @@
 		<echo>Done.</echo>
 	</target>
 
-	<target name="build" depends="init,run-jflex,run-cup, compile" description="Builds the project">
+	<target name="build" depends="init,run-jflex,run-cup,compile" description="Builds the project">
 	</target>
 
 	<target name="compile">
