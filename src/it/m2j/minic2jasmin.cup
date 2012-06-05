@@ -29,8 +29,197 @@ terminal Integer CONST_INT;
 terminal Float CONST_FLOAT;
 terminal String CONST_STRING;
 
-non terminal prog;
+// Non terminal tokens
+non terminal prog, stmt_list, stmt, if, while, assignment, print;
+non terminal Integer[] nt0_while;
+non terminal Integer nt0_if, nt1_if;
+non terminal String exp;
+non terminal minug, magug;
+
+non terminal function, fun_list, fun_def, fun_def_ext, decl_list, decl, var_list, var, decl_param, formal_param;
+non terminal block, block_in, ret_type, param_list;
+non terminal String type, simple_type, array_dim;
+non terminal String if_condition, while_condition;
+non terminal String id;
+
 
 start with prog;
 
-prog ::= prog {: :};
+prog ::= fun_list
+        ;
+
+decl ::= type var_list                          
+            ;
+
+type ::= simple_type                                       
+     | simple_type array_dim                              
+     ;
+
+simple_type ::= TYPE_BOOL
+             | TYPE_INT
+             | TYPE_FLOAT
+             | TYPE_STRING
+             ;
+
+array_dim ::= BRA_OS BRA_CS
+         | array_dim BRA_OS BRA_CS                       
+         ;
+
+var_list ::= ID
+       | var_list COMMA ID
+       | var_list ID /* error */ { 
+									System.out.println("Manca il carattere ',' per separare gli identificatori.");
+								 }
+       ;
+
+fun_list ::= /* empty */
+             | fun_list function
+             ;
+
+function ::= fun_def block       
+       | EXTERN fun_def_ext SEMI					
+       ;
+
+fun_def_ext ::= CONST_STRING ret_type ID BRA_O block_in decl_param BRA_C                               			          		
+            ;
+
+fun_def ::= ret_type ID BRA_O block_in formal_param BRA_C
+            | ret_type ID block_in formal_param /* error */ {
+																System.out.println("Funzione mal definita.");
+															}
+            ;
+
+formal_param ::= TYPE_VOID
+	    | /* empty */
+        | param_list                                 
+        ;
+            
+decl_param ::= TYPE_VOID                            
+	    |
+
+	/* empty */											
+
+            | DeclParamList                             
+            ;
+
+param_list ::= type ID                                     
+
+          | param_list COMMA type ID                     
+
+          | param_list type ID /* error */               
+          ;
+          
+DeclParamList ::= type                                    
+
+          | DeclParamList COMMA type                    
+          ;
+
+ret_type ::= TYPE_VOID                                  
+
+           | type                                       
+           ;
+
+
+block_in ::= /* empty */                                  
+        ;
+
+block ::= BRA_OG StatementList BRA_CG                     
+      ;
+
+StatementList ::= /* empty */                             
+
+              | StatementList Statement                 
+              ;
+
+Statement ::= block_in block                              
+
+          | decl SEMI                            
+
+          | FunctionCall SEMI                           
+
+          | AssignStatement                             
+
+
+          | ReturnStatement                             
+
+          | IfThenStatement                             
+
+          | IfThenElseStatement                         
+
+          | WhileStatement                              
+
+          | error SEMI                                  
+          ;
+
+AssignStatement ::= ID ASSIGN Expression SEMI            
+
+                | ID ArrayIndex ASSIGN Expression SEMI  
+                ;
+
+ArrayIndex ::= BRA_OS Expression BRA_CS                   
+
+           | ArrayIndex BRA_OS Expression BRA_CS        
+           ;
+
+FunctionCall ::= ID BRA_O /* no params */ BRA_C           
+
+             | ID BRA_O ExpressionList BRA_C            
+             ;
+
+
+ReturnStatement ::= RETURN Expression SEMI                
+                ;
+
+IfThenStatement ::= IF Expression block_in block          
+                ;
+
+IfThenElseStatement ::= IF Expression block_in block
+                      ELSE block_in block                
+                    ;
+
+WhileStatement ::= WHILE Expression block_in block         
+               ;
+
+
+
+ExpressionList ::= Expression                             
+               | ExpressionList COMMA Expression        
+               ;
+
+Expression ::= Expression OP_PLUS Expression              
+           | Expression OP_DIFF Expression              
+           | Expression OP_TIME Expression              
+           | Expression OP_DIV Expression               
+
+           | OP_DIFF Expression %prec OP_SIGN           
+           | Expression OP_AND Expression               
+
+           | Expression OP_OR Expression                
+
+           | OP_NOT Expression                          
+
+           | BRA_O TYPE_INT BRA_C Expression            
+           | Expression OP_LT Expression                
+           | Expression OP_LET Expression               
+           | Expression OP_GT Expression                
+           | Expression OP_GET Expression               
+           | Expression OP_EQ Expression                
+           | Expression OP_NEQ Expression               
+                                                        
+           | Expression OP_MOD Expression               
+
+           | BRA_O Expression BRA_C                     
+
+           | FunctionCall                               
+
+           | ID ArrayIndex                             
+           | NEW simple_type ArrayIndex                  
+           | ID                                         
+           | CONST_BOOL                                 
+
+           | CONST_INT                                  
+
+           | CONST_STRING                               
+
+           | CONST_FLOAT                               
+           ;
