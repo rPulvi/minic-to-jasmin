@@ -1,5 +1,4 @@
 import java_cup.runtime.*;
-import java.io.*;
 
 //init with {: scanner.init();              :};
 //scan with {: return scanner.next_token(); :};

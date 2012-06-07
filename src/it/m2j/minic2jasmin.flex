@@ -2,7 +2,6 @@
 
 package it.m2j;
 
-import java.io.*;
 import java_cup.runtime.*;
 import java.io.IOException;
 
