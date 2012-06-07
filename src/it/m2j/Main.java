@@ -16,8 +16,7 @@ public class Main {
 			minic2jasminParser parser = new minic2jasminParser(scanner);
 			
 			//Avvio il parser
-			Object result = parser.parse();
-			System.out.println(result.toString());
+			parser.parse();
 		}
 		catch(Exception e) {
 			e.printStackTrace();
