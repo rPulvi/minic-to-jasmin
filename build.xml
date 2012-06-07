@@ -12,7 +12,7 @@
 	
 	<property name="flexfile.name" value="minic2jasmin" />
 	<property name="cupfile.name" value="minic2jasmin" />
-	<property name="mainclass.name" value="m2jLex" />
+	<property name="mainclass.name" value="Main" />
 	
 	<property name="targetfile" location="bubble.c" />
 
@@ -140,7 +140,7 @@
 				<path refid="cup.classpath" />
 			</classpath>
 		</javac>
-		<echo>Running perser on selected file...</echo>
+		<echo>Running parser on selected file...</echo>
 		<java classname="${project.packagename}.${mainclass.name}" failonerror="true" fork="yes">
 			<classpath>
 				<path location="${build.dir}" />
@@ -152,7 +152,7 @@
 	</target>
 	
 	<target name="run" depends="build" description="Runs parser">
-		<echo>Running perser on selected file...</echo>
+		<echo>Running parser on selected file...</echo>
 		<java classname="${project.packagename}.${mainclass.name}" failonerror="true" fork="yes">
 			<classpath>
 				<path location="${build.dir}" />

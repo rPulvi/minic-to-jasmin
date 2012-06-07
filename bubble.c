@@ -1,8 +1,14 @@
 /* Esempio algoritmo di ordinamento Bubble sort */
 
-double x[5];
-int i, j;
-double swap;
+int metodoA(){}
+float metodoC(int pippo, bool pluto){}
+//int variable;
+//float variable2 = 5.4;
+
+void funzione() {
+//double x[5];
+int i,j;
+//double swap;
 int pos;
 
 /* Inizializzazione vettore */
@@ -32,6 +38,7 @@ while(pos > 0){
 /* Stampa risultati */
 i = 0;
 while(i<5){
-  print x[i];
+  print(x[i]);
   i = i + 1;
  }
+}
