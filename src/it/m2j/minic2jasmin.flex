@@ -75,7 +75,7 @@ Identifier = [a-zA-Z_]+[a-zA-Z0-9_]*
 <quote>"\""         { yybegin(YYINITIAL); }
 
 
-<quote>"\\".        { System.out.println("Ci SIAMO!!!" + " " + yytext()); } // gestire sequenza di escape all'interno di una stringa quotata
+<quote>"\\".        { ; } // gestire sequenza di escape all'interno di una stringa quotata
 <quote><<EOF>>      { error("Fine inattesa della stringa"); }
 <quote>[^\\\n\"]+    { ; }
 

@@ -3,24 +3,70 @@ import java_cup.runtime.*;
 //init with {: scanner.init();              :};
 //scan with {: return scanner.next_token(); :};
 
+/*--------------------------------PARSER CODE ----------------------------------*/
 parser code {:
 	// Redefinition of error functions
-	    public void report_error(String message, Object info) {
-	        System.err.print("ERROR: Syntax error");
-	        if (info instanceof Symbol)
-	            if (((Symbol)info).left != -1){
-	                int line = (((Symbol)info).left)+1;
-	                int column = (((Symbol)info).right)+1;
-	                System.err.print(" (linea "+line+", colonna "+column+"): ");
-	            } else System.err.print(": ");
-	        else System.err.print(": ");
-	    }
-    :};
+    public void report_error(String message, Object info) {
+        System.err.print("ERROR: Syntax error");
+        if (info instanceof Symbol)
+            if (((Symbol)info).left != -1){
+                int line = (((Symbol)info).left)+1;
+                int column = (((Symbol)info).right)+1;
+                System.err.print(" (linea "+line+", colonna "+column+"): ");
+            } else System.err.print(": ");
+        else System.err.print(": ");
+    }
+    
+    public void syntax_error(Symbol cur_token){}
+    
+    // Return actual symbol
+    public Symbol getToken() {
+        return ((Symbol)stack.elementAt(tos));
+    }
 
+    // Return semantic value of symbol in position (position)
+    public Object stack(int position) {
+        return (((Symbol)stack.elementAt(tos+position)).value);
+    }
+
+    // Return the line number of actual symbol
+    public int getLine() {
+        if (((Symbol)stack.elementAt(tos)).left != -1){
+            return ((Symbol)stack.elementAt(tos)).left+1;
+        }else return -1;
+    }
+    
+    // Return the column number of actual symbol
+    public int getColumn() {
+        if (((Symbol)stack.elementAt(tos)).left != -1){
+            return ((Symbol)stack.elementAt(tos)).right+1;
+        }else return -1;
+    }
+:};
+
+/*--------------------------------ACTION CODE ----------------------------------*/
 action code {:
-        
+ 	// Error management
+    private void pSemError(String message){
+        System.err.println("SEM ERROR: line: "+parser.getLine()+" col: "+parser.getColumn()+": "+message);
+
+        parser.done_parsing();
+    }
+    private void pSemWarning(String message){
+        System.err.println("SEM WARNING: line: "+parser.getLine()+" col: "+parser.getColumn()+": "+message);
+    }
+    private void pSynError(String message){
+        System.err.println("SYN ERROR: line: "+parser.getLine()+" col: "+parser.getColumn()+": "+message);
+        parser.done_parsing();
+    }
+    private void pSynWarning(String message){
+        System.err.println("SYN WARNING: line: "+parser.getLine()+" col: "+parser.getColumn()+": "+message);
+        /* Quando c'è un errore sintattico continuo il parsing ma disabilito la semantica */
+        //disableSem();
+    }    
 :}
 
+/*--------------------------------TERMINAL / NON TERMINAL ----------------------------------*/
 // Terminal tokens
 terminal TYPE_BOOL, TYPE_INT, TYPE_STRING, TYPE_VOID, TYPE_FLOAT;
 terminal EXTERN;
@@ -43,16 +89,17 @@ non terminal prog, stmt_list, stmt, if, while, assign_stmt, print;
 non terminal Integer[] nt0_while;
 non terminal Integer nt0_if, nt1_if;
 non terminal String expr;
-non terminal minug, magug;
+//non terminal minug, magug;
 non terminal ret_stmt, if_then_stmt, if_then_else_stmt, while_stmt;
 non terminal expr_list;
 
-non terminal function, fun_list, fun_def, fun_def_ext, decl_list, decl, var_list, var, decl_param, formal_param, fun_call;
+non terminal function, func_list, func_def, func_def_ext, decl_list, decl, var_list, var, decl_param, formal_param, func_call;
 non terminal block, block_in, ret_type, param_list, decl_param_list;
 non terminal String type, simple_type, array_dim, array_index;
 non terminal String if_condition, while_condition;
 non terminal String id;
 
+/*--------------------------------PRIORITY / ASSOCIATIVITY ----------------------------------*/
 //lower priority
 precedence left OP_OR;
 precedence left OP_AND;
@@ -64,51 +111,48 @@ precedence left OP_TIME, OP_DIV, OP_MOD;
 precedence nonassoc OP_SIGN;
 //highest priority
 
+/*-------------------------------- GRAMMAR ----------------------------------*/
 start with prog;
 
-prog ::= fun_list
+prog ::= func_list
         ;
 
 decl ::= type var_list                          
-            ;
+        ;
 
 type ::= simple_type                                       
-     | simple_type array_dim                              
-     ;
+     	| simple_type array_dim                              
+     	;
 
 simple_type ::= TYPE_BOOL
-             | TYPE_INT
-             | TYPE_FLOAT
-             | TYPE_STRING
-             ;
+        | TYPE_INT
+        | TYPE_FLOAT
+        | TYPE_STRING
+        ;
 
 array_dim ::= BRA_OS BRA_CS
-         | array_dim BRA_OS BRA_CS                       
-         ;
+        | array_dim BRA_OS BRA_CS                       
+        ;
 
 var_list ::= ID
-       | var_list COMMA ID
-       | var_list ID /* error */ {: 
-									System.out.println("Manca il carattere ',' per separare gli identificatori.");
-								 :}
-       ;
+       	| var_list COMMA ID
+       	| var_list ID /* error */		{: pSynWarning("Missing ',' before identifier"); :}	
+       	;
 
-fun_list ::= /* empty */
-             | fun_list function
-             ;
+func_list ::= /* empty */
+       	| func_list function
+       	;
 
-function ::= fun_def block       
-       | EXTERN fun_def_ext SEMI					
-       ;
+function ::= func_def block       
+		| EXTERN func_def_ext SEMI					
+		;
 
-fun_def_ext ::= CONST_STRING ret_type ID BRA_O block_in decl_param BRA_C                               			          		
-            ;
+func_def_ext ::= CONST_STRING ret_type ID BRA_O block_in decl_param BRA_C                               			          		
+        ;
 
-fun_def ::= ret_type ID BRA_O block_in formal_param BRA_C
-            | ret_type ID block_in formal_param /* error */ {:
-																System.out.println("Funzione mal definita.");
-															:}
-            ;
+func_def ::= ret_type ID BRA_O block_in formal_param BRA_C
+		| ret_type ID block_in formal_param /* error */ 		{: pSynWarning("Error in function definition "); :}
+        ;
 
 formal_param ::= TYPE_VOID
 	    | /* empty */
@@ -122,9 +166,7 @@ decl_param ::= TYPE_VOID
 
 param_list ::= type ID                                     
 		| param_list COMMA type ID                     
-		| param_list type ID /* error */ {:
-										 	System.out.println("Manca il carattere ','");
-										 :}             
+		| param_list type ID /* error */ 		{: pSynWarning("Missing ',' before identifier"); :}            
     	;
           
 decl_param_list ::= type                                    
@@ -135,11 +177,12 @@ ret_type ::= TYPE_VOID
         | type                                       
         ;
 
-
 block_in ::= /* empty */   //controllo EOF (da rivedere)                               
 		;
 
-block ::= BRA_OG stmt_list BRA_CG                     
+block ::= BRA_OG stmt_list BRA_CG
+		| BRA_OG stmt_list error BRA_CG			{: pSynWarning("Missing ; before }"); :}  
+		| BRA_OG error BRA_CG					{: pSynWarning("Missing ; before }"); :}             
 		;
 
 stmt_list ::= /* empty */ //controllo EOF (da rivedere)                    
@@ -147,42 +190,55 @@ stmt_list ::= /* empty */ //controllo EOF (da rivedere)
         ;
 
 stmt ::= block_in block                              
-		| decl SEMI                            
-		| fun_call SEMI                           
+		| decl SEMI				{: pSynWarning("Error in declaration"); :}                   
+		| func_call SEMI                           
 		| assign_stmt                             
 		| ret_stmt                             
 		| if_then_stmt                             
 		| if_then_else_stmt                         
 		| while_stmt                              
-		| error SEMI			{:
-									System.err.println("Statement errato");
-								:}       
+		| error SEMI			{: pSynWarning("Error in statement"); :}       
         ;
 
 assign_stmt ::= ID ASSIGN expr SEMI            
 		| ID array_index ASSIGN expr SEMI  
+		| ID ASSIGN error SEMI				{: pSynWarning("Error in expression"); :}
+		| error ASSIGN expr SEMI 			{: pSynWarning("Error in assigment"); :}
         ;
 
-array_index ::= BRA_OS expr BRA_CS                   
-		| array_index BRA_OS expr BRA_CS        
+array_index ::= BRA_OS expr BRA_CS 
+        | error BRA_CS 					{: pSynWarning("Error in vector"); :}
+		| array_index BRA_OS expr BRA_CS  		      
         ;
 
-fun_call ::= ID BRA_O /* no params */ BRA_C           
+func_call ::= ID BRA_O /* no params */ BRA_C           
 		| ID BRA_O expr_list BRA_C            
         ;
 
 ret_stmt ::= RETURN expr SEMI                
         ;
 
-if_then_stmt ::= IF expr block_in block          
+if_then_stmt ::= IF if_condition block_in block          
         ;
 
-if_then_else_stmt ::= IF expr block_in block
-        ELSE block_in block                
+if_then_else_stmt ::= IF if_condition block_in block ELSE block_in block
+		| IF if_condition block_in block error block_in block		{: pSynWarning("Error 'else' expected in 'if' instruction"); :}	             
+        ;
+        
+if_condition ::= BRA_O expr BRA_C 
+    	| BRA_O error BRA_C			{: pSynWarning("Error in 'if' condition"); :}
+    	| error expr BRA_C 			{: pSynWarning("Error '(' expected in 'if' instruction"); :}
+    	| BRA_O expr error  		{: pSynWarning("Error ')' expected in 'if' instruction"); :}
+		;
+
+while_stmt ::= WHILE while_condition block_in block         
         ;
 
-while_stmt ::= WHILE expr block_in block         
-        ;
+while_condition ::= BRA_O expr BRA_C 
+    	| BRA_O error BRA_C			{: pSynWarning("Error in 'while' condition"); :}
+    	| error expr BRA_C 			{: pSynWarning("Error '(' expected in 'while' instruction"); :}
+    	| BRA_O expr error  		{: pSynWarning("Error ')' expected in 'while' instruction"); :}
+		;
 
 expr_list ::= expr                             
         | expr_list COMMA expr        
@@ -204,8 +260,9 @@ expr ::= expr OP_PLUS expr
         | expr OP_EQ expr                
         | expr OP_NEQ expr               
         | expr OP_MOD expr               
-        | BRA_O expr BRA_C                     
-        | fun_call                               
+        | BRA_O expr BRA_C
+        | BRA_O error BRA_C		{: pSynWarning("Error in expression"); :}
+        | func_call                               
         | ID array_index                             
         | NEW simple_type array_index                  
         | ID                                         
