@@ -1,0 +1,45 @@
+package it.m2j;
+
+
+class SymbolType{
+    private IdType type;
+    private int dim;
+
+    SymbolType(IdType type){
+        this.type = type;
+        this.dim = 1;
+    }
+    
+    SymbolType(IdType type, IdType dim){
+        this.type = type;
+        this.dim = -1;
+    }
+    
+    SymbolType(IdType type, int dim){
+        this.type = type;
+        this.dim = dim;
+        //System.out.println("SYMB: "+type+" "+dim);
+    }
+
+
+    public IdType getType(){
+        return type;
+    }
+    public int getDim(){
+        return dim;
+    }
+
+    public boolean checkType(SymbolType sym){
+        if (sym.type == type)
+            return true;
+        else
+            return false;
+    }
+
+    public boolean checkDim(SymbolType sym){
+        if (sym.dim < dim)
+            return true;
+        else
+            return false;
+    }
+}

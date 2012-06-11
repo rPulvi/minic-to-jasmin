@@ -3,6 +3,8 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="generated-src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
-	<classpathentry kind="lib" path="/Latex2MathML/lib/java_cup_v10k_drawTree_runtime.jar" sourcepath="/Latex2MathML/src"/>
+	<classpathentry kind="lib" path="/home/alenico84/eclipse-workspace/minic-to-jasmin/lib/java_cup_v10k_drawTree.jar"/>
+	<classpathentry kind="lib" path="/home/alenico84/eclipse-workspace/minic-to-jasmin/lib/java_cup_v10k_drawTree_runtime.jar"/>
+	<classpathentry kind="lib" path="/home/alenico84/eclipse-workspace/minic-to-jasmin/lib/JFlex.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -72,12 +72,15 @@ Identifier = [a-zA-Z_]+[a-zA-Z0-9_]*
 
 "\""                { yybegin(quote); }
 
-<quote>"\""         { yybegin(YYINITIAL); }
+<quote>"\""         { 	yybegin(YYINITIAL); 
+						return sym(CONST_STRING); 	
+					}
 
 
 <quote>"\\".        { ; } // gestire sequenza di escape all'interno di una stringa quotata
 <quote><<EOF>>      { error("Fine inattesa della stringa"); }
-<quote>[^\\\n\"]+    { ; }
+<quote>[^\\\n\"]+   { ; }
+
 
 "bool"              { return sym(TYPE_BOOL); }
 "int"               { return sym(TYPE_INT); }
@@ -130,7 +133,9 @@ Identifier = [a-zA-Z_]+[a-zA-Z0-9_]*
 {Identifier}        { return sym(ID); }
 
 "\n"                { ; }
+"\t"				{ ; }
 " "					{ ; }
+
 [0-9]+{Identifier}	{ error("identificatore non valido"); }
 
 .                   { error("Simbolo sconosciuto"); } // ERROR: unknown token

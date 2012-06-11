@@ -1,10 +1,14 @@
 import java_cup.runtime.*;
+import java.util.HashMap;
 
 //init with {: scanner.init();              :};
 //scan with {: return scanner.next_token(); :};
 
 /*--------------------------------PARSER CODE ----------------------------------*/
 parser code {:
+	/* Symbol table for type checking */
+    HashMap<String,SymbolType> symbolType_table = new HashMap<String,SymbolType>();
+
 	// Redefinition of error functions
     public void report_error(String message, Object info) {
         System.err.print("ERROR: Syntax error");
@@ -42,14 +46,92 @@ parser code {:
             return ((Symbol)stack.elementAt(tos)).right+1;
         }else return -1;
     }
+    
+    
 :};
 
 /*--------------------------------ACTION CODE ----------------------------------*/
 action code {:
+
+	/* Class used to store expression and to do type checking on expressions */
+    class Expr{
+        private String value;
+        private SymbolType type;
+
+        private SymbolType lookupSymbolType(String id){
+            SymbolType type = parser.symbolType_table.get(id);
+            if (type == null){
+                pSemError("Variable \""+id+"\" not declared");
+                return new SymbolType(IdType.NULL, IdType.NULL);
+            }
+            return type;
+        }
+        
+        Expr(String value, SymbolType type){
+            this.value = value;
+            this.type = type;
+        }
+        Expr(String id){
+            this.value = id;
+            this.type = lookupSymbolType(id);
+        }
+
+        Expr(String id, Integer pos){
+            this.value = id+"["+pos.toString()+"]";
+            this.type = lookupSymbolType(id);
+
+            int dim = type.getDim();
+            if (pos>=dim && dim!=-1){
+                pSemError("Array index ("+pos+") exceed array size ("+dim+")");
+            }
+        }
+        Expr(String id, String pos){
+            this.value = id+"["+pos+"]";
+            this.type = lookupSymbolType(id);
+
+        }
+
+
+        public String toString(){
+            return value;
+        }
+        public SymbolType getSymbolType(){
+            return type;
+        }
+
+        /* Check symbol type. In return unknown type in the case of type error */
+        public SymbolType checkSymbolType(Expr expr){
+            IdType type1 = type.getType();
+            IdType type2 = expr.getSymbolType().getType();
+
+/* TODO: rivedere il controllo di expr fra tipi diversi
+            if (type1==type2){
+                return type;
+            }else if(type1!=-1 && type2!=-1){
+                // If operands are of two different types cast them to double 
+                pSemWarning("Operation between int and double, int number casted to double");
+                return new SymbolType(1, 1);
+            }else{
+                return new SymbolType(IdType.NULL, IdType.NULL);
+            }
+*/
+  			return new SymbolType(IdType.NULL, IdType.NULL); //Rimuovere dopo TODO
+        }
+        /*public void checkSymbolTypeAssignment(Expr expr){
+            IdType type1 = type.getType();
+            IdType type2 = expr.getSymbolType().getType();
+
+            if (type1==0 && type2==1){
+                pSemWarning("Assignment of a double value to an int variable");
+            } else if (type1==1 && type2==0){
+                pSemWarning("Assignment of an int value to an double variable");
+            }
+        }*/
+    }
+	
  	// Error management
     private void pSemError(String message){
         System.err.println("SEM ERROR: line: "+parser.getLine()+" col: "+parser.getColumn()+": "+message);
-
         parser.done_parsing();
     }
     private void pSemWarning(String message){
@@ -88,7 +170,7 @@ terminal String CONST_STRING;
 non terminal prog, stmt_list, stmt, if, while, assign_stmt, print;
 non terminal Integer[] nt0_while;
 non terminal Integer nt0_if, nt1_if;
-non terminal String expr;
+non terminal /*String*/ Expr expr;
 //non terminal minug, magug;
 non terminal ret_stmt, if_then_stmt, if_then_else_stmt, while_stmt;
 non terminal expr_list;
@@ -97,7 +179,7 @@ non terminal function, func_list, func_def, func_def_ext, decl_list, decl, var_l
 non terminal block, block_in, ret_type, param_list, decl_param_list;
 non terminal String type, simple_type, array_dim, array_index;
 non terminal String if_condition, while_condition;
-non terminal String id;
+non terminal /*String*/Expr id;
 
 /*--------------------------------PRIORITY / ASSOCIATIVITY ----------------------------------*/
 //lower priority
@@ -120,21 +202,22 @@ prog ::= func_list
 decl ::= type var_list                          
         ;
 
-type ::= simple_type                                       
-     	| simple_type array_dim                              
+type ::= simple_type:x 				{: RESULT=x; :}                                       
+     	| simple_type:x array_dim   {: RESULT=x; :}                          
      	;
 
-simple_type ::= TYPE_BOOL
-        | TYPE_INT
-        | TYPE_FLOAT
-        | TYPE_STRING
+simple_type ::= TYPE_BOOL		{: RESULT = new String("BOOL"); :}
+        | TYPE_INT				{: RESULT = new String("INT"); :}
+        | TYPE_FLOAT			{: RESULT = new String("FLOAT"); :}
+        | TYPE_STRING			{: RESULT = new String("STRING"); :}
         ;
 
 array_dim ::= BRA_OS BRA_CS
         | array_dim BRA_OS BRA_CS                       
         ;
 
-var_list ::= ID
+var_list ::= ID:x 				{: if(parser.stack(-1).equals("INT"))
+           			 					parser.symbolType_table.put(x, new SymbolType(IdType.INT)); :}
        	| var_list COMMA ID
        	| var_list ID /* error */		{: pSynWarning("Missing ',' before identifier"); :}	
        	;
@@ -190,7 +273,7 @@ stmt_list ::= /* empty */ //controllo EOF (da rivedere)
         ;
 
 stmt ::= block_in block                              
-		| decl SEMI				{: pSynWarning("Error in declaration"); :}                   
+		| decl SEMI	                   
 		| func_call SEMI                           
 		| assign_stmt                             
 		| ret_stmt                             
@@ -207,7 +290,10 @@ assign_stmt ::= ID ASSIGN expr SEMI
         ;
 
 array_index ::= BRA_OS expr BRA_CS 
-        | error BRA_CS 					{: pSynWarning("Error in vector"); :}
+//		| error expr BRA_CS			 	{: pSynWarning("Error1 in vector"); :}
+//		| BRA_OS error BRA_CS 			{: pSynWarning("Error2 in vector"); :}
+//		| BRA_OS expr error 			{: pSynWarning("Error3 in vector"); :}
+        | error BRA_CS 					{: pSynWarning("Error in vector"); :} 
 		| array_index BRA_OS expr BRA_CS  		      
         ;
 
