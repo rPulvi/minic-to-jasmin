@@ -158,7 +158,6 @@ terminal OP_PLUS, OP_DIFF, OP_TIME, OP_DIV, OP_MOD, OP_SIGN;
 terminal OP_EQ, OP_NEQ, OP_LT, OP_LET, OP_GT, OP_GET, OP_AND, OP_OR, OP_NOT;
 terminal COMMA, SEMI;
 terminal BRA_O, BRA_C, BRA_OS, BRA_CS, BRA_OG, BRA_CG;
-terminal INT, DOUBLE;
 
 terminal String ID;
 terminal Bool CONST_BOOL;
@@ -216,11 +215,21 @@ array_dim ::= BRA_OS BRA_CS
         | array_dim BRA_OS BRA_CS                       
         ;
 
-var_list ::= ID:x 				{: if(parser.stack(-1).equals("INT"))
-           			 					parser.symbolType_table.put(x, new SymbolType(IdType.INT)); :}
-       	| var_list COMMA ID
-       	| var_list ID /* error */		{: pSynWarning("Missing ',' before identifier"); :}	
+var_list ::= var
+       	| var_list COMMA {: RESULT = parser.stack(-2); :} var
+       	| var_list var /* error */		{: pSynWarning("Missing ',' before identifier"); :}	
        	;
+
+var ::= ID:x 		{: if(parser.stack(-1).equals("INT"))
+           			 					parser.symbolType_table.put(x, new SymbolType(IdType.INT)); 
+           			 				else if (parser.stack(-1).equals("FLOAT"))
+           			 					parser.symbolType_table.put(x, new SymbolType(IdType.FLOAT));
+           			 				else if (parser.stack(-1).equals("BOOL"))
+           			 					parser.symbolType_table.put(x, new SymbolType(IdType.BOOL));
+           			 				else if (parser.stack(-1).equals("STRING"))
+           			 					parser.symbolType_table.put(x, new SymbolType(IdType.STRING));
+           			 			:}
+        ;
 
 func_list ::= /* empty */
        	| func_list function
@@ -247,9 +256,9 @@ decl_param ::= TYPE_VOID
 		| decl_param_list                             
         ;
 
-param_list ::= type ID                                     
-		| param_list COMMA type ID                     
-		| param_list type ID /* error */ 		{: pSynWarning("Missing ',' before identifier"); :}            
+param_list ::= type var                                     
+		| param_list COMMA type var                     
+		| param_list type var /* error */ 		{: pSynWarning("Missing ',' before identifier"); :}            
     	;
           
 decl_param_list ::= type                                    
@@ -264,8 +273,8 @@ block_in ::= /* empty */   //controllo EOF (da rivedere)
 		;
 
 block ::= BRA_OG stmt_list BRA_CG
-		| BRA_OG stmt_list error BRA_CG			{: pSynWarning("Missing ; before }"); :}  
-		| BRA_OG error BRA_CG					{: pSynWarning("Missing ; before }"); :}             
+		| BRA_OG stmt_list error BRA_CG			{: pSynWarning("Missing ';' before }"); :}  
+		| BRA_OG error BRA_CG					{: pSynWarning("Missing ';' before }"); :}             
 		;
 
 stmt_list ::= /* empty */ //controllo EOF (da rivedere)                    
@@ -273,8 +282,10 @@ stmt_list ::= /* empty */ //controllo EOF (da rivedere)
         ;
 
 stmt ::= block_in block                              
-		| decl SEMI	                   
-		| func_call SEMI                           
+		| decl SEMI	       		
+		| decl error            {: pSynWarning("Missing ';' in statement"); :}
+		| func_call SEMI 		
+		| func_call error		{: pSynWarning("Missing ';' in statement"); :}                          
 		| assign_stmt                             
 		| ret_stmt                             
 		| if_then_stmt                             
@@ -283,21 +294,18 @@ stmt ::= block_in block
 		| error SEMI			{: pSynWarning("Error in statement"); :}       
         ;
 
-assign_stmt ::= ID ASSIGN expr SEMI            
-		| ID array_index ASSIGN expr SEMI  
-		| ID ASSIGN error SEMI				{: pSynWarning("Error in expression"); :}
+assign_stmt ::= id ASSIGN expr SEMI            
+		| id array_index ASSIGN expr SEMI  
+		| id ASSIGN error SEMI				{: pSynWarning("Error in expression"); :}
 		| error ASSIGN expr SEMI 			{: pSynWarning("Error in assigment"); :}
         ;
 
 array_index ::= BRA_OS expr BRA_CS 
-//		| error expr BRA_CS			 	{: pSynWarning("Error1 in vector"); :}
-//		| BRA_OS error BRA_CS 			{: pSynWarning("Error2 in vector"); :}
-//		| BRA_OS expr error 			{: pSynWarning("Error3 in vector"); :}
-        | error BRA_CS 					{: pSynWarning("Error in vector"); :} 
+        | error BRA_CS 					{: pSynWarning("Error in vector"); 	:} 
 		| array_index BRA_OS expr BRA_CS  		      
         ;
 
-func_call ::= ID BRA_O /* no params */ BRA_C           
+func_call ::= ID BRA_O /* no params */ BRA_C     // gestire id di function      
 		| ID BRA_O expr_list BRA_C            
         ;
 
@@ -349,12 +357,18 @@ expr ::= expr OP_PLUS expr
         | BRA_O expr BRA_C
         | BRA_O error BRA_C		{: pSynWarning("Error in expression"); :}
         | func_call                               
-        | ID array_index                             
+        | id array_index                             
         | NEW simple_type array_index                  
-        | ID                                         
+        | id                                         
         | CONST_BOOL                                 
         | CONST_INT                                  
         | CONST_STRING                               
         | CONST_FLOAT                               
         ;
+        
+id ::= ID:x 							{: RESULT = new Expr(x); :}
+      | ID:x BRA_OS CONST_INT:y BRA_CS 	{: RESULT = new Expr(x, y); :}
+      | ID:x BRA_OS ID:y BRA_CS 		{: RESULT = new Expr(x, y); :}
+      | error BRA_CS 					{: pSynWarning("Error in vector"); :}
+;   
 

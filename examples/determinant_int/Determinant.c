@@ -18,7 +18,7 @@ int sarrus(int[][] matrix, int size) {
         while( (j < (size )) ){
             k = (i+j) % size;
             pos = pos * matrix[j][k];
-            j = j+1;
+            j = j+1
         }
 //commento        
         det = det + pos;
