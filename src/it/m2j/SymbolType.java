@@ -7,13 +7,12 @@ class SymbolType{
 
     SymbolType(IdType type){
         this.type = type;
-        this.dim = 1;
-    }
-    
-    SymbolType(IdType type, IdType dim){
-        this.type = type;
-        this.dim = -1;
-    }
+        
+        if (type!=IdType.NULL)
+        	this.dim = 1;
+        else
+        	this.dim = -1;
+    }    
     
     SymbolType(IdType type, int dim){
         this.type = type;

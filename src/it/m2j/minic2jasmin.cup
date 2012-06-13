@@ -62,7 +62,7 @@ action code {:
             SymbolType type = parser.symbolType_table.get(id);
             if (type == null){
                 pSemError("Variable \""+id+"\" not declared");
-                return new SymbolType(IdType.NULL, IdType.NULL);
+                return new SymbolType(IdType.NULL);
             }
             return type;
         }
@@ -104,31 +104,31 @@ action code {:
             IdType type1 = type.getType();
             IdType type2 = expr.getSymbolType().getType();
 
-/* TODO: rivedere il controllo di expr fra tipi diversi
+/*
             if (type1==type2){
                 return type;
-            }else if(type1!=-1 && type2!=-1){
+            }else if(type1!=IdType.NULL && type2!=IdType.NULL){
                 // If operands are of two different types cast them to double 
-                pSemWarning("Operation between int and double, int number casted to double");
-                return new SymbolType(1, 1);
+                pSemWarning("Expression between" + type1.toString() + " to " + type2.toString() );
+                return new SymbolType(IdType.NULL);
             }else{
-                return new SymbolType(IdType.NULL, IdType.NULL);
+                return new SymbolType(IdType.NULL);
             }
-*/
-  			return new SymbolType(IdType.NULL, IdType.NULL); //Rimuovere dopo TODO
+            */
+            
+            return new SymbolType(IdType.NULL); //Rimuovere dopo il TODO
         }
-        /*public void checkSymbolTypeAssignment(Expr expr){
+        public void checkSymbolTypeAssignment(Expr expr){
             IdType type1 = type.getType();
             IdType type2 = expr.getSymbolType().getType();
 
-            if (type1==0 && type2==1){
-                pSemWarning("Assignment of a double value to an int variable");
-            } else if (type1==1 && type2==0){
-                pSemWarning("Assignment of an int value to an double variable");
+            if (type1!=IdType.NULL && type2!=IdType.NULL){
+                // If operands are of two different types print error 
+                pSemWarning("Can't assign" + type1.toString() + " to " + type2.toString() );                
             }
-        }*/
+        }
     }
-	
+
  	// Error management
     private void pSemError(String message){
         System.err.println("SEM ERROR: line: "+parser.getLine()+" col: "+parser.getColumn()+": "+message);
@@ -160,16 +160,16 @@ terminal COMMA, SEMI;
 terminal BRA_O, BRA_C, BRA_OS, BRA_CS, BRA_OG, BRA_CG;
 
 terminal String ID;
-terminal Bool CONST_BOOL;
+terminal Boolean CONST_BOOL;
 terminal Integer CONST_INT;
-terminal Float CONST_FLOAT;
-terminal String CONST_STRING;
+terminal Float   CONST_FLOAT;
+terminal String  CONST_STRING;
 
 // Non terminal tokens
 non terminal prog, stmt_list, stmt, if, while, assign_stmt, print;
 non terminal Integer[] nt0_while;
 non terminal Integer nt0_if, nt1_if;
-non terminal /*String*/ Expr expr;
+non terminal Expr expr;
 //non terminal minug, magug;
 non terminal ret_stmt, if_then_stmt, if_then_else_stmt, while_stmt;
 non terminal expr_list;
@@ -178,7 +178,7 @@ non terminal function, func_list, func_def, func_def_ext, decl_list, decl, var_l
 non terminal block, block_in, ret_type, param_list, decl_param_list;
 non terminal String type, simple_type, array_dim, array_index;
 non terminal String if_condition, while_condition;
-non terminal /*String*/Expr id;
+non terminal Expr id;
 
 /*--------------------------------PRIORITY / ASSOCIATIVITY ----------------------------------*/
 //lower priority
@@ -282,10 +282,8 @@ stmt_list ::= /* empty */ //controllo EOF (da rivedere)
         ;
 
 stmt ::= block_in block                              
-		| decl SEMI	       		
-		| decl error            {: pSynWarning("Missing ';' in statement"); :}
-		| func_call SEMI 		
-		| func_call error		{: pSynWarning("Missing ';' in statement"); :}                          
+		| decl SEMI	       				
+		| func_call SEMI
 		| assign_stmt                             
 		| ret_stmt                             
 		| if_then_stmt                             
@@ -294,7 +292,7 @@ stmt ::= block_in block
 		| error SEMI			{: pSynWarning("Error in statement"); :}       
         ;
 
-assign_stmt ::= id ASSIGN expr SEMI            
+assign_stmt ::= id:x ASSIGN expr:y SEMI		{: x.checkSymbolTypeAssignment(y); :}            
 		| id array_index ASSIGN expr SEMI  
 		| id ASSIGN error SEMI				{: pSynWarning("Error in expression"); :}
 		| error ASSIGN expr SEMI 			{: pSynWarning("Error in assigment"); :}
@@ -338,7 +336,7 @@ expr_list ::= expr
         | expr_list COMMA expr        
         ;
 
-expr ::= expr OP_PLUS expr              
+expr ::=  expr OP_PLUS expr              
         | expr OP_DIFF expr              
         | expr OP_TIME expr              
         | expr OP_DIV expr               
@@ -359,16 +357,13 @@ expr ::= expr OP_PLUS expr
         | func_call                               
         | id array_index                             
         | NEW simple_type array_index                  
-        | id                                         
-        | CONST_BOOL                                 
-        | CONST_INT                                  
-        | CONST_STRING                               
-        | CONST_FLOAT                               
+        | id:x 					{: RESULT = x; :}                                         
+        | CONST_BOOL:x			{: RESULT = new Expr(x.toString(), new SymbolType(IdType.BOOL)); :}                                
+        | CONST_INT:x			{: RESULT = new Expr(x.toString(), new SymbolType(IdType.INT)); :}                                  
+        | CONST_STRING:x		{: RESULT = new Expr(x, new SymbolType(IdType.STRING)); :}                               
+        | CONST_FLOAT:x 		{: RESULT = new Expr(x.toString(), new SymbolType(IdType.FLOAT)); :}                               
         ;
         
-id ::= ID:x 							{: RESULT = new Expr(x); :}
-      | ID:x BRA_OS CONST_INT:y BRA_CS 	{: RESULT = new Expr(x, y); :}
-      | ID:x BRA_OS ID:y BRA_CS 		{: RESULT = new Expr(x, y); :}
-      | error BRA_CS 					{: pSynWarning("Error in vector"); :}
-;   
+id ::= ID:x		{: RESULT = new Expr(x); :}
+		;   
 

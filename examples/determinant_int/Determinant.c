@@ -1,7 +1,3 @@
-extern "MinicLib/println" void print_string(string);
-extern "MinicLib/print" void print(string);
-extern "MinicLib/int2string" string i2s(int);
-
 /* Calcola il determinante di una matrice quadrata.
    NB: matrice[riga][colonna]
 */
@@ -9,16 +5,20 @@ extern "MinicLib/int2string" string i2s(int);
 //prova commento //singola linea
 /* calcola il determinante con il metodo di sarrus */
 int sarrus(int[][] matrix, int size) {
+	
     int k, pos, neg, det,i,j,l,m;
+    float f;
     det = 0;
     i = 0;
-    while( i < (size )){
+    while( i < (size )){        
         pos = 1;
         j = 0;
-        while( (j < (size )) ){
+        
+        while( (j < (size )) ){        	
             k = (i+j) % size;
             pos = pos * matrix[j][k];
-            j = j+1
+            j = j+1;
+            j=f;
         }
 //commento        
         det = det + pos;
