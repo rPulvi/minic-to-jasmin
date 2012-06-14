@@ -12,7 +12,7 @@ int sarrus(int[][] matrix, int size) {
     i = 0;
     while( i < (size )){        
         pos = 1;
-        j = 0;
+        j = f;
         
         while( (j < (size )) ){        	
             k = (i+j) % size;

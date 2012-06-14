@@ -125,11 +125,11 @@ Identifier = [a-zA-Z_]+[a-zA-Z0-9_]*
 "{"		    		{ return sym(BRA_OG); }
 "}"		    		{ return sym(BRA_CG); }
 
-"true"              { return sym(CONST_BOOL); }
-"false"             { return sym(CONST_BOOL); }
+"true"              { return sym(CONST_BOOL, new Boolean(yytext())); }
+"false"             { return sym(CONST_BOOL, new Boolean(yytext())); }
 
-{Integer}           { return sym(CONST_INT); }
-{Float}             { return sym(CONST_FLOAT); }
+{Integer}           { return sym(CONST_INT, new Integer(yytext())); }
+{Float}             { return sym(CONST_FLOAT, new Float(yytext())); }
 {Identifier}        { return sym(ID); }
 
 "\n"                { ; }

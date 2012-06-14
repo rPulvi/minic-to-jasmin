@@ -76,7 +76,7 @@
 		<java classname="java_cup.Main" failonerror="true" fork="yes" dir="${gen.dir}/${project.packagepath}">
 			<classpath>
 				<path refid="cup.classpath" />
-			</classpath>
+			</classpath>			
 			<arg value="-expect" />
 			<arg value="${conflicts.expected}"/>
 			<arg value="-package" />
@@ -84,7 +84,7 @@
 			<arg value="-parser" />
 			<arg value="${cupfile.name}Parser" />
 			<arg value="-symbols" />
-			<arg value="${cupfile.name}Sym" />
+			<arg value="${cupfile.name}Sym" />			
 			<arg path="${src.dir}/${project.packagepath}/${cupfile.name}.cup" />
 		</java>
 		<delete file="${gen.dir}/${project.packagepath}/.cup-tree" />

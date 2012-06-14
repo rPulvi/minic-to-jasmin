@@ -25,5 +25,10 @@ public enum IdType {
 			return "string"; 
 		}
 	}, 
-	NULL 
+	NULL{
+		public String toString() 
+		{
+			return "void"; 
+		}
+	} 
 }
