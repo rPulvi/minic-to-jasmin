@@ -10,9 +10,11 @@ int sarrus(int[][] matrix, int size) {
     float f;
     det = 0;
     i = 0;
+    string s;
     while( i < (size )){        
         pos = 1;
         j = f;
+        i = j+s;
         
         while( (j < (size )) ){        	
             k = (i+j) % size;

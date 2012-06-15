@@ -24,10 +24,7 @@ public class Main {
 			minic2jasminParser parser = new minic2jasminParser(scanner);
 			
 			//Avvio il parser
-			parser.parse();
-			
-			System.out.println("VARS: " + parser.symbolType_table);
-			System.out.println("FUNCS: " + parser.symbolTypeFunction_table);
+			parser.parse();		
 		}
 		catch(Exception e) {
 			e.printStackTrace();

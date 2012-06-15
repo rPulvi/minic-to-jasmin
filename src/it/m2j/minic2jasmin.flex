@@ -99,7 +99,7 @@ Identifier = [a-zA-Z_]+[a-zA-Z0-9_]*
 
 "+"                 { return sym(OP_PLUS); }
 "-"                 { return sym(OP_DIFF); }
-"*"                 { return sym(OP_TIME); }
+"*"                 { return sym(OP_MUL); }
 "/"                 { return sym(OP_DIV); }
 "%"                 { return sym(OP_MOD); }
 

@@ -104,7 +104,6 @@ action code {:
         Expr(String id, String pos){
             this.value = id+"["+pos+"]";
             this.type = lookupSymbolType(id, LookUp.VAR);
-
         }
 
         public String toString(){
@@ -115,24 +114,69 @@ action code {:
         }
 
         /* Check symbol type. In return unknown type in the case of type error */
-        public SymbolType checkSymbolType(Expr expr){
+        public SymbolType checkSymbolType(Expr expr, Operator op){
             IdType type1 = type.getType();
             IdType type2 = expr.getSymbolType().getType();
+			IdType t = IdType.VOID;
 
-/*
-            if (type1==type2){
-                return type;
-            }else if(type1!=IdType.VOID && type2!=IdType.VOID){
-                // If operands are of two different types cast them to double 
-                pSemWarning("Expression between" + type1.toString() + " to " + type2.toString() );
-                return new SymbolType(IdType.VOID);
-            }else{
-                return new SymbolType(IdType.VOID);
-            }
-            */
-            
-            return new SymbolType(IdType.VOID); //Rimuovere dopo il TODO
+			switch(op)
+			{
+				case PLUS: 
+				case DIFF:
+				case MUL:
+				case DIV:
+					
+					if(type1.IsNumeric() == true && type2.IsNumeric() == true)
+					{
+						if (type1 == type2) 
+							t = type1;
+						else
+							t = IdType.FLOAT;
+					}
+					else
+						pSemWarning("Incomparable types: " + type1.toString() + " to " + type2.toString() );					
+					break;
+					
+				case MOD:
+					if(type1.IsNumeric() == true && type2.IsNumeric() == true)
+						t = IdType.INT;
+					else
+						pSemWarning("Incomparable types: " + type1.toString() + " to " + type2.toString() );
+
+					break;
+				
+				case AND:
+				case OR:
+					if( (type1 == type2) && (type1 == IdType.BOOL) )
+						t = IdType.BOOL;
+					else
+						pSemWarning("Incomparable types: " + type1.toString() + " to " + type2.toString() );															
+					break;
+
+				case EQ:
+				case NEQ:
+					if (type1 != IdType.STRING && type2 != IdType.STRING)
+						t = IdType.BOOL;
+					else
+						pSemWarning("Incomparable types: " + type1.toString() + " to " + type2.toString() );						
+					break;
+
+				case LT:
+				case LET:
+				case GT:
+				case GET:
+					if(type1.IsNumeric() == true && type2.IsNumeric() == true)
+						t = IdType.BOOL;
+					else
+						pSemWarning("Incomparable types: " + type1.toString() + " to " + type2.toString() );						
+
+					break;
+			}
+
+            return new SymbolType(t);                               
         }
+
+
         public void checkSymbolTypeAssignment(Expr expr){
             IdType type1 = type.getType();
             IdType type2 = expr.getSymbolType().getType();
@@ -141,7 +185,7 @@ action code {:
                 // If operands are of two different types print error 
                 pSemWarning("Can't assign " + type2.toString() + " to " + type1.toString() );                
             }
-        }
+        }               
     }
 
  	// Error management
@@ -169,7 +213,7 @@ terminal TYPE_BOOL, TYPE_INT, TYPE_STRING, TYPE_VOID, TYPE_FLOAT;
 terminal EXTERN;
 terminal String IF, ELSE, WHILE;
 terminal ASSIGN, NEW, RETURN;
-terminal OP_PLUS, OP_DIFF, OP_TIME, OP_DIV, OP_MOD, OP_SIGN;
+terminal OP_PLUS, OP_DIFF, OP_MUL, OP_DIV, OP_MOD, OP_SIGN;
 terminal OP_EQ, OP_NEQ, OP_LT, OP_LET, OP_GT, OP_GET, OP_AND, OP_OR, OP_NOT;
 terminal COMMA, SEMI;
 terminal BRA_O, BRA_C, BRA_OS, BRA_CS, BRA_OG, BRA_CG;
@@ -189,7 +233,7 @@ non terminal ret_stmt, if_then_stmt, if_then_else_stmt, while_stmt;
 
 non terminal function, func_list, func_def, func_def_ext, decl_list, decl, var_list, var, decl_param, formal_param;
 non terminal block, block_in, param_list, decl_param_list;
-non terminal String type, simple_type, array_dim, array_index, ret_type, func_id;
+non terminal String type, simple_type, array_dim, array_index, ret_type;
 non terminal String if_condition, while_condition;
 non terminal Expr expr, id, func_call, expr_list;
 
@@ -201,7 +245,7 @@ precedence left OP_EQ, OP_NEQ;
 precedence nonassoc OP_NOT;
 precedence left OP_LT, OP_LET, OP_GT, OP_GET;
 precedence left OP_PLUS, OP_DIFF;
-precedence left OP_TIME, OP_DIV, OP_MOD;
+precedence left OP_MUL, OP_DIV, OP_MOD;
 precedence nonassoc OP_SIGN;
 //highest priority
 
@@ -269,11 +313,8 @@ func_def ::= ret_type:x ID:y BRA_O block_in formal_param BRA_C
    			 					parser.symbolTypeFunction_table.put(y, new SymbolType(IdType.VOID));
    			 			:}
 
-		| ret_type func_id block_in formal_param /* error */ 		{: pSynWarning("Error in function definition "); :}		
+		| ret_type ID block_in formal_param /* error */ 		{: pSynWarning("Error in function definition "); :}		
         ;
-
-//func_id ::= ID:x {: RESULT = x; :}
-//		;
 
 formal_param ::= TYPE_VOID
 	    | /* empty */
@@ -361,26 +402,26 @@ while_condition ::= BRA_O expr BRA_C
     	| BRA_O expr error  		{: pSynWarning("Error ')' expected in 'while' instruction"); :}
 		;
 
-expr_list ::= expr:x {: RESULT = new Expr("bla", x.getSymbolType()); :}                             
+expr_list ::= expr:x {: RESULT = new Expr("exp", x.getSymbolType()); :}                             
         | expr_list COMMA expr        
         ;
 
-expr ::=  expr:x OP_PLUS expr:y		   	{: RESULT = new Expr("+", x.checkSymbolType(y)); :}              
-        | expr:x OP_DIFF expr:y    	   	{: RESULT = new Expr("bla", x.checkSymbolType(y)); :}
-        | expr:x OP_TIME expr:y		   	{: RESULT = new Expr("bla", x.checkSymbolType(y)); :}              
-        | expr:x OP_DIV expr:y		   	{: RESULT = new Expr("bla", x.checkSymbolType(y)); :}               
-		| OP_DIFF expr:x %prec OP_SIGN 	//{: RESULT = new Expr("bla", x.getSymbolType()); :}           
-        | expr:x OP_AND expr:y		   	{: RESULT = new Expr("bla", x.checkSymbolType(y)); :}               
-        | expr:x OP_OR expr:y			{: RESULT = new Expr("bla", x.checkSymbolType(y)); :}                
+expr ::=  expr:x OP_PLUS expr:y		   	{: RESULT = new Expr("+", x.checkSymbolType(y,Operator.PLUS)); :}              
+        | expr:x OP_DIFF expr:y    	   	{: RESULT = new Expr("-", x.checkSymbolType(y,Operator.DIFF)); :}
+        | expr:x OP_MUL expr:y		   	{: RESULT = new Expr("*", x.checkSymbolType(y,Operator.MUL)); :}              
+        | expr:x OP_DIV expr:y		   	{: RESULT = new Expr("/", x.checkSymbolType(y,Operator.DIV)); :}               
+		| OP_DIFF expr:x /* %prec OP_SIGN*/ 	{: RESULT = new Expr("opop", x.getSymbolType()); :}           
+        | expr:x OP_AND expr:y		   	{: RESULT = new Expr("&&", x.checkSymbolType(y, Operator.AND)); :}               
+        | expr:x OP_OR expr:y			{: RESULT = new Expr("||", x.checkSymbolType(y, Operator.OR)); :}                
         | OP_NOT expr:x                 {: RESULT = new Expr("bla", x.getSymbolType()); :}         
         | BRA_O TYPE_INT BRA_C expr:x /* cast */ {: RESULT = new Expr("bla", x.getSymbolType()); :}         
-        | expr:x OP_LT expr:y			{: RESULT = new Expr("bla", x.checkSymbolType(y)); :}
-        | expr:x OP_LET expr:y          {: RESULT = new Expr("bla", x.checkSymbolType(y)); :}     
-        | expr:x OP_GT expr:y           {: RESULT = new Expr("bla", x.checkSymbolType(y)); :}     
-        | expr:x OP_GET expr:y          {: RESULT = new Expr("bla", x.checkSymbolType(y)); :}   
-        | expr:x OP_EQ expr:y           {: RESULT = new Expr("bla", x.checkSymbolType(y)); :}   
-        | expr:x OP_NEQ expr:y          {: RESULT = new Expr("bla", x.checkSymbolType(y)); :}    
-        | expr:x OP_MOD expr:y          {: RESULT = new Expr("bla", x.checkSymbolType(y)); :}    
+        | expr:x OP_LT expr:y			{: RESULT = new Expr("<", x.checkSymbolType(y, Operator.LT)); :}
+        | expr:x OP_LET expr:y          {: RESULT = new Expr("<=", x.checkSymbolType(y, Operator.LET)); :}     
+        | expr:x OP_GT expr:y           {: RESULT = new Expr(">", x.checkSymbolType(y, Operator.GT)); :}     
+        | expr:x OP_GET expr:y          {: RESULT = new Expr(">=", x.checkSymbolType(y, Operator.GET)); :}   
+        | expr:x OP_EQ expr:y           {: RESULT = new Expr("==", x.checkSymbolType(y, Operator.EQ)); :}   
+        | expr:x OP_NEQ expr:y          {: RESULT = new Expr("!=", x.checkSymbolType(y, Operator.NEQ)); :}    
+        | expr:x OP_MOD expr:y          {: RESULT = new Expr("%", x.checkSymbolType(y, Operator.MOD)); :}    
         | BRA_O expr:x BRA_C			{: RESULT = new Expr("bla", x.getSymbolType()); :}
         | BRA_O error BRA_C				{: pSynWarning("Error in expression"); :}
         | func_call:x 					{: RESULT = new Expr("bla", x.getSymbolType()); :}                               

@@ -1,11 +1,11 @@
 package it.m2j;
 
 public enum IdType {
-	INT {
-			public String toString() 
-			{
-				return "int"; 
-			}
+	INT {		
+		public String toString() 
+		{
+			return "int"; 
+		}
 	}, 
 	FLOAT{
 		public String toString() 
@@ -30,5 +30,15 @@ public enum IdType {
 		{
 			return "void"; 
 		}
-	} 
+	}; 
+	
+	public boolean IsNumeric()
+	{
+		boolean bRet = false;
+		
+		if(this == INT || this == FLOAT) 
+			bRet = true;
+		
+		return bRet;
+	}
 }
