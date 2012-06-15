@@ -62,23 +62,24 @@ action code {:
         private SymbolType lookupSymbolType(String id, LookUp l)
         {        	
         	String s = "";
+        	SymbolType symType = null;
         
             if (l == LookUp.VAR)
             {
-            	SymbolType type = parser.symbolType_table.get(id);
+            	symType = parser.symbolType_table.get(id);
             	s = "Variable";
             }
             else if(l == LookUp.FUNC)
             {
-            	SymbolType type = parser.symbolTypeFunction_table.get(id);
+            	symType = parser.symbolTypeFunction_table.get(id);
             	s = "Function";
             }
             
-            if (type == null){
-                pSemError(s + " \""+id+"\" not declared");
-                return new SymbolType(IdType.NULL);
+            if (symType == null){
+                pSemError(s + " \""+id+"\" not declared");				                
+                return new SymbolType(IdType.VOID);
             }
-            return type;
+            return symType;
         }
         
         Expr(String value, SymbolType type){
@@ -121,16 +122,16 @@ action code {:
 /*
             if (type1==type2){
                 return type;
-            }else if(type1!=IdType.NULL && type2!=IdType.NULL){
+            }else if(type1!=IdType.VOID && type2!=IdType.VOID){
                 // If operands are of two different types cast them to double 
                 pSemWarning("Expression between" + type1.toString() + " to " + type2.toString() );
-                return new SymbolType(IdType.NULL);
+                return new SymbolType(IdType.VOID);
             }else{
-                return new SymbolType(IdType.NULL);
+                return new SymbolType(IdType.VOID);
             }
             */
             
-            return new SymbolType(IdType.NULL); //Rimuovere dopo il TODO
+            return new SymbolType(IdType.VOID); //Rimuovere dopo il TODO
         }
         public void checkSymbolTypeAssignment(Expr expr){
             IdType type1 = type.getType();
@@ -146,18 +147,18 @@ action code {:
  	// Error management
     private void pSemError(String message){
         System.err.println("SEM ERROR: line: "+parser.getLine()+" col: "+parser.getColumn()+": "+message);
-        parser.done_parsing();
+        //parser.done_parsing();
     }
     private void pSemWarning(String message){
         System.err.println("SEM WARNING: line: "+parser.getLine()+" col: "+parser.getColumn()+": "+message);
     }
     private void pSynError(String message){
         System.err.println("SYN ERROR: line: "+parser.getLine()+" col: "+parser.getColumn()+": "+message);
-        parser.done_parsing();
+        //parser.done_parsing();
     }
     private void pSynWarning(String message){
         System.err.println("SYN WARNING: line: "+parser.getLine()+" col: "+parser.getColumn()+": "+message);
-        /* Quando c'√® un errore sintattico continuo il parsing ma disabilito la semantica */
+        /* Quando c'è un errore sintattico continuo il parsing ma disabilito la semantica */
         //disableSem();
     }    
 :}
@@ -186,9 +187,9 @@ non terminal Integer nt0_if, nt1_if;
 //non terminal minug, magug;
 non terminal ret_stmt, if_then_stmt, if_then_else_stmt, while_stmt;
 
-non terminal function, func_list, func_def, func_def_ext, decl_list, decl, var_list, var, decl_param, formal_param, func_id;
+non terminal function, func_list, func_def, func_def_ext, decl_list, decl, var_list, var, decl_param, formal_param;
 non terminal block, block_in, param_list, decl_param_list;
-non terminal String type, simple_type, array_dim, array_index, ret_type;
+non terminal String type, simple_type, array_dim, array_index, ret_type, func_id;
 non terminal String if_condition, while_condition;
 non terminal Expr expr, id, func_call, expr_list;
 
@@ -254,22 +255,25 @@ function ::= func_def block
 func_def_ext ::= CONST_STRING ret_type ID BRA_O block_in decl_param BRA_C                               			          		
         ;
 
-func_def ::= ret_type:x func_id BRA_O block_in formal_param BRA_C  	
+func_def ::= ret_type:x ID:y BRA_O block_in formal_param BRA_C  	
 						
 						{: if(x.equals("INT"))
-   			 					parser.symbolTypeFunction_table.put(x, new SymbolType(IdType.INT)); 
+   			 					parser.symbolTypeFunction_table.put(y, new SymbolType(IdType.INT)); 
    			 				else if (x.equals("FLOAT"))
-   			 					parser.symbolTypeFunction_table.put(x, new SymbolType(IdType.FLOAT));
+   			 					parser.symbolTypeFunction_table.put(y, new SymbolType(IdType.FLOAT));
    			 				else if (x.equals("BOOL"))
-   			 					parser.symbolTypeFunction_table.put(x, new SymbolType(IdType.BOOL));
+   			 					parser.symbolTypeFunction_table.put(y, new SymbolType(IdType.BOOL));
    			 				else if (x.equals("STRING"))
-   			 					parser.symbolTypeFunction_table.put(x, new SymbolType(IdType.STRING));
+   			 					parser.symbolTypeFunction_table.put(y, new SymbolType(IdType.STRING));
+   			 				else if (x.equals("VOID"))
+   			 					parser.symbolTypeFunction_table.put(y, new SymbolType(IdType.VOID));
    			 			:}
 
-		| ret_type func_id block_in formal_param /* error */ 		{: pSynWarning("Error in function definition "); :}
+		| ret_type func_id block_in formal_param /* error */ 		{: pSynWarning("Error in function definition "); :}		
         ;
 
-//func_id ::= ID:x 	   		;
+//func_id ::= ID:x {: RESULT = x; :}
+//		;
 
 formal_param ::= TYPE_VOID
 	    | /* empty */
@@ -328,8 +332,8 @@ array_index ::= BRA_OS expr BRA_CS
 		| array_index BRA_OS expr BRA_CS  		      
         ;
 
-func_call ::= ID:x BRA_O /* no params */ BRA_C   {: RESULT = new Expr(x, LookUp.FUNC); :}  // gestire id di function      
-		| ID:x BRA_O expr_list BRA_C {: RESULT = new Expr(x, LookUp.FUNC); :}            
+func_call ::= ID:x BRA_O /* no params */ BRA_C   	{: RESULT = new Expr(x, LookUp.FUNC); :}      
+		| ID:x BRA_O expr_list BRA_C 				{: RESULT = new Expr(x, LookUp.FUNC); :}            
         ;
 
 ret_stmt ::= RETURN expr SEMI                
@@ -382,7 +386,7 @@ expr ::=  expr:x OP_PLUS expr:y		   	{: RESULT = new Expr("+", x.checkSymbolType
         | func_call:x 					{: RESULT = new Expr("bla", x.getSymbolType()); :}                               
         | id:x array_index				{: RESULT = new Expr("bla", x.getSymbolType()); :}                             
         | NEW simple_type:x array_index {:
-        									IdType t =  IdType.NULL;
+        									IdType t =  IdType.VOID;
         									
         									if (x.equals("INT"))
         										t=IdType.INT;

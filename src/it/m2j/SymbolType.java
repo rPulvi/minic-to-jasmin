@@ -8,7 +8,7 @@ class SymbolType{
     SymbolType(IdType type){
         this.type = type;
         
-        if (type!=IdType.NULL)
+        if (type!=IdType.VOID)
         	this.dim = 1;
         else
         	this.dim = -1;
@@ -17,9 +17,7 @@ class SymbolType{
     SymbolType(IdType type, int dim){
         this.type = type;
         this.dim = dim;
-        //System.out.println("SYMB: "+type+" "+dim);
     }
-
 
     public IdType getType(){
         return type;

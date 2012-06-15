@@ -25,6 +25,9 @@ public class Main {
 			
 			//Avvio il parser
 			parser.parse();
+			
+			System.out.println("VARS: " + parser.symbolType_table);
+			System.out.println("FUNCS: " + parser.symbolTypeFunction_table);
 		}
 		catch(Exception e) {
 			e.printStackTrace();
