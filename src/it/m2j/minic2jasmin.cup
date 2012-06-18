@@ -117,7 +117,7 @@ action code {:
         public SymbolType checkSymbolType(Expr expr, Operator op){
             IdType type1 = type.getType();
             IdType type2 = expr.getSymbolType().getType();
-			IdType t = IdType.VOID;
+			IdType t = IdType.ERR;
 
 			switch(op)
 			{
@@ -131,7 +131,7 @@ action code {:
 						if (type1 == type2) 
 							t = type1;
 						else
-							t = IdType.FLOAT;
+							t = IdType.FLOAT; //PROM
 					}
 					else
 						pSemWarning("Incomparable types: " + type1.toString() + " to " + type2.toString() );					
@@ -180,10 +180,15 @@ action code {:
         public void checkSymbolTypeAssignment(Expr expr){
             IdType type1 = type.getType();
             IdType type2 = expr.getSymbolType().getType();
+            
+            if (type1 == IdType.ERR || type2 == IdType.ERR)
+            	pSemWarning("Error in assignment");
 
-            if (!type1.toString().equals(type2.toString())){
-                // If operands are of two different types print error 
-                pSemWarning("Can't assign " + type2.toString() + " to " + type1.toString() );                
+            // If operands are of two different types and they aren't numerics print error
+            else if ( !type1.toString().equals(type2.toString()) ) 
+            {                 
+            	if (!(type1.IsNumeric() == true && type2.IsNumeric() == true)) //If both are numerics don't alert: PROM
+                	pSemWarning("Can't assign " + type2.toString() + " to " + type1.toString() );                
             }
         }               
     }
@@ -368,7 +373,9 @@ assign_stmt ::= id:x ASSIGN expr:y SEMI		{: x.checkSymbolTypeAssignment(y); :}
 		| error ASSIGN expr SEMI 			{: pSynWarning("Error in assigment"); :}
         ;
 
-array_index ::= BRA_OS expr BRA_CS 
+array_index ::= BRA_OS expr:x BRA_CS    {: if(x.getSymbolType().getType() != IdType.INT)
+												pSynWarning("Error in vector. Arguments must be int.");
+										:}
         | error BRA_CS 					{: pSynWarning("Error in vector"); 	:} 
 		| array_index BRA_OS expr BRA_CS  		      
         ;
@@ -414,7 +421,7 @@ expr ::=  expr:x OP_PLUS expr:y		   	{: RESULT = new Expr("+", x.checkSymbolType
         | expr:x OP_AND expr:y		   	{: RESULT = new Expr("&&", x.checkSymbolType(y, Operator.AND)); :}               
         | expr:x OP_OR expr:y			{: RESULT = new Expr("||", x.checkSymbolType(y, Operator.OR)); :}                
         | OP_NOT expr:x                 {: RESULT = new Expr("bla", x.getSymbolType()); :}         
-        | BRA_O TYPE_INT BRA_C expr:x /* cast */ {: RESULT = new Expr("bla", x.getSymbolType()); :}         
+        | BRA_O TYPE_INT BRA_C expr:x /* cast */ {: RESULT = new Expr("cast", x.getSymbolType()); :}         
         | expr:x OP_LT expr:y			{: RESULT = new Expr("<", x.checkSymbolType(y, Operator.LT)); :}
         | expr:x OP_LET expr:y          {: RESULT = new Expr("<=", x.checkSymbolType(y, Operator.LET)); :}     
         | expr:x OP_GT expr:y           {: RESULT = new Expr(">", x.checkSymbolType(y, Operator.GT)); :}     

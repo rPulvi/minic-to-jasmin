@@ -30,6 +30,12 @@ public enum IdType {
 		{
 			return "void"; 
 		}
+	},
+	ERR{		
+		public String toString() 
+		{
+			return "error"; 
+		}		
 	}; 
 	
 	public boolean IsNumeric()
