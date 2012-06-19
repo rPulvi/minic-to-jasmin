@@ -1,15 +1,17 @@
 import java_cup.runtime.*;
 import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 //init with {: scanner.init();              :};
 //scan with {: return scanner.next_token(); :};
 
 /*--------------------------------PARSER CODE ----------------------------------*/
 parser code {:
-	/* Symbol table for type checking */
-    HashMap<String,SymbolType> symbolType_table = new HashMap<String,SymbolType>();
+	/* Symbol table for type checking */    
+    HashMap<String,ArrayList<SymbolType> > symbolType_table = new HashMap<String,ArrayList<SymbolType> >();
     HashMap<String,SymbolType> symbolTypeFunction_table = new HashMap<String,SymbolType>();
-
+    	
 	// Redefinition of error functions
     public void report_error(String message, Object info) {
         System.err.print("ERROR: Syntax error");
@@ -53,6 +55,76 @@ parser code {:
 
 /*--------------------------------ACTION CODE ----------------------------------*/
 action code {:
+	
+    int blockCounter = 0;	
+
+	public void addBlock()
+	{
+		blockCounter++;		
+		//System.out.println("***BLOCCO: " + blockCounter);
+	}
+	
+	public void remBlock()
+	{
+		blockCounter--;
+		
+		if (blockCounter <= 0)
+		{
+			blockCounter = 0;
+			parser.symbolType_table.clear();
+		}
+		
+		
+		//System.out.println("***BLOCCO: " + blockCounter);
+		
+	}
+	
+	public int getBlockNumber()
+	{
+		return blockCounter;
+	}	
+	
+	public int checkVar(IdType type, String id, int block)
+	{
+		/*
+		* RETURN VALUES 
+		*
+		* 0: Identifier not found
+		* 1: ID found -> block found
+		* 2: ID found -> block not found
+		*/
+		
+		int nRet = 0;
+		ArrayList<SymbolType> symTypeList = null;
+		
+		symTypeList = parser.symbolType_table.get(id);
+		
+		if (symTypeList == null) //Identifier not found
+			nRet = 0;
+		else
+		{
+			boolean blockFound = false;							
+			Iterator<SymbolType> it = symTypeList.listIterator();
+		    
+		    while (it.hasNext()) {
+		      SymbolType s = it.next();
+		      
+		      if (s.getBlock() == block){
+		      	blockFound = true;	//Block Found
+				nRet = 1;
+		      	break;
+		      }		   
+		    }
+		    
+		    if(blockFound == false) //Block not found
+			{
+		    	symTypeList.add(new SymbolType(type, block));	
+				nRet = 2;
+			}
+		}	
+			
+		return nRet;
+	}
 
 	/* Class used to store expression and to do type checking on expressions */
     class Expr{
@@ -60,38 +132,70 @@ action code {:
         private SymbolType type;
 
         private SymbolType lookupSymbolType(String id, LookUp l)
-        {        	
-        	String s = "";
+        {        	        	
         	SymbolType symType = null;
-        
-            if (l == LookUp.VAR)
-            {
-            	symType = parser.symbolType_table.get(id);
-            	s = "Variable";
-            }
-            else if(l == LookUp.FUNC)
-            {
+                    
+            if(l == LookUp.FUNC)
             	symType = parser.symbolTypeFunction_table.get(id);
-            	s = "Function";
-            }
             
             if (symType == null){
-                pSemError(s + " \""+id+"\" not declared");				                
+                pSemError("Function \""+id+"\" not declared");				                
                 return new SymbolType(IdType.VOID);
             }
             return symType;
         }
         
+		private SymbolType lookupSymbolType(String id, int block, LookUp l)
+        {        	
+			SymbolType sType = new SymbolType(IdType.VOID);
+        	ArrayList<SymbolType> symTypeList = null;
+        
+            if (l == LookUp.VAR)
+            	symTypeList = parser.symbolType_table.get(id);
+            
+            if (symTypeList == null){
+                pSemError("Variable \""+id+ " - " + block + "\" not declared");
+                sType.setType(IdType.ERR);				
+            }
+			else{
+				Iterator<SymbolType> it = symTypeList.listIterator();
+				boolean blockFound = false;
+				
+				while (it.hasNext()) {
+					SymbolType s = it.next();
+
+					if (s.getBlock() <= block){
+						blockFound = true;	//Block Found
+						sType = s;
+						break;
+					}		   
+				}
+				
+				if (blockFound == false){
+	                pSemError("Variable \""+id+ " - " + block + "\" not declared");				                
+	                return new SymbolType(IdType.ERR);					
+				}
+								
+			}
+            return sType;
+        }    
+
+
         Expr(String value, SymbolType type){
             this.value = value;
             this.type = type;
         }
-        
+                
         Expr(String id, LookUp l){
             this.value = id;
             this.type = lookupSymbolType(id, l);
         }
-
+        
+		Expr(String id, int block, LookUp l){
+            this.value = id;
+            this.type = lookupSymbolType(id, block, l);
+        }
+        
         Expr(String id, Integer pos){
             this.value = id+"["+pos.toString()+"]";
             this.type = lookupSymbolType(id, LookUp.VAR);
@@ -237,7 +341,7 @@ non terminal Integer nt0_if, nt1_if;
 non terminal ret_stmt, if_then_stmt, if_then_else_stmt, while_stmt;
 
 non terminal function, func_list, func_def, func_def_ext, decl_list, decl, var_list, var, decl_param, formal_param;
-non terminal block, block_in, param_list, decl_param_list;
+non terminal block, br_og, br_cg, block_in, param_list, decl_param_list;
 non terminal String type, simple_type, array_dim, array_index, ret_type;
 non terminal String if_condition, while_condition;
 non terminal Expr expr, id, func_call, expr_list;
@@ -282,14 +386,30 @@ var_list ::= var
        	| var_list var /* error */		{: pSynWarning("Missing ',' before identifier"); :}	
        	;
 
-var ::= ID:x 		{: if(parser.stack(-1).equals("INT"))
-		 					parser.symbolType_table.put(x, new SymbolType(IdType.INT)); 
+var ::= ID:x 		{: 
+						int nRet = -1;
+						IdType t = IdType.VOID;							 													
+						
+						if(parser.stack(-1).equals("INT"))
+		 					t = IdType.INT; 
 		 				else if (parser.stack(-1).equals("FLOAT"))
-		 					parser.symbolType_table.put(x, new SymbolType(IdType.FLOAT));
+		 					t = IdType.FLOAT;
 		 				else if (parser.stack(-1).equals("BOOL"))
-		 					parser.symbolType_table.put(x, new SymbolType(IdType.BOOL));
+		 					t = IdType.BOOL;
 		 				else if (parser.stack(-1).equals("STRING"))
-		 					parser.symbolType_table.put(x, new SymbolType(IdType.STRING));
+		 					t = IdType.STRING;
+												
+						nRet = checkVar(t, x, getBlockNumber());
+						
+						if (nRet == 0)						
+						{
+							ArrayList<SymbolType> newVarList = new ArrayList<SymbolType>();
+			 					
+							newVarList.add(new SymbolType(t, getBlockNumber() ));			 					
+							parser.symbolType_table.put(x, newVarList);
+						}
+		 				else if(nRet == 1) 
+		 					pSynWarning("Variable " + x + " - " + getBlockNumber() + " already declared.");
 		 			:}
         ;
 
@@ -347,9 +467,14 @@ ret_type ::= TYPE_VOID {: RESULT = new String("VOID"); :}
 block_in ::= /* empty */   //controllo EOF (da rivedere)                               
 		;
 
-block ::= BRA_OG stmt_list BRA_CG
-		| BRA_OG stmt_list error BRA_CG			{: pSynWarning("Missing ';' before }"); :}  
-		| BRA_OG error BRA_CG					{: pSynWarning("Missing ';' before }"); :}             
+br_og ::= BRA_OG {: addBlock(); :}
+		;
+br_cg ::= BRA_CG {: remBlock(); :}
+		;
+
+block ::= br_og stmt_list br_cg
+		| br_og stmt_list error br_cg			{: pSynWarning("Missing ';' before }"); :}  
+		| br_og error br_cg					{: pSynWarning("Missing ';' before }"); :}             
 		;
 
 stmt_list ::= /* empty */ //controllo EOF (da rivedere)                    
@@ -454,5 +579,5 @@ expr ::=  expr:x OP_PLUS expr:y		   	{: RESULT = new Expr("+", x.checkSymbolType
         | CONST_FLOAT:x 		{: RESULT = new Expr(x.toString(), new SymbolType(IdType.FLOAT)); :}                               
         ;
         
-id ::= ID:x		{: RESULT = new Expr(x, LookUp.VAR); :}
+id ::= ID:x		{: RESULT = new Expr(x, getBlockNumber() ,LookUp.VAR); :}
 		;   

@@ -4,6 +4,7 @@ package it.m2j;
 class SymbolType{
     private IdType type;
     private int dim;
+    private int nBlock;
 
     SymbolType(IdType type){
         this.type = type;
@@ -14,16 +15,24 @@ class SymbolType{
         	this.dim = -1;
     }    
     
-    SymbolType(IdType type, int dim){
+    SymbolType(IdType type, int block){
         this.type = type;
-        this.dim = dim;
+        this.nBlock = block;
+        this.dim = -1;
     }
 
     public IdType getType(){
         return type;
     }
+    public void setType(IdType t){
+    	this.type = t;
+    }
+    
     public int getDim(){
         return dim;
+    }
+    public int getBlock(){
+    	return nBlock;
     }
 
     public boolean checkType(SymbolType sym){

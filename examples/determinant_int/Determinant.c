@@ -8,6 +8,7 @@ int sarrus(int[][] matrix, int size) {
 	
     int k, pos, neg, det,i,j,l,m;
     float f;
+    int f;
     det = 0;
     i = 0;
     string s;
@@ -15,6 +16,7 @@ int sarrus(int[][] matrix, int size) {
         pos = 1;
         j = f;
         i = j+s;
+        j = s;
         
         while( (j < (size )) ){        	
             k = (i+j) % size;
@@ -28,10 +30,10 @@ int sarrus(int[][] matrix, int size) {
     }
 
     l = 0;
-    while( l < (size)){
+    while( l < size){
         neg = 1;
         m = 0;
-        while( m < (size )){
+        while( m < size ){
             int j;
             j = size - 1 - m;
             k = (l + (size ) -j) % size;
@@ -50,7 +52,7 @@ int sarrus(int[][] matrix, int size) {
 int bidim(int[][] matrix){
     int det;
 
-    det = matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
+    det = matrix[0.4][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
 
     return det;
 }
@@ -84,6 +86,8 @@ void main(){
     int[][] matrix;
     int SIZE1;
     int SIZE2;
+    float err;
+    j = 5;
 
     SIZE1 = 2;
     SIZE2 = 3;
@@ -114,7 +118,8 @@ void main(){
     print_matrix(matrix, SIZE2);
 
     if (SIZE2 == 3){
-        det = sarrus(matrix, SIZE2);
+        //det = sarrus(matrix, SIZE2);
+        err = main();
         print("Il suo determinante e':  ");
             print_string(i2s(det));
     }

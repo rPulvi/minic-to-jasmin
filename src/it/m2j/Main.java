@@ -15,7 +15,7 @@ public class Main {
 			JFrame win = new GUI();
 	        win.setVisible(true);
 	        win.setLocationRelativeTo(null);
-	        */
+	        */		
 			
 			// Istanzio lo scanner aprendo il file d'ingresso args[0]
 			m2jLex scanner = new m2jLex(new FileReader(args[0]));
