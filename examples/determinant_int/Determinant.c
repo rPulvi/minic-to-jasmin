@@ -7,11 +7,21 @@
 int sarrus(int[][] matrix, int size) {
 	
     int k, pos, neg, det,i,j,l,m;
+    bool b;
     float f;
     int f;
     det = 0;
     i = 0;
     string s;
+    i = (int) s;
+    i = (int)f;
+    
+    i = -5;
+    i = +22;
+    
+    b = !(i>5  && det ==0);
+    b = !f;
+    
     while( i < (size )){        
         pos = 1;
         j = f;

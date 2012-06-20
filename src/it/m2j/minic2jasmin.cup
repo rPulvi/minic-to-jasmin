@@ -542,11 +542,28 @@ expr ::=  expr:x OP_PLUS expr:y		   	{: RESULT = new Expr("+", x.checkSymbolType
         | expr:x OP_DIFF expr:y    	   	{: RESULT = new Expr("-", x.checkSymbolType(y,Operator.DIFF)); :}
         | expr:x OP_MUL expr:y		   	{: RESULT = new Expr("*", x.checkSymbolType(y,Operator.MUL)); :}              
         | expr:x OP_DIV expr:y		   	{: RESULT = new Expr("/", x.checkSymbolType(y,Operator.DIV)); :}               
-		| OP_DIFF expr:x /* %prec OP_SIGN*/ 	{: RESULT = new Expr("opop", x.getSymbolType()); :}           
+		| OP_PLUS expr:x   {: RESULT = new Expr("opop", x.getSymbolType()); :} %prec OP_SIGN
+		| OP_DIFF expr:x   {: RESULT = new Expr("opop", x.getSymbolType()); :} %prec OP_SIGN           
         | expr:x OP_AND expr:y		   	{: RESULT = new Expr("&&", x.checkSymbolType(y, Operator.AND)); :}               
         | expr:x OP_OR expr:y			{: RESULT = new Expr("||", x.checkSymbolType(y, Operator.OR)); :}                
-        | OP_NOT expr:x                 {: RESULT = new Expr("bla", x.getSymbolType()); :}         
-        | BRA_O TYPE_INT BRA_C expr:x /* cast */ {: RESULT = new Expr("cast", x.getSymbolType()); :}         
+        | OP_NOT expr:x                 {: 
+        									if (x.getSymbolType().getType() == IdType.BOOL)      
+        										RESULT = new Expr("!", x.getSymbolType());
+        									else 
+											{
+												pSynWarning("Error in expression. Required boolean, found " + x.getSymbolType().getType().toString() + ".");
+												RESULT = new Expr("cast", new SymbolType(IdType.ERR));
+											}					
+        								:}         
+        | BRA_O TYPE_INT BRA_C expr:x /* cast */ {: 
+        											if (x.getSymbolType().getType() == IdType.FLOAT || x.getSymbolType().getType() == IdType.INT)
+        												RESULT = new Expr("cast", new SymbolType(IdType.INT));
+        											else 
+        											{
+        												pSynWarning("Cannot cast " + x.getSymbolType().getType().toString() + " to int.");
+        												RESULT = new Expr("cast", new SymbolType(IdType.ERR));
+        											} 
+        										 :}         
         | expr:x OP_LT expr:y			{: RESULT = new Expr("<", x.checkSymbolType(y, Operator.LT)); :}
         | expr:x OP_LET expr:y          {: RESULT = new Expr("<=", x.checkSymbolType(y, Operator.LET)); :}     
         | expr:x OP_GT expr:y           {: RESULT = new Expr(">", x.checkSymbolType(y, Operator.GT)); :}     
@@ -554,10 +571,10 @@ expr ::=  expr:x OP_PLUS expr:y		   	{: RESULT = new Expr("+", x.checkSymbolType
         | expr:x OP_EQ expr:y           {: RESULT = new Expr("==", x.checkSymbolType(y, Operator.EQ)); :}   
         | expr:x OP_NEQ expr:y          {: RESULT = new Expr("!=", x.checkSymbolType(y, Operator.NEQ)); :}    
         | expr:x OP_MOD expr:y          {: RESULT = new Expr("%", x.checkSymbolType(y, Operator.MOD)); :}    
-        | BRA_O expr:x BRA_C			{: RESULT = new Expr("bla", x.getSymbolType()); :}
+        | BRA_O expr:x BRA_C			{: RESULT = new Expr("bras", x.getSymbolType()); :}
         | BRA_O error BRA_C				{: pSynWarning("Error in expression"); :}
-        | func_call:x 					{: RESULT = new Expr("bla", x.getSymbolType()); :}                               
-        | id:x array_index				{: RESULT = new Expr("bla", x.getSymbolType()); :}                             
+        | func_call:x 					{: RESULT = new Expr("func_call", x.getSymbolType()); :}                               
+        | id:x array_index				{: RESULT = new Expr("array_index", x.getSymbolType()); :}                             
         | NEW simple_type:x array_index {:
         									IdType t =  IdType.VOID;
         									
