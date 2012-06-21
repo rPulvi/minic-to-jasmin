@@ -8,9 +8,10 @@ extern "MinicLib/int2string" string i2s(int);
 
 void hanoi( int n, int peg1, int peg2){
 	if (n > 0){
+        float f;
         hanoi(n-1, peg1, 6-peg1-peg2);
         print ("Muovi l'anello ");
-        print( i2s(n));
+        print( i2s(f));
         print(" dal piolo ");
         print(i2s(peg1));
         print(" al piolo ");

@@ -22,6 +22,10 @@ int sarrus(int[][] matrix, int size) {
     b = !(i>5  && det ==0);
     b = !f;
     
+    while(b){
+    	i = b;
+    }
+    
     while( i < (size )){        
         pos = 1;
         j = f;

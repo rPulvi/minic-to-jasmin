@@ -56,8 +56,12 @@ parser code {:
 /*--------------------------------ACTION CODE ----------------------------------*/
 action code {:
 	
-    int blockCounter = 0;	
-
+    int blockCounter = 0;
+    int nErrors = 0;
+    	
+	ArrayList<IdType> tempParamDefList = new ArrayList<IdType>();
+	ArrayList<IdType> tempParamCallList = new ArrayList<IdType>();
+	
 	public void addBlock()
 	{
 		blockCounter++;		
@@ -72,18 +76,16 @@ action code {:
 		{
 			blockCounter = 0;
 			parser.symbolType_table.clear();
-		}
+		}		
 		
-		
-		//System.out.println("***BLOCCO: " + blockCounter);
-		
+		//System.out.println("***BLOCCO: " + blockCounter);		
 	}
 	
 	public int getBlockNumber()
 	{
 		return blockCounter;
 	}	
-	
+		
 	public int checkVar(IdType type, String id, int block)
 	{
 		/*
@@ -125,36 +127,106 @@ action code {:
 			
 		return nRet;
 	}
+	/*
+	* Add type param to 'tempParamDefList' global list, every time a function is DECLARED	
+	*/
+	public void addFunctionParam(String type){
+		IdType t = IdType.VOID;
+								
+		if(type.equals("INT"))
+			t = IdType.INT; 
+		else if (type.equals("FLOAT"))
+			t = IdType.FLOAT;
+		else if (type.equals("BOOL"))
+			t = IdType.BOOL;
+		else if (type.equals("STRING"))
+			t = IdType.STRING; 
+		
+		tempParamDefList.add(t);		
+	}
 
 	/* Class used to store expression and to do type checking on expressions */
     class Expr{
         private String value;
         private SymbolType type;
 
-        private SymbolType lookupSymbolType(String id, LookUp l)
+		private SymbolType checkParamList(String id, ArrayList<IdType> pList)
+		{
+			SymbolType symType = null;
+			boolean bErr = false;
+			
+			symType = lookupSymbolType(id);
+			
+			if(symType.getType() != IdType.ERR)
+			{
+				ArrayList<IdType> l = symType.getParamList();								
+				
+				/*
+				System.out.println("Funzione: " + id);
+				System.out.println("Lista1: " + l.size() + " - Lista2: " + pList.size());
+				
+				for(int j=0;j<l.size();j++)
+					System.out.println("PAR " + j + ": " + l.get(j).toString());
+
+				System.out.println("----------");
+
+				for(int j=0;j<pList.size();j++)
+					System.out.println("PAR " + j + ": " + pList.get(j).toString());
+				*/
+				
+				if(l.size() == pList.size())
+				{
+					for(int i=0;i<l.size();i++)
+					{
+						if( !l.get(i).toString().equals(pList.get(i).toString()) ) //If params are differents
+						{
+							if(pList.get(i) != IdType.ERR)
+			                	PrintError("Function \""+id+"\": expected " + l.get(i).toString() + ", found " + pList.get(i).toString());				                
+			                
+			                bErr = true;
+			            }
+					}
+				}
+				else
+				{
+	                PrintError("Function \""+id+"\" ERRRORE SIGNATURE"); //TODO				                
+	                bErr = true;	                
+				}
+			}
+			else
+				bErr = true;
+			
+			tempParamCallList.clear();
+			
+			if (bErr == true)
+				return new SymbolType(IdType.ERR);
+			else
+				return symType;
+										
+		}
+
+        private SymbolType lookupSymbolType(String id)
         {        	        	
         	SymbolType symType = null;
-                    
-            if(l == LookUp.FUNC)
-            	symType = parser.symbolTypeFunction_table.get(id);
+
+			symType = parser.symbolTypeFunction_table.get(id);
             
             if (symType == null){
-                pSemError("Function \""+id+"\" not declared");				                
-                return new SymbolType(IdType.VOID);
+                PrintError("Function \""+id+"\" not declared");				                
+                return new SymbolType(IdType.ERR);
             }
             return symType;
         }
         
-		private SymbolType lookupSymbolType(String id, int block, LookUp l)
+		private SymbolType lookupSymbolType(String id, int block)
         {        	
 			SymbolType sType = new SymbolType(IdType.VOID);
         	ArrayList<SymbolType> symTypeList = null;
-        
-            if (l == LookUp.VAR)
-            	symTypeList = parser.symbolType_table.get(id);
+                  
+			symTypeList = parser.symbolType_table.get(id);
             
             if (symTypeList == null){
-                pSemError("Variable \""+id+ " - " + block + "\" not declared");
+                PrintError("Variable \""+id+ " - " + block + "\" not declared");
                 sType.setType(IdType.ERR);				
             }
 			else{
@@ -172,7 +244,7 @@ action code {:
 				}
 				
 				if (blockFound == false){
-	                pSemError("Variable \""+id+ " - " + block + "\" not declared");				                
+	                PrintError("Variable \""+id+ " - " + block + "\" not declared");				                
 	                return new SymbolType(IdType.ERR);					
 				}
 								
@@ -185,29 +257,23 @@ action code {:
             this.value = value;
             this.type = type;
         }
-                
-        Expr(String id, LookUp l){
+          
+        //Called by Function      
+        Expr(String id, ArrayList<IdType> pList){
             this.value = id;
-            this.type = lookupSymbolType(id, l);
+            this.type = checkParamList(id, pList);
         }
         
-		Expr(String id, int block, LookUp l){
+        //Called by Function      
+        Expr(String id){
             this.value = id;
-            this.type = lookupSymbolType(id, block, l);
+            this.type = lookupSymbolType(id);
         }
         
-        Expr(String id, Integer pos){
-            this.value = id+"["+pos.toString()+"]";
-            this.type = lookupSymbolType(id, LookUp.VAR);
-
-            int dim = type.getDim();
-            if (pos>=dim && dim!=-1){
-                pSemError("Array index ("+pos+") exceed array size ("+dim+")");
-            }
-        }
-        Expr(String id, String pos){
-            this.value = id+"["+pos+"]";
-            this.type = lookupSymbolType(id, LookUp.VAR);
+        //Called by Variables
+		Expr(String id, int block){
+            this.value = id;
+            this.type = lookupSymbolType(id, block);
         }
 
         public String toString(){
@@ -238,14 +304,14 @@ action code {:
 							t = IdType.FLOAT; //PROM
 					}
 					else
-						pSemWarning("Incomparable types: " + type1.toString() + " to " + type2.toString() );					
+						PrintError("Incomparable types: " + type1.toString() + " to " + type2.toString() );					
 					break;
 					
 				case MOD:
 					if(type1.IsNumeric() == true && type2.IsNumeric() == true)
 						t = IdType.INT;
 					else
-						pSemWarning("Incomparable types: " + type1.toString() + " to " + type2.toString() );
+						PrintError("Incomparable types: " + type1.toString() + " to " + type2.toString() );
 
 					break;
 				
@@ -254,7 +320,7 @@ action code {:
 					if( (type1 == type2) && (type1 == IdType.BOOL) )
 						t = IdType.BOOL;
 					else
-						pSemWarning("Incomparable types: " + type1.toString() + " to " + type2.toString() );															
+						PrintError("Incomparable types: " + type1.toString() + " to " + type2.toString() );															
 					break;
 
 				case EQ:
@@ -262,7 +328,7 @@ action code {:
 					if (type1 != IdType.STRING && type2 != IdType.STRING)
 						t = IdType.BOOL;
 					else
-						pSemWarning("Incomparable types: " + type1.toString() + " to " + type2.toString() );						
+						PrintError("Incomparable types: " + type1.toString() + " to " + type2.toString() );						
 					break;
 
 				case LT:
@@ -272,7 +338,7 @@ action code {:
 					if(type1.IsNumeric() == true && type2.IsNumeric() == true)
 						t = IdType.BOOL;
 					else
-						pSemWarning("Incomparable types: " + type1.toString() + " to " + type2.toString() );						
+						PrintError("Incomparable types: " + type1.toString() + " to " + type2.toString() );						
 
 					break;
 			}
@@ -286,33 +352,22 @@ action code {:
             IdType type2 = expr.getSymbolType().getType();
             
             if (type1 == IdType.ERR || type2 == IdType.ERR)
-            	pSemWarning("Error in assignment");
+            	PrintError("Error in assignment");
 
             // If operands are of two different types and they aren't numerics print error
             else if ( !type1.toString().equals(type2.toString()) ) 
             {                 
             	if (!(type1.IsNumeric() == true && type2.IsNumeric() == true)) //If both are numerics don't alert: PROM
-                	pSemWarning("Can't assign " + type2.toString() + " to " + type1.toString() );                
+                	PrintError("Can't assign " + type2.toString() + " to " + type1.toString() );                
             }
         }               
     }
 
  	// Error management
-    private void pSemError(String message){
-        System.err.println("SEM ERROR: line: "+parser.getLine()+" col: "+parser.getColumn()+": "+message);
+    private void PrintError(String message){
+        System.err.println("ERROR: line: "+parser.getLine()+" col: "+parser.getColumn()+": "+message);
+        nErrors++;
         //parser.done_parsing();
-    }
-    private void pSemWarning(String message){
-        System.err.println("SEM WARNING: line: "+parser.getLine()+" col: "+parser.getColumn()+": "+message);
-    }
-    private void pSynError(String message){
-        System.err.println("SYN ERROR: line: "+parser.getLine()+" col: "+parser.getColumn()+": "+message);
-        //parser.done_parsing();
-    }
-    private void pSynWarning(String message){
-        System.err.println("SYN WARNING: line: "+parser.getLine()+" col: "+parser.getColumn()+": "+message);
-        /* Quando c'è un errore sintattico continuo il parsing ma disabilito la semantica */
-        //disableSem();
     }    
 :}
 
@@ -340,10 +395,11 @@ non terminal Integer nt0_if, nt1_if;
 //non terminal minug, magug;
 non terminal ret_stmt, if_then_stmt, if_then_else_stmt, while_stmt;
 
-non terminal function, func_list, func_def, func_def_ext, decl_list, decl, var_list, var, decl_param, formal_param;
-non terminal block, br_og, br_cg, block_in, param_list, decl_param_list;
+non terminal function, func_list, func_def, func_def_ext, decl_list, decl, var_list, var, param_var, decl_param; 
+non terminal param_list, formal_param;
+non terminal block, br_og, br_cg, block_in, decl_param_list;
 non terminal String type, simple_type, array_dim, array_index, ret_type;
-non terminal String if_condition, while_condition;
+non terminal Expr if_condition, while_condition;
 non terminal Expr expr, id, func_call, expr_list;
 
 /*--------------------------------PRIORITY / ASSOCIATIVITY ----------------------------------*/
@@ -361,7 +417,7 @@ precedence nonassoc OP_SIGN;
 /*-------------------------------- GRAMMAR ----------------------------------*/
 start with prog;
 
-prog ::= func_list
+prog ::= func_list {: System.out.println("Compilation ended with " + nErrors + " errors."); :}
         ;
 
 decl ::= type var_list                          
@@ -383,12 +439,12 @@ array_dim ::= BRA_OS BRA_CS
 
 var_list ::= var
        	| var_list COMMA {: RESULT = parser.stack(-2); :} var
-       	| var_list var /* error */		{: pSynWarning("Missing ',' before identifier"); :}	
+       	| var_list var /* error */		{: PrintError("Missing ',' before identifier"); :}	
        	;
 
 var ::= ID:x 		{: 
 						int nRet = -1;
-						IdType t = IdType.VOID;							 													
+						IdType t = IdType.VOID;
 						
 						if(parser.stack(-1).equals("INT"))
 		 					t = IdType.INT; 
@@ -409,7 +465,7 @@ var ::= ID:x 		{:
 							parser.symbolType_table.put(x, newVarList);
 						}
 		 				else if(nRet == 1) 
-		 					pSynWarning("Variable " + x + " - " + getBlockNumber() + " already declared.");
+		 					PrintError("Variable " + x + " already declared.");
 		 			:}
         ;
 
@@ -421,24 +477,41 @@ function ::= func_def block
 		| EXTERN func_def_ext SEMI					
 		;
 
-func_def_ext ::= CONST_STRING ret_type ID BRA_O block_in decl_param BRA_C                               			          		
+func_def_ext ::= CONST_STRING ret_type:x ID:y BRA_O block_in decl_param BRA_C  
+						{: 							
+							if(x.equals("INT"))
+   			 					parser.symbolTypeFunction_table.put(y, new SymbolType(IdType.INT, tempParamDefList)); 
+   			 				else if (x.equals("FLOAT"))
+   			 					parser.symbolTypeFunction_table.put(y, new SymbolType(IdType.FLOAT, tempParamDefList));
+   			 				else if (x.equals("BOOL"))
+   			 					parser.symbolTypeFunction_table.put(y, new SymbolType(IdType.BOOL, tempParamDefList));
+   			 				else if (x.equals("STRING"))
+   			 					parser.symbolTypeFunction_table.put(y, new SymbolType(IdType.STRING, tempParamDefList));
+   			 				else if (x.equals("VOID"))
+   			 					parser.symbolTypeFunction_table.put(y, new SymbolType(IdType.VOID, tempParamDefList));
+   			 					
+   			 				tempParamDefList.clear();
+   			 			:}                             			          		
         ;
 
 func_def ::= ret_type:x ID:y BRA_O block_in formal_param BRA_C  	
 						
-						{: if(x.equals("INT"))
-   			 					parser.symbolTypeFunction_table.put(y, new SymbolType(IdType.INT)); 
+						{: 							
+							if(x.equals("INT"))
+   			 					parser.symbolTypeFunction_table.put(y, new SymbolType(IdType.INT, tempParamDefList)); 
    			 				else if (x.equals("FLOAT"))
-   			 					parser.symbolTypeFunction_table.put(y, new SymbolType(IdType.FLOAT));
+   			 					parser.symbolTypeFunction_table.put(y, new SymbolType(IdType.FLOAT, tempParamDefList));
    			 				else if (x.equals("BOOL"))
-   			 					parser.symbolTypeFunction_table.put(y, new SymbolType(IdType.BOOL));
+   			 					parser.symbolTypeFunction_table.put(y, new SymbolType(IdType.BOOL, tempParamDefList));
    			 				else if (x.equals("STRING"))
-   			 					parser.symbolTypeFunction_table.put(y, new SymbolType(IdType.STRING));
+   			 					parser.symbolTypeFunction_table.put(y, new SymbolType(IdType.STRING, tempParamDefList));
    			 				else if (x.equals("VOID"))
-   			 					parser.symbolTypeFunction_table.put(y, new SymbolType(IdType.VOID));
+   			 					parser.symbolTypeFunction_table.put(y, new SymbolType(IdType.VOID, tempParamDefList));
+   			 					
+   			 				tempParamDefList.clear();
    			 			:}
 
-		| ret_type ID block_in formal_param /* error */ 		{: pSynWarning("Error in function definition "); :}		
+		| ret_type ID block_in formal_param /* error */ 		{: PrintError("Error in function definition "); :}		
         ;
 
 formal_param ::= TYPE_VOID
@@ -451,13 +524,13 @@ decl_param ::= TYPE_VOID
 		| decl_param_list                             
         ;
 
-param_list ::= type var                                     
-		| param_list COMMA type var                     
-		| param_list type var /* error */ 		{: pSynWarning("Missing ',' before identifier"); :}            
-    	;
+param_list ::= type:x var  								{: addFunctionParam(x); :}                                      
+		| param_list COMMA type:x var  					{: addFunctionParam(x); :}                        
+		| param_list type param_var /* error */ 		{: PrintError("Missing ',' before identifier"); :}            
+		;
           
-decl_param_list ::= type                                    
-        | decl_param_list COMMA type                    
+decl_param_list ::= type:x				{: addFunctionParam(x); :}                                  
+        | decl_param_list COMMA type:x	{: addFunctionParam(x); :}                
         ;
 
 ret_type ::= TYPE_VOID {: RESULT = new String("VOID"); :}                                 
@@ -473,8 +546,8 @@ br_cg ::= BRA_CG {: remBlock(); :}
 		;
 
 block ::= br_og stmt_list br_cg
-		| br_og stmt_list error br_cg			{: pSynWarning("Missing ';' before }"); :}  
-		| br_og error br_cg					{: pSynWarning("Missing ';' before }"); :}             
+		| br_og stmt_list error br_cg		{: PrintError("Missing ';' before }"); :}  
+		| br_og error br_cg					{: PrintError("Missing ';' before }"); :}             
 		;
 
 stmt_list ::= /* empty */ //controllo EOF (da rivedere)                    
@@ -489,24 +562,24 @@ stmt ::= block_in block
 		| if_then_stmt                             
 		| if_then_else_stmt                         
 		| while_stmt                              
-		| error SEMI			{: pSynWarning("Error in statement"); :}       
+		| error SEMI						{: PrintError("Error in statement"); :}       
         ;
 
 assign_stmt ::= id:x ASSIGN expr:y SEMI		{: x.checkSymbolTypeAssignment(y); :}            
 		| id array_index ASSIGN expr SEMI  
-		| id ASSIGN error SEMI				{: pSynWarning("Error in expression"); :}
-		| error ASSIGN expr SEMI 			{: pSynWarning("Error in assigment"); :}
+		| id ASSIGN error SEMI				{: PrintError("Error in expression"); :}
+		| error ASSIGN expr SEMI 			{: PrintError("Error in assigment"); :}
         ;
 
 array_index ::= BRA_OS expr:x BRA_CS    {: if(x.getSymbolType().getType() != IdType.INT)
-												pSynWarning("Error in vector. Arguments must be int.");
+												PrintError("Error in vector. Arguments must be int.");
 										:}
-        | error BRA_CS 					{: pSynWarning("Error in vector"); 	:} 
+        | error BRA_CS 					{: PrintError("Error in vector"); 	:} 
 		| array_index BRA_OS expr BRA_CS  		      
         ;
 
-func_call ::= ID:x BRA_O /* no params */ BRA_C   	{: RESULT = new Expr(x, LookUp.FUNC); :}      
-		| ID:x BRA_O expr_list BRA_C 				{: RESULT = new Expr(x, LookUp.FUNC); :}            
+func_call ::= ID:x BRA_O /* no params */ BRA_C   	{: RESULT = new Expr(x); :}
+		| ID:x BRA_O expr_list BRA_C 				{: RESULT = new Expr(x, tempParamCallList); :}            
         ;
 
 ret_stmt ::= RETURN expr SEMI                
@@ -516,34 +589,54 @@ if_then_stmt ::= IF if_condition block_in block
         ;
 
 if_then_else_stmt ::= IF if_condition block_in block ELSE block_in block
-		| IF if_condition block_in block error block_in block		{: pSynWarning("Error 'else' expected in 'if' instruction"); :}	             
+		| IF if_condition block_in block error block_in block		{: PrintError("Error 'else' expected in 'if' instruction"); :}	             
         ;
         
-if_condition ::= BRA_O expr BRA_C 
-    	| BRA_O error BRA_C			{: pSynWarning("Error in 'if' condition"); :}
-    	| error expr BRA_C 			{: pSynWarning("Error '(' expected in 'if' instruction"); :}
-    	| BRA_O expr error  		{: pSynWarning("Error ')' expected in 'if' instruction"); :}
+if_condition ::= BRA_O expr:x BRA_C {: 
+										if (x.getSymbolType().getType() == IdType.BOOL)
+											RESULT = new Expr("if_cond", x.getSymbolType());
+    									else 
+										{
+											PrintError("Error in 'if' condition. Required boolean, found " + x.getSymbolType().getType().toString() + ".");
+											RESULT = new Expr("if_cond", new SymbolType(IdType.ERR));
+										}
+									:}
+    	| BRA_O error BRA_C			{: PrintError("Error in 'if' condition"); :}
+    	| error expr BRA_C 			{: PrintError("Error '(' expected in 'if' instruction"); :}
+    	| BRA_O expr error  		{: PrintError("Error ')' expected in 'if' instruction"); :}
 		;
 
 while_stmt ::= WHILE while_condition block_in block         
         ;
 
-while_condition ::= BRA_O expr BRA_C 
-    	| BRA_O error BRA_C			{: pSynWarning("Error in 'while' condition"); :}
-    	| error expr BRA_C 			{: pSynWarning("Error '(' expected in 'while' instruction"); :}
-    	| BRA_O expr error  		{: pSynWarning("Error ')' expected in 'while' instruction"); :}
+while_condition ::= BRA_O expr:x BRA_C {: 
+										if (x.getSymbolType().getType() == IdType.BOOL)
+											RESULT = new Expr("while_cond", x.getSymbolType());
+    									else 
+										{
+											PrintError("Error in 'while' condition. Required boolean, found " + x.getSymbolType().getType().toString() + ".");
+											RESULT = new Expr("while_cond", new SymbolType(IdType.ERR));
+										}
+									:} 
+    	| BRA_O error BRA_C			{: PrintError("Error in 'while' condition"); :}
+    	| error expr BRA_C 			{: PrintError(" '(' expected in 'while' instruction"); :}
+    	| BRA_O expr error  		{: PrintError(" ')' expected in 'while' instruction"); :}
 		;
 
-expr_list ::= expr:x {: RESULT = new Expr("exp", x.getSymbolType()); :}                             
-        | expr_list COMMA expr        
+expr_list ::= expr:x 				{: 
+										tempParamCallList.add(x.getSymbolType().getType());
+									:}                             
+        | expr_list COMMA expr:x    {: 
+										tempParamCallList.add(x.getSymbolType().getType());
+									:}    
         ;
 
 expr ::=  expr:x OP_PLUS expr:y		   	{: RESULT = new Expr("+", x.checkSymbolType(y,Operator.PLUS)); :}              
         | expr:x OP_DIFF expr:y    	   	{: RESULT = new Expr("-", x.checkSymbolType(y,Operator.DIFF)); :}
         | expr:x OP_MUL expr:y		   	{: RESULT = new Expr("*", x.checkSymbolType(y,Operator.MUL)); :}              
         | expr:x OP_DIV expr:y		   	{: RESULT = new Expr("/", x.checkSymbolType(y,Operator.DIV)); :}               
-		| OP_PLUS expr:x   {: RESULT = new Expr("opop", x.getSymbolType()); :} %prec OP_SIGN
-		| OP_DIFF expr:x   {: RESULT = new Expr("opop", x.getSymbolType()); :} %prec OP_SIGN           
+		| OP_PLUS expr:x   				{: RESULT = new Expr("opop", x.getSymbolType()); :} %prec OP_SIGN
+		| OP_DIFF expr:x   				{: RESULT = new Expr("opop", x.getSymbolType()); :} %prec OP_SIGN           
         | expr:x OP_AND expr:y		   	{: RESULT = new Expr("&&", x.checkSymbolType(y, Operator.AND)); :}               
         | expr:x OP_OR expr:y			{: RESULT = new Expr("||", x.checkSymbolType(y, Operator.OR)); :}                
         | OP_NOT expr:x                 {: 
@@ -551,8 +644,8 @@ expr ::=  expr:x OP_PLUS expr:y		   	{: RESULT = new Expr("+", x.checkSymbolType
         										RESULT = new Expr("!", x.getSymbolType());
         									else 
 											{
-												pSynWarning("Error in expression. Required boolean, found " + x.getSymbolType().getType().toString() + ".");
-												RESULT = new Expr("cast", new SymbolType(IdType.ERR));
+												PrintError("Error in expression. Required boolean, found " + x.getSymbolType().getType().toString() + ".");
+												RESULT = new Expr("!", new SymbolType(IdType.ERR));
 											}					
         								:}         
         | BRA_O TYPE_INT BRA_C expr:x /* cast */ {: 
@@ -560,7 +653,7 @@ expr ::=  expr:x OP_PLUS expr:y		   	{: RESULT = new Expr("+", x.checkSymbolType
         												RESULT = new Expr("cast", new SymbolType(IdType.INT));
         											else 
         											{
-        												pSynWarning("Cannot cast " + x.getSymbolType().getType().toString() + " to int.");
+        												PrintError("Cannot cast " + x.getSymbolType().getType().toString() + " to int.");
         												RESULT = new Expr("cast", new SymbolType(IdType.ERR));
         											} 
         										 :}         
@@ -572,7 +665,7 @@ expr ::=  expr:x OP_PLUS expr:y		   	{: RESULT = new Expr("+", x.checkSymbolType
         | expr:x OP_NEQ expr:y          {: RESULT = new Expr("!=", x.checkSymbolType(y, Operator.NEQ)); :}    
         | expr:x OP_MOD expr:y          {: RESULT = new Expr("%", x.checkSymbolType(y, Operator.MOD)); :}    
         | BRA_O expr:x BRA_C			{: RESULT = new Expr("bras", x.getSymbolType()); :}
-        | BRA_O error BRA_C				{: pSynWarning("Error in expression"); :}
+        | BRA_O error BRA_C				{: PrintError("Error in expression"); :}
         | func_call:x 					{: RESULT = new Expr("func_call", x.getSymbolType()); :}                               
         | id:x array_index				{: RESULT = new Expr("array_index", x.getSymbolType()); :}                             
         | NEW simple_type:x array_index {:
@@ -596,5 +689,5 @@ expr ::=  expr:x OP_PLUS expr:y		   	{: RESULT = new Expr("+", x.checkSymbolType
         | CONST_FLOAT:x 		{: RESULT = new Expr(x.toString(), new SymbolType(IdType.FLOAT)); :}                               
         ;
         
-id ::= ID:x		{: RESULT = new Expr(x, getBlockNumber() ,LookUp.VAR); :}
+id ::= ID:x		{: RESULT = new Expr(x, getBlockNumber()); :}
 		;   
