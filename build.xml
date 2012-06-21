@@ -14,7 +14,7 @@
 	<property name="cupfile.name" value="minic2jasmin" />
 	<property name="mainclass.name" value="Main" />
 	
-	<property name="targetfile" location="${project.location}/examples/determinant_int/Determinant.c" />
+	<property name="targetfile" location="${project.location}/examples/error/NoMain.c" />
 
 	<property name="debug" value="on" />
 	<property name="debuglevel" value="source,lines,vars" />

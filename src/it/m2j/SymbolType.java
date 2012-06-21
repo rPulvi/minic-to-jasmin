@@ -10,7 +10,7 @@ class SymbolType{
     private ArrayList<IdType> paramList;
     
     SymbolType(IdType type){
-        this.type = type;       
+        this.type = type;         
     }    
     
     //Used by variables

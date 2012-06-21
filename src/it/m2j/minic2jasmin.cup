@@ -189,7 +189,18 @@ action code {:
 				}
 				else
 				{
-	                PrintError("Function \""+id+"\" ERRRORE SIGNATURE"); //TODO				                
+					if(pList.size() > 0)
+					{
+						String args=pList.get(0).toString();
+						
+						for(int i=1;i<pList.size();i++)
+							args= args + ", " + pList.get(i).toString();
+		                	
+		                PrintError("Function \""+id+"\" is not applicable for the arguments: (" + args + ").");			                
+					}
+					else
+						PrintError("Function \""+id+"\" is not applicable without arguments.");
+	                
 	                bErr = true;	                
 				}
 			}
@@ -226,7 +237,7 @@ action code {:
 			symTypeList = parser.symbolType_table.get(id);
             
             if (symTypeList == null){
-                PrintError("Variable \""+id+ " - " + block + "\" not declared");
+                PrintError("Variable \""+id+ "\" not declared");
                 sType.setType(IdType.ERR);				
             }
 			else{
@@ -358,7 +369,9 @@ action code {:
             else if ( !type1.toString().equals(type2.toString()) ) 
             {                 
             	if (!(type1.IsNumeric() == true && type2.IsNumeric() == true)) //If both are numerics don't alert: PROM
-                	PrintError("Can't assign " + type2.toString() + " to " + type1.toString() );                
+                	PrintError("Can't assign " + type2.toString() + " to " + type1.toString() );
+                else if(type1 == IdType.INT && type2 == IdType.FLOAT)
+					PrintError("Can't assign " + type2.toString() + " to " + type1.toString() + ". Required cast." );                	                
             }
         }               
     }
@@ -572,7 +585,7 @@ assign_stmt ::= id:x ASSIGN expr:y SEMI		{: x.checkSymbolTypeAssignment(y); :}
         ;
 
 array_index ::= BRA_OS expr:x BRA_CS    {: if(x.getSymbolType().getType() != IdType.INT)
-												PrintError("Error in vector. Arguments must be int.");
+												PrintError("Error in vector. Argument must be int.");
 										:}
         | error BRA_CS 					{: PrintError("Error in vector"); 	:} 
 		| array_index BRA_OS expr BRA_CS  		      
