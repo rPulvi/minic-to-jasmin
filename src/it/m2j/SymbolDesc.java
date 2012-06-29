@@ -3,38 +3,44 @@ package it.m2j;
 import java.util.ArrayList;
 import java.util.Collections;
 
-
-class SymbolType{
-    private IdType type;    
+public class SymbolDesc{
+    private IdType type;
+    private IdType kind;
     private int nBlock;
     private ArrayList<IdType> paramList;
-    
-    SymbolType(IdType type){
-        this.type = type;         
+        
+
+    public SymbolDesc(){
+    	this.type = IdType.VOID;
+    	this.kind = IdType.VOID; 
+    	this.nBlock = 0;
+    	this.paramList = null;
     }    
     
-    //Used by variables
-    SymbolType(IdType type, int block){
+    public void setVariableSymbol(IdType type, int block){
         this.type = type;
         this.nBlock = block;
-    }
+        this.kind = IdType.VARIABLE;
+    }   
     
-    //Used by functions
-    SymbolType(IdType type, ArrayList<IdType> typeList){
+    public void setFunctionSymbol(IdType type, ArrayList<IdType> typeList){
         this.type = type;
         this.paramList = new ArrayList<IdType>();
         
         if(typeList!=null)
         	this.paramList = (ArrayList<IdType>) typeList.clone();
+        
+        this.kind = IdType.FUNCTION;
+    }        
+
+    public void setType(IdType t){
+    	this.type = t;
     }
 
     public IdType getType(){
         return type;
     }
-    public void setType(IdType t){
-    	this.type = t;
-    }
-    
+
     public int getBlock(){
     	return nBlock;
     }
@@ -43,7 +49,11 @@ class SymbolType{
     	return this.paramList;
     }
 
-    public boolean checkType(SymbolType sym){
+    public IdType getKind(){
+    	return this.kind;
+    }
+    
+    public boolean checkType(SymbolDesc sym){
         if (sym.type == type)
             return true;
         else

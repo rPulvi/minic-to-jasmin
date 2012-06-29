@@ -36,7 +36,19 @@ public enum IdType {
 		{
 			return "error"; 
 		}		
-	}; 
+	},
+	VARIABLE{
+		public String toString()
+		{
+			return "Variable";
+		}
+	},
+	FUNCTION{
+		public String toString()
+		{
+			return "Function";
+		}
+	};	
 	
 	public boolean IsNumeric()
 	{
