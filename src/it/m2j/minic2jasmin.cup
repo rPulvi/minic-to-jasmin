@@ -56,34 +56,34 @@ parser code {:
 
 /*--------------------------------ACTION CODE ----------------------------------*/
 action code {:
-//	
-//    int blockCounter = 0;
-//    int nErrors = 0;
-//    	
-//	public void addBlock()
-//	{
-//		blockCounter++;		
-//		//System.out.println("***BLOCCO: " + blockCounter);
-//	}
-//	
-//	public void remBlock()
-//	{
-//		blockCounter--;
-//		
-//		if (blockCounter <= 0)
-//		{
-//			blockCounter = 0;
-//			parser.SymbolDesc_table.clear();
-//		}		
-//		
-//		//System.out.println("***BLOCCO: " + blockCounter);		
-//	}
-//	
-//	public int getBlockNumber()
-//	{
-//		return blockCounter;
-//	}	
-//		
+	
+    int blockCounter = 0;
+    int nErrors = 0;
+    	
+	public void addBlock()
+	{
+		blockCounter++;		
+		//System.out.println("***BLOCCO: " + blockCounter);
+	}
+	
+	public void remBlock()
+	{
+		blockCounter--;
+		
+		if (blockCounter <= 0)
+		{
+			blockCounter = 0;
+			parser.SymbolDesc_table.clear();
+		}		
+		
+		//System.out.println("***BLOCCO: " + blockCounter);		
+	}
+	
+	public int getBlockNumber()
+	{
+		return blockCounter;
+	}	
+		
 //	public int checkVar(IdType type, String id, int block)
 //	{
 //		/*
@@ -374,12 +374,13 @@ action code {:
 //        }               
 //    }
 //
-// 	// Error management
-//    private void PrintError(String message){
-//        System.err.println("ERROR: line: "+parser.getLine()+" col: "+parser.getColumn()+": "+message);
-//        nErrors++;
-//        //parser.done_parsing();
-//    }    
+
+ 	// Error management
+    private void PrintError(String message){
+        System.err.println("ERROR: line: "+parser.getLine()+" col: "+parser.getColumn()+": "+message);
+        nErrors++;
+        //parser.done_parsing();
+    }    
 :}
 
 /*--------------------------------TERMINAL / NON TERMINAL ----------------------------------*/
@@ -455,7 +456,7 @@ func_list ::= func_list:x function:y	{: RESULT = new ListNode(x, y); :}
 
 function ::= ret_type:x ID:y BRA_O param_list:params BRA_C block:b     					{: RESULT = new FunctionNode(y, params, x, b, yleft, yright); :}  
 		| EXTERN CONST_STRING ret_type:x ID:y BRA_O decl_param:params BRA_C SEMI			{: RESULT = new FunctionExtNode(y, x, params, yleft, yright); :}
-		| ret_type ID param_list /* error */ 												//{: PrintError("Error in function definition "); :}				
+		| ret_type ID param_list /* error */ 												{: PrintError("Error in function definition "); :}				
 		;
 
 decl_param ::=                             
@@ -470,7 +471,7 @@ decl_param_list ::= type:t				{: RESULT = new ListNode(new ArgNode(t, tleft, tri
 param_list ::= /* empty */						{: RESULT = null; :} 
 		| type:t ID:x  							{: RESULT = new ListNode(new ArgNode(x, t, xleft, xright), null); :}                                    
 		| param_list:l COMMA type:t ID:x  		{: RESULT = new ListNode(l,new ArgNode(x, t, xleft, xright)); :}                      
-		| param_list type ID /* error */ 		//{: PrintError("Missing ',' before identifier"); :}            
+		| param_list type ID /* error */ 		{: PrintError("Missing ',' before identifier"); :}            
 		;
 
 ret_type ::= TYPE_VOID 		{: RESULT = IdType.VOID; :}                                 
@@ -485,8 +486,8 @@ br_cg ::= BRA_CG {: remBlock(); :}
 */
 
 block ::= BRA_OG:lb stmt_list:x BRA_CG			{: new BlockNode(x, lbleft, lbright); :}
-		| BRA_OG stmt_list error BRA_CG			//{: PrintError("Missing ';' before }"); :}  
-		| BRA_OG error BRA_CG					//{: PrintError("Missing ';' before }"); :}             
+		| BRA_OG stmt_list error BRA_CG			{: PrintError("Missing ';' before }"); :}  
+		| BRA_OG error BRA_CG					{: PrintError("Missing ';' before }"); :}             
 		;
 
 stmt_list ::= 					{: RESULT = null; :}                    
@@ -501,17 +502,17 @@ stmt ::= block:b					{: RESULT = b; :}
 		| if_then_stmt:x        	{: RESULT = x; :}                 
 		| if_then_else_stmt:x    	{: RESULT = x; :}                   
 		| while_stmt:x              {: RESULT = x; :}            
-		| error SEMI				//{: PrintError("Error in statement"); :}       
+		| error SEMI				{: PrintError("Error in statement"); :}       
         ;
 
 assign_stmt ::= ID:x ASSIGN expr:y SEMI				{: RESULT = new AssignNode(x, y, xleft, xright); :}            
 		| ID:x array_index ASSIGN expr:y SEMI  		{: RESULT = new AssignNode(x, y, xleft, xright); :}
-		| ID ASSIGN error SEMI						//{: PrintError("Error in expression"); :}
-		| error ASSIGN expr SEMI 					//{: PrintError("Error in assigment"); :}
+		| ID ASSIGN error SEMI						{: PrintError("Error in expression"); :}
+		| error ASSIGN expr SEMI 					{: PrintError("Error in assigment"); :}
         ;
 
 array_index ::= BRA_OS expr:x BRA_CS    			{: RESULT = x; :}
-        | error BRA_CS 								//{: PrintError("Error in vector"); :} 
+        | error BRA_CS 								{: PrintError("Error in vector"); :} 
 		| array_index BRA_OS expr:x BRA_CS  		{: RESULT = x; :}
         ;
 
@@ -526,22 +527,22 @@ if_then_stmt ::= IF:n if_condition:c block:b     	{: RESULT = new IfNode(c, b, n
         ;
 
 if_then_else_stmt ::= IF:n if_condition:c block:b1 ELSE block:b2		{: RESULT = new IfElseNode(c, b1, b2, nleft, nright); :}
-		| IF if_condition block error block								//{: PrintError("Error 'else' expected in 'if' instruction"); :}	             
+		| IF if_condition block error block								{: PrintError("Error 'else' expected in 'if' instruction"); :}	             
         ;
         
 if_condition ::= BRA_O expr:x BRA_C {: RESULT = x; :}
-    	| BRA_O error BRA_C			//{: PrintError("Error in 'if' condition"); :}
-    	| error expr BRA_C 			//{: PrintError("Error '(' expected in 'if' instruction"); :}
-    	| BRA_O expr error  		//{: PrintError("Error ')' expected in 'if' instruction"); :}
+    	| BRA_O error BRA_C			{: PrintError("Error in 'if' condition"); :}
+    	| error expr BRA_C 			{: PrintError("Error '(' expected in 'if' instruction"); :}
+    	| BRA_O expr error  		{: PrintError("Error ')' expected in 'if' instruction"); :}
 		;
 
 while_stmt ::= WHILE:n while_condition:c block:b	{: RESULT = new WhileNode(c, b, nleft, nright); :}        
         ;
 
 while_condition ::= BRA_O expr:x BRA_C 		{: RESULT = x; :} 
-    	| BRA_O error BRA_C					//{: PrintError("Error in 'while' condition"); :}
-    	| error expr BRA_C 					//{: PrintError(" '(' expected in 'while' instruction"); :}
-    	| BRA_O expr error  				//{: PrintError(" ')' expected in 'while' instruction"); :}
+    	| BRA_O error BRA_C					{: PrintError("Error in 'while' condition"); :}
+    	| error expr BRA_C 					{: PrintError(" '(' expected in 'while' instruction"); :}
+    	| BRA_O expr error  				{: PrintError(" ')' expected in 'while' instruction"); :}
 		;
 
 expr_list ::= expr:x 					{: RESULT = new ListNode(x,null); :}                             
@@ -567,7 +568,7 @@ expr ::=  expr:x OP_PLUS:n expr:y		{: RESULT = new AddNode(x, y, nleft, nright);
         | expr:x OP_NEQ:n expr:y        {: RESULT = new NotEqNode(x, y, nleft, nright); :}    
         | expr:x OP_MOD:n expr:y        {: RESULT = new ModNode(x, y, nleft, nright); :}    
         | BRA_O expr:x BRA_C			{: RESULT = new BracketNode(x, xleft, xright); :}
-        | BRA_O error BRA_C				//{: PrintError("Error in expression"); :}   //errore da gestire
+        | BRA_O error BRA_C				{: PrintError("Error in expression"); :}   //errore da gestire
         | func_call:x 					{: RESULT = x; :}                  
         | ID:x array_index				//{: RESULT = ArrayElementNode(x, parser.stack(-2), xleft, xright); :}    // APPOI VIREMU                        
         | NEW simple_type:x array_index //{: RESULT = new ArrayNode(x, y, nleft, nright); :}						//APPOI VIREMU
