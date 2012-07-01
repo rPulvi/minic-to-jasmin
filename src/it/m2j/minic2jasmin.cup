@@ -451,7 +451,8 @@ array_dim ::= BRA_OS BRA_CS
         | array_dim BRA_OS BRA_CS                       
         ;      	
 
-func_list ::= func_list:x function:y	{: RESULT = new ListNode(x, y); :}
+func_list ::= 
+		| func_list:x function:y	{: RESULT = new ListNode(x, y); :}
        	;
 
 function ::= ret_type:x ID:y BRA_O param_list:params BRA_C block:b     					{: RESULT = new FunctionNode(y, params, x, b, yleft, yright); :}  
