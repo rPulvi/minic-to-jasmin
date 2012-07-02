@@ -19,10 +19,10 @@ public class SymbolTable
     public boolean putVariable(String id, IdType type, int blockNumber)
     {    	 
     	boolean bRet = false;
-    	ArrayList<SymbolDesc> varDesc = this.getSpecific(id, IdType.VARIABLE);
+    	ArrayList<SymbolDesc> varDesc = this.getSpecific(id, IdType.VARIABLE);        	
     	
     	if (varDesc.size() == 0) //create a new entry in the table
-    	{
+    	{    		
         	ArrayList<SymbolDesc> descList = new ArrayList<SymbolDesc>();
         	SymbolDesc symbol = new SymbolDesc();
 
@@ -100,19 +100,23 @@ public class SymbolTable
      */
     public ArrayList<SymbolDesc> getSpecific(String key, IdType kind)
     {
-    	ArrayList<SymbolDesc> varDesc = new ArrayList<SymbolDesc>();    	
-
-        if (storage.get(key) != null){ //Identifier found
-			Iterator<SymbolDesc> it = varDesc.listIterator();			
+    	ArrayList<SymbolDesc> tmpDesc = new ArrayList<SymbolDesc>();
+    	ArrayList<SymbolDesc> varDesc;
+    	
+    	varDesc = storage.get(key);
+    	
+        if (varDesc != null){ //Identifier found
+			
+        	Iterator<SymbolDesc> it = varDesc.listIterator();			
 			
 			while (it.hasNext()) {
 				SymbolDesc s = it.next();
 
 				if(s.getKind() == kind)
-					varDesc.add(s);
+					tmpDesc.add(s);
 			}
 		}
 
-        return varDesc;
+        return tmpDesc;
     }  
 }

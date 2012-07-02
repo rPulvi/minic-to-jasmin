@@ -35,7 +35,7 @@ public class FunctionNode extends SlotNode
 //    }
 
     public void visitBody(Visitor v)
-    {
+    {    	
         if (body != null)
             body.accept(v);
     }

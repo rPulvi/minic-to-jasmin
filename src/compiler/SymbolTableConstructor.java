@@ -105,8 +105,9 @@ public class SymbolTableConstructor extends Visitor
 //
 //        //create an entry in the symbol table for the cs
 //        ScopeSymbol scope = ScopeSymbol.getInstance(sTable, node);
-//        //visit the statements in the compound statement
-//        node.visitChildren(this);
+
+    	//visit the statements in the compound statement
+        node.visitChildren(this);
 //
 //        //restore the symbol table
 //        sTable = sTable.getParent();
@@ -125,11 +126,11 @@ public class SymbolTableConstructor extends Visitor
      * @return
      */
     public Object visit(DeclNode node)
-    {
-    	if (sTable.putVariable(node.getName(), node.getType(), node.getBlockNumber()) == false)
-    		error("Variable" + node.getName() + " already declared.", node);
-    	
-        return null;
+    {    	    	    	
+    	if (sTable.putVariable(node.getName(), node.getType(), node.getBlockNumber()) == false)    		
+    		error("Variable" + node.getName() + " already declared.", node);    	    	
+        
+    	return null;
     }
 
     /**
@@ -158,7 +159,7 @@ public class SymbolTableConstructor extends Visitor
      * @return null
      */
     public Object visit(FunctionNode node)
-    {
+    {    	
         visitMethod(node, "method", false);
 
         return null;
@@ -290,10 +291,9 @@ public class SymbolTableConstructor extends Visitor
     {
         return null;
     }
-
-	@Override
+	
 	public Object visit(FloatNode node) {
-		// TODO Auto-generated method stub
+		
 		return null;
 	}
 }

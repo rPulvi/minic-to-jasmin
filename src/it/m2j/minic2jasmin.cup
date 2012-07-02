@@ -455,7 +455,7 @@ func_list ::=
 		| func_list:x function:y	{: RESULT = new ListNode(x, y); :}
        	;
 
-function ::= ret_type:x ID:y BRA_O param_list:params BRA_C block:b     					{: RESULT = new FunctionNode(y, params, x, b, yleft, yright); :}  
+function ::= ret_type:x ID:y BRA_O param_list:params BRA_C block:b     						{: RESULT = new FunctionNode(y, params, x, b, yleft, yright); :}  
 		| EXTERN CONST_STRING ret_type:x ID:y BRA_O decl_param:params BRA_C SEMI			{: RESULT = new FunctionExtNode(y, x, params, yleft, yright); :}
 		| ret_type ID param_list /* error */ 												{: PrintError("Error in function definition "); :}				
 		;
@@ -486,7 +486,7 @@ br_cg ::= BRA_CG {: remBlock(); :}
 		;
 */
 
-block ::= BRA_OG:lb stmt_list:x BRA_CG			{: new BlockNode(x, lbleft, lbright); :}
+block ::= BRA_OG:lb stmt_list:x BRA_CG			{: RESULT = new BlockNode(x, lbleft, lbright); :}
 		| BRA_OG stmt_list error BRA_CG			{: PrintError("Missing ';' before }"); :}  
 		| BRA_OG error BRA_CG					{: PrintError("Missing ';' before }"); :}             
 		;

@@ -33,7 +33,7 @@ public abstract class Node
      */
     public int getLineNumber()
     {
-        return lineNumber;
+        return ++lineNumber; //Lines start with 1
     }
 
     /**

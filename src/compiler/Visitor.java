@@ -28,7 +28,7 @@ public abstract class Visitor
     //report and log an error
     protected void error(String msg, Node node)
     {
-        err.println("  " + msg + "'" + node.toString() + "' on line " + node.getLineNumber() + ", column " + node.getColumnNumber());
+        System.out.println("  " + msg + "'" + node.toString() + "' on line " + node.getLineNumber() + ", column " + node.getColumnNumber());
         ++errorCount;
     }
 
