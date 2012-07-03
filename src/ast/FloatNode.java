@@ -5,12 +5,12 @@ import compiler.Visitor;
 
 public class FloatNode extends ExprNode{
 
-	private int value;
+	private float value;
 
     public FloatNode(Float value, int lineNumber, int colNumber)
     {
         super(lineNumber, colNumber);
-        this.value = value.intValue();
+        this.value = value.floatValue();
     }
 
     public Object accept(Visitor v)
