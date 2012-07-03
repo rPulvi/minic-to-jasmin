@@ -228,10 +228,6 @@ public class SymbolTableConstructor extends Visitor
     {
         return null;
     }
-    public Object visit(FieldAccessNode node)
-    {
-        return null;
-    }  
     public Object visit(DivNode node)
     {
         return null;

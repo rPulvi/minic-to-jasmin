@@ -41,8 +41,7 @@ public abstract class Visitor
     public abstract Object visit(BlockNode node);
     public abstract Object visit(DeclNode node);
     public abstract Object visit(DivNode node);
-    public abstract Object visit(EqNode node);
-    public abstract Object visit(FieldAccessNode node);
+    public abstract Object visit(EqNode node);    
     public abstract Object visit(FieldNode node);
     public abstract Object visit(IfNode node);
     public abstract Object visit(ListNode node);
@@ -60,10 +59,6 @@ public abstract class Visitor
     public abstract Object visit(ReturnNode node);
     public abstract Object visit(StringNode node);
     public abstract Object visit(SubNode node);    
-    public abstract Object visit(VarNode node);
-
-	public Object visit(IfElseNode ifElseNode) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    public abstract Object visit(VarNode node);    
+	public abstract Object visit(IfElseNode node);	
 }

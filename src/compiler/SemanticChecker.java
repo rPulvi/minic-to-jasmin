@@ -9,10 +9,7 @@ import ast.*;
 public class SemanticChecker extends Visitor
 {
     //pointer to the global symbol table
-    private SymbolTable sTable;
-    private SymbolTable curTable;
-
-    private boolean superExpected = false;
+    private SymbolTable sTable;    
 
     //the class that we are currently checking
     //private ClassSymbol curClass = null;
@@ -21,9 +18,7 @@ public class SemanticChecker extends Visitor
     {
         super(out);
         this.sTable = sTable;
-        this.curTable = sTable;
     }
-
 
     public Object visit(DeclNode node)
     {    	
@@ -57,50 +52,6 @@ public class SemanticChecker extends Visitor
 
     	return null;
     }
-
-    public Object visit(FieldAccessNode node)
-    {
-//        //so we don't check for assignment to 'this' if we assign to one of this's field
-//        inAssignment = false;
-//        //check the target
-//        Symbol target = (Symbol)node.visitTarget(this);
-//
-//        //check the target is OK
-//        if (target == sTable.get("unknown"))
-//            return sTable.get("unknown");
-//
-//        //check the target has a method with the given parameters
-//        ClassSymbol targetClass = (ClassSymbol)target;
-//        FieldSymbol field = targetClass.getField(node.getName());
-//        if (field == null)
-//        {
-//            error("Field not defined: ", node);
-//            return sTable.get("unknown");
-//        }
-//
-//        checkAccess(field, node);
-//        Symbol type = sTable.get(field.getType());
-//
-//        node.setSymbol(field);
-//        node.setTargetSymbol(targetClass);
-//
-//        if (type == null)
-//            return sTable.get("unknown"); //the error will be caught when the field declaration is visited
-//
-//        return type;
-    	
-    	return null;
-    }
-
-    //check's the field's access modifier to see if have access
-//    private void checkAccess(AccessSymbol slot, Node node)
-//    {
-//        //check we have access
-//        if (slot.getAccessModifier() == Modifier.PRIVATE && curClass != slot.getOwner())
-//            error(slot.getKind() + " '" + slot.getName() + "' has private access in class '" + slot.getOwner().getName() + "'. ", node);
-//        else if (slot.getAccessModifier() == Modifier.PROTECTED && !curClass.symbolEquals(slot.getOwner()))
-//            error(slot.getKind() + " '" + slot.getName() + "' has protected access in class '" + slot.getOwner().getName() + "'. ", node);
-//    }
 
     public Object visit(VarNode node)
     {
@@ -231,41 +182,6 @@ public class SemanticChecker extends Visitor
     	return null;
     }
 
-//    public Object visit(SuperCallNode node)
-//    {
-//        if (!superExpected)
-//            error("Method super() must be the first statement in a constructor. ", node);
-//        superExpected = false;
-//
-//        //check the super class exists
-//        ClassSymbol targetClass = curClass.getSuperClass();
-//        if (targetClass == null)
-//        {
-//            error("No declared super class in '" + curClass.getName() + "'. ", node);
-//            return sTable.get("void");
-//        }
-//
-//        //check the parameters
-//        String[] typeNames = ParamUtils.makeTypeArray(node.visitParams(this));
-//
-//        //check an appropriate constructor exists
-//        MethodSymbol methodSymbol = targetClass.getConstructor(typeNames);
-//        if (methodSymbol == null)
-//        {
-//            error("Constructor not found: '" + targetClass.getName() + " (" + ParamUtils.makeList(typeNames) + ")'. ", node);
-//            return sTable.get("void");
-//        }
-//
-//        //check we have access
-//        checkAccess(methodSymbol, node);
-//
-//        node.setSymbol(methodSymbol);
-//
-//        return sTable.get("void");
-    	
-//    	return null;
-//    }
-
     //only checks the method exists statically, the actual method to call is
     //determined at run time
     public Object visit(FuncCallNode node)
@@ -330,25 +246,6 @@ public class SemanticChecker extends Visitor
     	return null;
     }
 
-//    public Object visit(ClassNode node)
-//    {
-//        //change scope to the class's scope
-//        curTable = node.getSymbol().getSymbolTable();
-//
-//        curClass = node.getSymbol();
-//
-//        //visit the methods and fields of the class
-//        node.visitSlots(this);
-//
-//        curClass = null;
-//
-//        //restore the global scope
-//        curTable = sTable;
-//
-//        return sTable.get("void");
-//    	return null;
-//    }
-
     //the return type for the current node
     private IdType returnType = null;
 
@@ -383,32 +280,6 @@ public class SemanticChecker extends Visitor
     	return null;
     }
 
-//    public Object visit(ConstructorNode node)
-//    {
-//        MethodSymbol symbol = node.getSymbol();
-//        curTable = symbol.getSymbolTable();
-//
-//        //check the constructor is correctly named
-//        if(!node.getName().equals(curClass.getName()))
-//        {
-//            error("Method does not declare a return type: ", node);
-//            return sTable.get("void");
-//        }
-//
-//        //resolve the type - trivial
-//        symbol.resolveType(sTable.get("void"));
-//
-//        superExpected = true;
-//        visitParamsAndBody(node, sTable.get("void"));
-//        checkSuperCall(node);
-//
-//        superExpected = false;
-//
-//        return sTable.get("void");
-    	
-//    	return null;
-//    }
-
     //visits the parameters and body of a function
     private void visitParamsAndBody(FunctionNode node, IdType returnType)
     {
@@ -422,15 +293,6 @@ public class SemanticChecker extends Visitor
         node.visitBody(this);            	    	
     }
 
-    //checks that super call is made as the first statement in a constructor
-    //and not elsewhere
-    private void checkSuperCall(Node node)
-    {
-//        if (superExpected)
-//            error("First statement in constructor must be super call. ", node);
-//
-//        superExpected = false;
-    }
 
     public Object visit(ListNode node)
     {
@@ -438,25 +300,6 @@ public class SemanticChecker extends Visitor
 
     	return null;
     }
-
-//    public Object visit(ForNode node)
-//    {
-//        checkSuperCall(node);
-//
-//        curTable = node.getSymbol().getSymbolTable();
-//
-//        node.visitInitExpr(this);
-//        Symbol testType = (Symbol) node.visitTestExpr(this);
-//        node.visitIncExpr(this);
-//
-//        if (testType != sTable.get("boolean"))
-//            error("Test expression in for statement must be of type boolean, found: '" + testType.getKey() + "' in expression: ", node);
-//
-//        node.visitLoopStmt(this);
-//        curTable = curTable.getParent();
-//
-//        return sTable.get("void");
-//    }
 
     public Object visit(IfNode node)
     {
@@ -520,32 +363,6 @@ public class SemanticChecker extends Visitor
     	
     	return null;
     }
-
-//    public Object visit(ExitNode node)
-//    {
-//        checkSuperCall(node);
-//
-//        return sTable.get("void");
-//    	return null;
-//    }
-
-//    public Object visit(ConcatNode node)
-//    {
-//        Symbol leftType = (Symbol) node.visitLeft(this);
-//        Symbol rightType = (Symbol) node.visitRight(this);
-//
-//        if (leftType == sTable.get("void"))
-//            error("Left argument to operator ++ must have type, found: 'void' in expression: ", node);
-//        if (rightType == sTable.get("void"))
-//            error("Right argument to operator ++ must have type, found: 'void' in expression: ", node);
-//
-//        node.setLeftType(leftType.getName());
-//        node.setRightType(rightType.getName());
-//
-//        return sTable.get("String");
-    	
-//    	return null;
-//    }
 
     public Object visit(DivNode node)
     {
@@ -628,7 +445,7 @@ public class SemanticChecker extends Visitor
 //    	return null;
 //    }
 
-    public Object visit(NegNode node)
+    public Object visit(SignNode node)
     {
         //return visitUnaryOp("-", "int", node);
     	return null;
@@ -676,16 +493,24 @@ public class SemanticChecker extends Visitor
     	return null;
     }
 
+	public Object visit(FloatNode node) {
+		return null;
+	}
+
+	public Object visit(PrintNode node) {
+		return null;
+	}
+
 
 	@Override
-	public Object visit(FloatNode node) {
+	public Object visit(NegNode node) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 
 	@Override
-	public Object visit(PrintNode node) {
+	public Object visit(IfElseNode node) {
 		// TODO Auto-generated method stub
 		return null;
 	}

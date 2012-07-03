@@ -1,6 +1,5 @@
 int funzione(){
-	string a;
+	int a;
 
-	a = 5;
-
+	a = (int)5.4;	
 }
