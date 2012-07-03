@@ -296,7 +296,13 @@ public class SymbolTableConstructor extends Visitor
 
 	@Override
 	public Object visit(IfElseNode node) {
-		// TODO Auto-generated method stub
+		
+		return null;
+	}
+
+	@Override
+	public Object visit(CastNode node) {
+		
 		return null;
 	}
 }
