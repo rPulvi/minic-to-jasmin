@@ -23,13 +23,18 @@ public class DeclNode extends ExprNode
         return v.visit(this);
     }
 
-    public VarNode getVar()
+    public Object visitVar(Visitor v)
     {
-    	return vNode;
+    	return vNode.accept(v);
     }
     
     public String toString()
     {
         return vNode.toString();
+    }
+    
+    public String getName()
+    {
+    	return vNode.getName();
     }
 }

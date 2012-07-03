@@ -2,6 +2,8 @@ package compiler;
 
 import ast.*;
 
+import it.m2j.SymbolDesc;
+
 import java.io.*;
 
 
@@ -127,7 +129,9 @@ public class SymbolTableConstructor extends Visitor
      */
     public Object visit(DeclNode node)
     {    	    	    	
-    	if (sTable.putVariable(node.getVar().getName(), node.getVar().getType(), node.getVar().getBlockNumber()) == false)    		
+    	SymbolDesc varDesc = (SymbolDesc) node.visitVar(this);
+    	
+    	if (sTable.putVariable(node.getName(), varDesc.getType(), varDesc.getBlock()) == false)    		
     		//error("Variable '" + node.getName() + "' already declared.", node);
     		error("Variable already declared: ", node);
         
@@ -222,7 +226,10 @@ public class SymbolTableConstructor extends Visitor
     }
     public Object visit(VarNode node)
     {
-        return null;
+        SymbolDesc varDesc = new SymbolDesc();
+        varDesc.setVariableSymbol(node.getType(), node.getBlockNumber());
+    	
+        return varDesc;
     }
     public Object visit(AssignNode node)
     {
