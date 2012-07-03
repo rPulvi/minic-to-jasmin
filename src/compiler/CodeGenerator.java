@@ -752,4 +752,11 @@ public class CodeGenerator extends Visitor
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	
+	@Override
+	public Object visit(CastNode node) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
