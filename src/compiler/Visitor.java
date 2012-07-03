@@ -60,5 +60,6 @@ public abstract class Visitor
     public abstract Object visit(StringNode node);
     public abstract Object visit(SubNode node);    
     public abstract Object visit(VarNode node);    
-	public abstract Object visit(IfElseNode node);	
+	public abstract Object visit(IfElseNode node);
+	public abstract Object visit(CastNode node);
 }
