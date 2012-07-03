@@ -6,15 +6,12 @@ import compiler.*;
 public class VarNode extends ExprNode
 {
     private String name;
-    private Object type;
-    private int block;        
+    private IdType type;        
 
-    public VarNode(String name, Object type, int block, int lineNumber, int colNumber)
+    public VarNode(String name, int blockNumber, int lineNumber, int colNumber)
     {
-        super(lineNumber, colNumber);        
+        super(blockNumber, lineNumber, colNumber);        
         this.name = name;
-        this.type = type;
-        this.block = block;        
     }
 
     public Object accept(Visitor v)
@@ -24,23 +21,20 @@ public class VarNode extends ExprNode
 
     public String toString()
     {
-        return type.toString() + " " + name;
+        return  name;
     }
+    
     public String getName()
     {
         return name;
     }
-
-    public IdType getType()
+    public void setType(IdType type)
     {
-    	if (type instanceof Node)
-    		return ((Node)type).getType();
-    	else
-    		return (IdType)type;
+    	this.type = type;
     }
     
-    public int getBlockNumber()
+    public IdType getType()
     {
-    	return block;
+    	return this.type;
     }
 }

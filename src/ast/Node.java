@@ -20,6 +20,13 @@ public abstract class Node
         this.colNumber = colNumber;
     }
 
+    protected Node(int blockNumber, int lineNumber, int colNumber)
+    {
+    	this.blockNumber = blockNumber;
+        this.lineNumber = lineNumber;
+        this.colNumber = colNumber;
+    }
+    
     /**
      * accept a visitor of the tree (see Visitor pattern, Gamma et al)
      * @param v the visitor to accept

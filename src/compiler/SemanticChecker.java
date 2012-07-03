@@ -36,7 +36,8 @@ public class SemanticChecker extends Visitor
     
     public Object visit(AssignNode node)
     {
-    	IdType type1 = sTable.getVariableType(node.getVar(),node.getBlockNumber());    	
+    	//IdType type1 = sTable.getVariableType(node.getVar(),node.getBlockNumber());    	
+    	IdType type1 = (IdType) node.visitVar(this);
     	IdType type2 = (IdType) node.visitValue(this);    	
 
     	if (type1 == IdType.ERR || type2 == IdType.ERR)
@@ -56,6 +57,7 @@ public class SemanticChecker extends Visitor
 
     public Object visit(VarNode node)
     {
+    	return sTable.getVariableType(node.getName(), node.getBlockNumber());
 //        //check for 'this'
 //        if (node.isThis())
 //        {
@@ -136,9 +138,7 @@ public class SemanticChecker extends Visitor
 //        node.setSymbol((VarSymbol)symbol);
 //
 //        //return the variable's static type
-//        return node.getTypeSymbol();
-    	
-    	return null;
+//        return node.getTypeSymbol();    	    	
     }
 
     public Object visit(BlockNode node)
@@ -543,7 +543,7 @@ public class SemanticChecker extends Visitor
     }
 
 	public Object visit(FloatNode node) {
-		return null;
+		return node.getType();
 	}
 
 	public Object visit(PrintNode node) {

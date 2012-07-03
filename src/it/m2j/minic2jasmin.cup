@@ -432,10 +432,10 @@ start with prog;
 prog ::= function:x	{: RESULT = x; :}	
         ;
 
-decl ::= type var:x      			{: RESULT = new DeclNode(x, xleft, xright); :}                    
+decl ::= type:t var:x      			{: RESULT = new DeclNode(x, t, xleft, xright); :}                    
         ;
 
-var ::= ID:x 						{: RESULT = new VarNode(x, parser.stack(-1), getBlockNumber(), xleft, xright); :}
+var ::= ID:x 						{: RESULT = new VarNode(x, getBlockNumber(), xleft, xright); :}
 		;
 		
 type ::= simple_type:x 				{: RESULT=x; :}                                       
@@ -502,9 +502,9 @@ stmt ::= block:b					{: RESULT = b; :}
 		| error SEMI				{: PrintError("Error in statement"); :}       
         ;
 
-assign_stmt ::= ID:x ASSIGN expr:y SEMI				{: RESULT = new AssignNode(x, y, getBlockNumber(), xleft, xright); :}            
-		| ID:x array_index ASSIGN expr:y SEMI  		{: RESULT = new AssignNode(x, y, getBlockNumber(), xleft, xright); :}
-		| ID ASSIGN error SEMI						{: PrintError("Error in expression"); :}
+assign_stmt ::= var:x ASSIGN expr:y SEMI				{: RESULT = new AssignNode(x, y, getBlockNumber(), xleft, xright); :}            
+		| var:x array_index ASSIGN expr:y SEMI  		{: RESULT = new AssignNode(x, y, getBlockNumber(), xleft, xright); :}
+		| var ASSIGN error SEMI						{: PrintError("Error in expression"); :}
 		| error ASSIGN expr SEMI 					{: PrintError("Error in assigment"); :}
         ;
 
@@ -567,12 +567,13 @@ expr ::=  expr:x OP_PLUS:n expr:y		{: RESULT = new AddNode(x, y, nleft, nright);
         | BRA_O expr:x BRA_C			{: RESULT = new BracketNode(x, xleft, xright); :}
         | BRA_O error BRA_C				{: PrintError("Error in expression"); :}   //errore da gestire
         | func_call:x 					{: RESULT = x; :}                  
-        | ID:x array_index				//{: RESULT = ArrayElementNode(x, parser.stack(-2), xleft, xright); :}    // APPOI VIREMU                        
+        | var:x array_index				//{: RESULT = ArrayElementNode(x, parser.stack(-2), xleft, xright); :}    // APPOI VIREMU                        
         | NEW simple_type:x array_index //{: RESULT = new ArrayNode(x, y, nleft, nright); :}						//APPOI VIREMU
         									             
-        | ID:x 					{: RESULT = null; :}                                         
+        | var:x 				{: RESULT = x; :}                                         
         | CONST_BOOL:x			{: RESULT = new BoolNode(x, xleft, xright); :}                                
         | CONST_INT:x			{: RESULT = new IntNode(x, xleft, xright); :}                                  
         | CONST_STRING:x		{: RESULT = new StringNode(x, xleft, xright); :}                               
         | CONST_FLOAT:x 		{: RESULT = new FloatNode(x, xleft, xright); :}                               
         ;
+        
