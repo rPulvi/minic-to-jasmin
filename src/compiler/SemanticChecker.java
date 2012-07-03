@@ -38,7 +38,8 @@ public class SemanticChecker extends Visitor
     {
     	//IdType type1 = sTable.getVariableType(node.getVar(),node.getBlockNumber());    	
     	IdType type1 = (IdType) node.visitVar(this);
-    	IdType type2 = (IdType) node.visitValue(this);    	
+    	IdType type2 = (IdType) node.visitValue(this);  
+    	System.out.println("type1 = " + type1 + "\n type2 = " + type2);
 
     	if (type1 == IdType.ERR || type2 == IdType.ERR)
         	error("Error in assignment",node);
@@ -562,5 +563,18 @@ public class SemanticChecker extends Visitor
 	public Object visit(IfElseNode node) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public Object visit(CastNode node) {
+		IdType type = (IdType) node.visitChild(this);
+		
+		
+		if (type == IdType.FLOAT || type == IdType.INT)
+			return IdType.INT;
+		else 
+			error("Cannot cast " + type + " to int.", node);
+		return IdType.ERR;
+
 	}
 }
