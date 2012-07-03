@@ -7,7 +7,7 @@ import compiler.*;
 public abstract class Node
 {
     //the line and column number of the node's position in the source code
-    protected int lineNumber, colNumber;
+    protected int lineNumber, colNumber, blockNumber;
 
     /**
      * Construct a Node that was parsed at the given position in the source file
@@ -44,7 +44,12 @@ public abstract class Node
     {
         return colNumber;
     }
+    
 
+    public int getBlockNumber()
+    {
+    	return blockNumber;
+    }
     /**
      * returns the static type of the node, overridden by the sub-classes
      * @return "void" unless overridden by a sub-class

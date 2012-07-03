@@ -6,15 +6,14 @@ import compiler.Visitor;
 public class AssignNode extends ExprNode
 {
     private String var;
-    private ExprNode value;
-    private int block;
+    private ExprNode value;   
     
     public AssignNode(String var, ExprNode e, int block, int lineNumber, int colNumber)
     {
         super(lineNumber, colNumber);
         this.var = var;
-        this.block = block;
-        value = e;
+        this.blockNumber = block;
+        this.value = e;
     }
 
     public Object accept(Visitor v)
@@ -40,10 +39,5 @@ public class AssignNode extends ExprNode
     public ExprNode getValue()
     {
     	return value;
-    }
-    
-    public int getBlock()
-    {
-    	return block;
-    }
+    }    
 }

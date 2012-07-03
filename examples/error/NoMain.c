@@ -1,5 +1,5 @@
 int funzione(){
 	int a;
 
-	a = (int)5.4;	
+	a = 3+2;	
 }

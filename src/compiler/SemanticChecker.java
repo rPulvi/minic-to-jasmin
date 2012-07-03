@@ -1,6 +1,7 @@
 package compiler;
 
 import it.m2j.IdType;
+import it.m2j.Operator;
 
 import java.io.PrintWriter;
 
@@ -35,8 +36,8 @@ public class SemanticChecker extends Visitor
     
     public Object visit(AssignNode node)
     {
-    	IdType type1 = sTable.getVariableType(node.getVar(),node.getBlock());    	
-    	IdType type2 = node.getValue().getType();    	
+    	IdType type1 = sTable.getVariableType(node.getVar(),node.getBlockNumber());    	
+    	IdType type2 = (IdType) node.visitValue(this);    	
 
     	if (type1 == IdType.ERR || type2 == IdType.ERR)
         	error("Error in assignment",node);
@@ -371,9 +372,8 @@ public class SemanticChecker extends Visitor
     }
 
     public Object visit(AddNode node)
-    {
-        //return visitBinaryOp("+", "int", node);
-    	return null;
+    {    	
+        return visitBinaryOp(Operator.PLUS, IdType.INT, node);    	
     }
 
     public Object visit(SubNode node)
@@ -401,20 +401,70 @@ public class SemanticChecker extends Visitor
     }
 
     //shared functionality for &&, ||, +, -, / and * operators
-//    private Symbol visitBinaryOp(String op, String type, BinaryNode node)
-//    {
-//        Symbol leftType = (Symbol) node.visitLeft(this);
-//        Symbol rightType = (Symbol) node.visitRight(this);
-//
-//        if (leftType != sTable.get(type))
-//            error("Left argument to operator " + op + " must be of type " + type + ", found: '" + leftType.getKey() + "' in expression: ", node);
-//        if (rightType != sTable.get(type))
-//            error("Right argument to operator " + op + " must be of type " + type + ", found: '" + rightType.getKey() + "' in expression: ", node);
-//
-//        return sTable.get(type);
-//    	
-//    	return null;
-//    }
+    private IdType visitBinaryOp(Operator op, IdType type, BinaryNode node)
+    {
+    	IdType type1 = (IdType) node.visitLeft(this);    	
+    	IdType type2 = (IdType) node.visitRight(this);    	
+
+		IdType t = IdType.ERR;
+
+		switch(op)
+		{
+			case PLUS: 
+			case DIFF:
+			case MUL:
+			case DIV:
+				
+				if(type1.IsNumeric() == true && type2.IsNumeric() == true)
+				{
+					if (type1 == type2) 
+						t = type1;
+					else
+						t = IdType.FLOAT; //PROM
+				}
+				else
+					error("Incomparable types: " + type1.toString() + " to " + type2.toString(), node );					
+				break;
+				
+			case MOD:
+				if(type1.IsNumeric() == true && type2.IsNumeric() == true)
+					t = IdType.INT;
+				else
+					error("Incomparable types: " + type1.toString() + " to " + type2.toString(), node );
+
+				break;
+			
+			case AND:
+			case OR:
+				if( (type1 == type2) && (type1 == IdType.BOOL) )
+					t = IdType.BOOL;
+				else
+					error("Incomparable types: " + type1.toString() + " to " + type2.toString(), node );															
+				break;
+
+			case EQ:
+			case NEQ:
+				if (type1 != IdType.STRING && type2 != IdType.STRING)
+					t = IdType.BOOL;
+				else
+					error("Incomparable types: " + type1.toString() + " to " + type2.toString(), node );						
+				break;
+
+			case LT:
+			case LET:
+			case GT:
+			case GET:
+				if(type1.IsNumeric() == true && type2.IsNumeric() == true)
+					t = IdType.BOOL;
+				else
+					error("Incomparable types: " + type1.toString() + " to " + type2.toString(), node );						
+
+				break;
+		}
+
+      //return new SymbolDesc(t);
+		return t;
+    }
 
     public Object visit(EqNode node)
     {
@@ -472,13 +522,12 @@ public class SemanticChecker extends Visitor
     public Object visit(BoolNode node)
     {
         //return sTable.get("boolean");
-    	return null;
+    	return node.getType();
     }
 
     public Object visit(IntNode node)
     {
-        //return sTable.get("int");
-    	return null;
+    	return node.getType();
     }
 
     public Object visit(StringNode node)
