@@ -119,4 +119,29 @@ public class SymbolTable
 
         return tmpDesc;
     }  
+
+    public IdType getVariableType(String key, int block)
+    {
+    	ArrayList<SymbolDesc> varDesc = new ArrayList<SymbolDesc>();
+    	IdType typeRet = IdType.ERR;
+    	
+    	varDesc = getSpecific(key, IdType.VARIABLE);
+    	
+    	if (varDesc.size() > 0)
+    	{    		
+    		Iterator<SymbolDesc> it = varDesc.listIterator();			
+			
+			while (it.hasNext()) {
+				SymbolDesc s = it.next();
+
+				if(s.getBlock() == block)
+				{
+					typeRet = s.getType();
+					break;
+				}
+			}
+    	}
+
+    	return typeRet;
+    }
 }

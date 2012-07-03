@@ -85,10 +85,10 @@ public class SymbolTableConstructor extends Visitor
      * to return the constructed symbol table
      * @return
      */
-//    public SymbolTable getSymbolTable()
-//    {
-//        return sTable;
-//    }
+    public SymbolTable getSymbolTable()
+    {
+        return sTable;
+    }
 
     //visit a list node, visit its children
     public Object visit(ListNode node)
@@ -127,8 +127,9 @@ public class SymbolTableConstructor extends Visitor
      */
     public Object visit(DeclNode node)
     {    	    	    	
-    	if (sTable.putVariable(node.getName(), node.getType(), node.getBlockNumber()) == false)    		
-    		error("Variable '" + node.getName() + "' already declared.", node);    	    	
+    	if (sTable.putVariable(node.getVar().getName(), node.getVar().getType(), node.getVar().getBlockNumber()) == false)    		
+    		//error("Variable '" + node.getName() + "' already declared.", node);
+    		error("Variable already declared: ", node);
         
     	return null;
     }
@@ -160,13 +161,13 @@ public class SymbolTableConstructor extends Visitor
      */
     public Object visit(FunctionNode node)
     {    	
-        visitMethod(node, "method", false);
+        visitFunction(node, "method", false);
 
         return null;
     }
 
     //visit a method or constructor definition
-    private void visitMethod(FunctionNode node, String methodType, boolean constructor)
+    private void visitFunction(FunctionNode node, String methodType, boolean constructor)
     {
     	//TODO: fix the param list
     	if (sTable.putFunction(node.getName(), node.getType(), null) == false)

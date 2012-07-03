@@ -7,11 +7,13 @@ public class AssignNode extends ExprNode
 {
     private String var;
     private ExprNode value;
-
-    public AssignNode(String var, ExprNode e, int lineNumber, int colNumber)
+    private int block;
+    
+    public AssignNode(String var, ExprNode e, int block, int lineNumber, int colNumber)
     {
         super(lineNumber, colNumber);
         this.var = var;
+        this.block = block;
         value = e;
     }
 
@@ -28,5 +30,20 @@ public class AssignNode extends ExprNode
     public Object visitValue(Visitor v)
     {
         return value.accept(v);
+    }
+    
+    public String getVar()
+    {
+    	return var;
+    }
+    
+    public ExprNode getValue()
+    {
+    	return value;
+    }
+    
+    public int getBlock()
+    {
+    	return block;
     }
 }

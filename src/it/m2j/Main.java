@@ -8,6 +8,7 @@ import javax.swing.JFrame;
 
 import ast.Node;
 
+import compiler.SemanticChecker;
 import compiler.SymbolTableConstructor;
 
 public class Main {
@@ -33,12 +34,13 @@ public class Main {
 
 			//Avvio il parser
 			result = parser.parse();
-
-			SymbolTableConstructor stc = new SymbolTableConstructor(new PrintWriter("pippo") );
-
 			root = (Node)result.value;
-
+			
+			SymbolTableConstructor stc = new SymbolTableConstructor(null);
 			root.accept(stc);
+			
+			SemanticChecker tsc = new SemanticChecker(stc.getSymbolTable(), null);
+			root.accept(tsc);
 		}
 		catch(Exception e) {
 			e.printStackTrace();

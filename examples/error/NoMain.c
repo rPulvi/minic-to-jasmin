@@ -1,12 +1,6 @@
 int funzione(){
-	int a;
-	int c;
-	int a;
+	string a;
 
 	a = 5;
 
-}
-
-int funzione() {
-	int a;
 }

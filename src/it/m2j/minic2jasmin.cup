@@ -9,9 +9,6 @@ import ast.*;
 
 /*--------------------------------PARSER CODE ----------------------------------*/
 parser code {:
-	/* Symbol table for type checking */    
-    HashMap<String,ArrayList<SymbolDesc> > SymbolDesc_table = new HashMap<String,ArrayList<SymbolDesc> >();
-    HashMap<String,SymbolDesc> SymbolDescFunction_table = new HashMap<String,SymbolDesc>();
     	
 	// Redefinition of error functions
     public void report_error(String message, Object info) {
@@ -73,7 +70,7 @@ action code {:
 		if (blockCounter <= 0)
 		{
 			blockCounter = 0;
-			parser.SymbolDesc_table.clear();
+			//parser.SymbolDesc_table.clear();
 		}		
 		
 		//System.out.println("***BLOCCO: " + blockCounter);		
@@ -401,9 +398,9 @@ terminal Float   CONST_FLOAT;
 terminal String  CONST_STRING;
 
 // Non terminal tokens
-non terminal ListNode prog, func_list, param_list, stmt_list, expr_list, decl_param, decl_param_list;
+non terminal ListNode param_list, stmt_list, expr_list, decl_param, decl_param_list;
 non terminal DeclNode decl; 
-non terminal Node function, stmt;
+non terminal Node prog, function, stmt;
 non terminal FuncCallNode func_call;
 non terminal BlockNode block;
 non terminal ReturnNode ret_stmt;
@@ -413,8 +410,9 @@ non terminal IfNode if_then_stmt;
 non terminal IfElseNode if_then_else_stmt;
 non terminal IdType simple_type, type, ret_type;
 non terminal ExprNode expr, if_condition, while_condition, array_index;
+non terminal VarNode var;
 
-non terminal array_dim;
+non terminal array_dim, br_cg, br_og;
 
 /*--------------------------------PRIORITY / ASSOCIATIVITY ----------------------------------*/
 //lower priority
@@ -431,12 +429,15 @@ precedence nonassoc OP_SIGN;
 /*-------------------------------- GRAMMAR ----------------------------------*/
 start with prog;
 
-prog ::= func_list:x				{: RESULT = x; :}		
+prog ::= function:x	{: RESULT = x; :}	
         ;
 
-decl ::= type:t ID:x      			{: RESULT = new DeclNode(x, t, -99, xleft, xright); :}                    
+decl ::= type var:x      			{: RESULT = new DeclNode(x, xleft, xright); :}                    
         ;
 
+var ::= ID:x 						{: RESULT = new VarNode(x, parser.stack(-1), getBlockNumber(), xleft, xright); :}
+		;
+		
 type ::= simple_type:x 				{: RESULT=x; :}                                       
      	| simple_type:x array_dim   {: RESULT=x; :}                          
      	;
@@ -450,10 +451,6 @@ simple_type ::= TYPE_BOOL			{: RESULT = IdType.BOOL; :}
 array_dim ::= BRA_OS BRA_CS
         | array_dim BRA_OS BRA_CS                       
         ;      	
-
-func_list ::= 
-		| func_list:x function:y	{: RESULT = new ListNode(x, y); :}
-       	;
 
 function ::= ret_type:x ID:y BRA_O param_list:params BRA_C block:b     						{: RESULT = new FunctionNode(y, params, x, b, yleft, yright); :}  
 		| EXTERN CONST_STRING ret_type:x ID:y BRA_O decl_param:params BRA_C SEMI			{: RESULT = new FunctionExtNode(y, x, params, yleft, yright); :}
@@ -479,16 +476,15 @@ ret_type ::= TYPE_VOID 		{: RESULT = IdType.VOID; :}
         | type:x 			{: RESULT = x; :}                                       
         ;
                 
-/* conteggio blocchi per scope
+
 br_og ::= BRA_OG {: addBlock(); :}
 		;
 br_cg ::= BRA_CG {: remBlock(); :}
 		;
-*/
 
-block ::= BRA_OG:lb stmt_list:x BRA_CG			{: RESULT = new BlockNode(x, lbleft, lbright); :}
-		| BRA_OG stmt_list error BRA_CG			{: PrintError("Missing ';' before }"); :}  
-		| BRA_OG error BRA_CG					{: PrintError("Missing ';' before }"); :}             
+block ::= br_og:lb stmt_list:x br_cg			{: RESULT = new BlockNode(x, lbleft, lbright); :}
+		| br_og stmt_list error br_cg			{: PrintError("Missing ';' before }"); :}  
+		| br_og error br_cg						{: PrintError("Missing ';' before }"); :}             
 		;
 
 stmt_list ::= 					{: RESULT = null; :}                    
@@ -506,8 +502,8 @@ stmt ::= block:b					{: RESULT = b; :}
 		| error SEMI				{: PrintError("Error in statement"); :}       
         ;
 
-assign_stmt ::= ID:x ASSIGN expr:y SEMI				{: RESULT = new AssignNode(x, y, xleft, xright); :}            
-		| ID:x array_index ASSIGN expr:y SEMI  		{: RESULT = new AssignNode(x, y, xleft, xright); :}
+assign_stmt ::= ID:x ASSIGN expr:y SEMI				{: RESULT = new AssignNode(x, y, getBlockNumber(), xleft, xright); :}            
+		| ID:x array_index ASSIGN expr:y SEMI  		{: RESULT = new AssignNode(x, y, getBlockNumber(), xleft, xright); :}
 		| ID ASSIGN error SEMI						{: PrintError("Error in expression"); :}
 		| error ASSIGN expr SEMI 					{: PrintError("Error in assigment"); :}
         ;
