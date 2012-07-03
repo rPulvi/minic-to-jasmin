@@ -6,3 +6,7 @@ int funzione(){
 	a = 5;
 
 }
+
+int funzione() {
+	int a;
+}

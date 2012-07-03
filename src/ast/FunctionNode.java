@@ -29,10 +29,11 @@ public class FunctionNode extends SlotNode
             params.accept(v);
     }
 
-//    public String toString()
-//    {
-//        return access + " " + name + "(" + ParamUtils.makeSourceList(params) + ")";
-//    }
+    public String toString()
+    {
+        //return access + " " + name + "(" + ParamUtils.makeSourceList(params) + ")";
+    	return name /*+ params.toString()*/;
+    }
 
     public void visitBody(Visitor v)
     {    	

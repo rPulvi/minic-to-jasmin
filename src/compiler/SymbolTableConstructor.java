@@ -128,7 +128,7 @@ public class SymbolTableConstructor extends Visitor
     public Object visit(DeclNode node)
     {    	    	    	
     	if (sTable.putVariable(node.getName(), node.getType(), node.getBlockNumber()) == false)    		
-    		error("Variable" + node.getName() + " already declared.", node);    	    	
+    		error("Variable '" + node.getName() + "' already declared.", node);    	    	
         
     	return null;
     }
@@ -170,7 +170,7 @@ public class SymbolTableConstructor extends Visitor
     {
     	//TODO: fix the param list
     	if (sTable.putFunction(node.getName(), node.getType(), null) == false)
-    		error("Function" + node.getName() + " already declared.", node);    
+    		error("Function '" + node.getName() + "' already declared.", node);    
     	else //TODO: VERIFICARE!!!
     	{
     		node.visitParams(this);            	
