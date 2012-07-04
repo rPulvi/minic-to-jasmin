@@ -134,7 +134,7 @@ public class SymbolTable
 			while (it.hasNext()) {
 				SymbolDesc s = it.next();
 
-				if(s.getBlock() == block)
+				if(s.getBlock() <= block)
 				{
 					typeRet = s.getType();
 					break;

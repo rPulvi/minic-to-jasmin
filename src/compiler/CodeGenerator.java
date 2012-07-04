@@ -80,18 +80,6 @@ public class CodeGenerator extends Visitor
 //        writeStmt("iinc 2 1"); //increment the heap index
     }
 
-    public Object visit(FieldNode node)
-    {
-//        //create an initialiser for the field
-//        FieldSymbol fieldSymbol = node.getSymbol();
-//        writeStmt("\n;" + node.toString());
-//        writeStmt("fieldInit" + fieldSymbol.getFieldNumber() + ":");
-//        node.visitValue(this);
-//        CodeGenerator.pushFromStack(out);
-//        writeStmt("goto returnTable");
-        return null;
-    }
-
     public Object visit(DeclNode node)
     {
 //        inExpr = true;
@@ -734,13 +722,6 @@ public class CodeGenerator extends Visitor
         return null;
     }
 
-    public Object visit(NullNode node)
-    {
-        //push the number -1 onto the stack
-//        writeStmt("bipush -1");
-        return null;
-    }
-
 	@Override
 	public Object visit(FloatNode node) {
 		// TODO Auto-generated method stub
@@ -792,6 +773,18 @@ public class CodeGenerator extends Visitor
 
 	@Override
 	public Object visit(SignNode letNode) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Object visit(WhileNode letNode) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Object visit(NullNode letNode) {
 		// TODO Auto-generated method stub
 		return null;
 	}

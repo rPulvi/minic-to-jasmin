@@ -139,25 +139,6 @@ public class SymbolTableConstructor extends Visitor
     }
 
     /**
-     * visits a field definition node in the ast and adds it to the symbol table
-     * @param node a FieldNode to visit
-     * @return null
-     */
-    public Object visit(FieldNode node)
-    {
-//        FieldSymbol field = new FieldSymbol(node.getName(), node.getType(), node.getAccess(), node);
-//
-//        if (canBeDeclared(field, node))
-//        {
-//            field.setOwner(curClass);
-//            field.setFieldNumber(NumberGenerator.getInstance().getFieldNumber(field));
-//            node.setSymbol(field);
-//        }
-
-        return null;
-    }   
-
-    /**
      * visit a method definition node and add the method, its parameters and any variables in its body
      * to the symbol table
      * @param node a MethodNode to visit
@@ -209,6 +190,21 @@ public class SymbolTableConstructor extends Visitor
         node.visitThen(this);
         return null;
     }
+    
+	public Object visit(IfElseNode node) 
+	{
+		node.visitThen(this);
+		node.visitElse(this);
+		
+		return null;
+	}    
+		
+	public Object visit(WhileNode node) {
+		
+		node.visitWhile(this);
+		
+		return null;
+	}
 
     //all the below methods do nothing, since none of these nodes define new symbols
     /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -240,10 +236,6 @@ public class SymbolTableConstructor extends Visitor
         return null;
     }
     public Object visit(AddNode node)
-    {
-        return null;
-    }
-    public Object visit(NullNode node)
     {
         return null;
     }
@@ -301,47 +293,48 @@ public class SymbolTableConstructor extends Visitor
 		return null;
 	}
 
-	public Object visit(IfElseNode node) {
-		
-		return null;
-	}
-
 	public Object visit(CastNode node) {
 		
 		return null;
 	}
 
-	public Object visit(ModNode modNode) {
+	public Object visit(ModNode node) {
 
 		return null;
 	}
 
 	@Override
-	public Object visit(LTNode letNode) {
+	public Object visit(LTNode node) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Object visit(LETNode letNode) {
+	public Object visit(LETNode node) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Object visit(GTNode letNode) {
+	public Object visit(GTNode node) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Object visit(GETNode letNode) {
+	public Object visit(GETNode node) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Object visit(SignNode letNode) {
+	public Object visit(SignNode node) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Object visit(NullNode letNode) {
 		// TODO Auto-generated method stub
 		return null;
 	}

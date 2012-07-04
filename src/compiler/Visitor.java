@@ -41,8 +41,7 @@ public abstract class Visitor
     public abstract Object visit(BlockNode node);
     public abstract Object visit(DeclNode node);
     public abstract Object visit(DivNode node);
-    public abstract Object visit(EqNode node);    
-    public abstract Object visit(FieldNode node);
+    public abstract Object visit(EqNode node);        
     public abstract Object visit(IfNode node);
     public abstract Object visit(ListNode node);
     public abstract Object visit(FuncCallNode node);
@@ -52,7 +51,6 @@ public abstract class Visitor
     public abstract Object visit(NewNode node);
     public abstract Object visit(NotEqNode node);
     public abstract Object visit(NotNode node);
-    public abstract Object visit(NullNode node);
     public abstract Object visit(IntNode node);
     public abstract Object visit(OrNode node);
     public abstract Object visit(PrintNode node);
@@ -68,4 +66,6 @@ public abstract class Visitor
 	public abstract Object visit(GTNode letNode);
 	public abstract Object visit(GETNode letNode);
 	public abstract Object visit(SignNode letNode);
+	public abstract Object visit(WhileNode letNode);
+	public abstract Object visit(NullNode letNode);	
 }

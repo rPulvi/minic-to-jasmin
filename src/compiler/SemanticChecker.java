@@ -26,21 +26,16 @@ public class SemanticChecker extends Visitor
     	return null;
     }
 
-    public Object visit(FieldNode node)
-    {
-    	return null;
-    }
-
     //true if we are checking the lhs of an assignment
     private boolean inAssignment = false;
     
     public Object visit(AssignNode node)
-    {    	    
+    {    	        	    	
     	IdType type1 = (IdType) node.visitVar(this);
-    	IdType type2 = (IdType) node.visitValue(this);  
-
+    	IdType type2 = (IdType) node.visitValue(this);
+    	
     	if (type1 == IdType.ERR || type2 == IdType.ERR)
-        	;//error("Error in assignment",node);
+        	error("Error in assignment",node);
 
         // If operands are of two different types and they aren't numerics print error
         else if ( !type1.toString().equals(type2.toString()) ) 
@@ -55,89 +50,8 @@ public class SemanticChecker extends Visitor
     }
 
     public Object visit(VarNode node)
-    {
-    	return sTable.getVariableType(node.getName(), node.getBlockNumber());
-//        //check for 'this'
-//        if (node.isThis())
-//        {
-//            if (inAssignment)
-//                error("Attempt to assign to 'this': ", node);
-//
-//            node.setType(curClass);
-//            return curClass;
-//        }
-//
-//        //check the variable is declared (in the symbol table)
-//        Symbol symbol = curTable.get(node.getName());
-//        if (symbol == null)
-//        {
-//            //check if its an inherited field
-//            symbol = curClass.getField(node.getName());
-//            if (symbol == null)
-//            {
-//                error("Variable has not been declared: ", node);
-//                return sTable.get("unknown");
-//            }
-//        }
-//
-//        if (symbol instanceof FieldSymbol)
-//        {
-//            //if the variable is a field
-//
-//            //check the target has a field with the given parameters
-//            FieldSymbol field = curClass.getField(node.getName());
-//            if (field == null)
-//            {
-//                error("Variable has not been declared: ", node);
-//                return sTable.get("unknown");
-//            }
-//
-//            checkAccess(field, node);
-//            Symbol type = sTable.get(field.getType());
-//
-//            if (type == null)
-//                return sTable.get("unknown");
-//
-//            node.setType(type);
-//            node.setFieldSymbol(field);
-//
-//            return type;
-//        }
-//
-//        //check a variable being declared is not used in its own declaration
-//        if (symbol == curDeclVar)
-//        {
-//            error("Variable has not been declared: ", node);
-//            return sTable.get(symbol.getType());
-//        }
-//        //if it is a local variable check it is not a forward reference
-//        if (symbol instanceof VariableSymbol)
-//        {
-//            if (symbol.getLineNumber() > node.getLineNumber())
-//            {
-//                error("Variable has not been declared: ", node);
-//                return sTable.get("unknown");
-//            }
-//            else if (symbol.getLineNumber() == node.getLineNumber() && symbol.getColumnNumber() >= node.getColumnNumber())
-//            {
-//                error("Variable has not been declared: ", node);
-//                return sTable.get("unknown");
-//            }
-//        }
-//        //check the kind
-//        if (!(symbol instanceof VarSymbol || symbol instanceof FieldSymbol))
-//        {
-//            error("Variable has incorrect kind: '" + symbol.getKind() + "'. Variable: ", node);
-//            return sTable.get("unknown");
-//        }
-//
-//        //store the variable's static type in the node
-//        //won't be null since the type has already been checked when the var was declared
-//        node.setType(sTable.get(symbol.getType()));
-//        node.setSymbol((VarSymbol)symbol);
-//
-//        //return the variable's static type
-//        return node.getTypeSymbol();    	    	
+    {    	    	
+    	return sTable.getVariableType(node.getName(), node.getBlockNumber()); 	    	
     }
 
     public Object visit(BlockNode node)
@@ -254,30 +168,15 @@ public class SemanticChecker extends Visitor
 
     public Object visit(FunctionNode node)
     {
-    	    	
-//        //get the symbol and set up the symbol table
-//        MethodSymbol symbol = node.getSymbol();
-//        curTable = symbol.getSymbolTable();
-//
-//        //check the return type exists
-//        Symbol returnType = sTable.get(node.getType());
-//        if (returnType == null)
-//        {
-//            error("Type '" + node.getType() + "' does not exist: ", node);
-//            symbol.resolveType(sTable.get("unknown"));
-//        }
-//        else
-//            symbol.resolveType(returnType);
-//
-//
+    	returnType = node.getType();
+
         visitParamsAndBody(node, returnType);
-//
-//        //make sure there's at elast one return statement if the type is not void
-//        if (!returned && returnType != sTable.get("void"))
-//            error("Method does not return. ", node);
-//
-//        return sTable.get("void");
-    	return null;
+
+        //make sure there's at elast one return statement if the type is not void
+        if (!returned && node.getType() != IdType.VOID)
+            error("Function does not return. ", node);
+    	
+        return returnType;
     }
 
     //visits the parameters and body of a function
@@ -301,20 +200,54 @@ public class SemanticChecker extends Visitor
     	return null;
     }
 
+    public Object visit(WhileNode node)
+    {    	
+    	IdType type = (IdType) node.visitTest(this);    		
+    	IdType tRet = IdType.ERR;
+    	
+    	if (type != IdType.BOOL)
+    		error("Test expression in while statement must be of type boolean, found: '" + type + "' in expression: ", node);
+    	else
+    		tRet = type;
+
+        node.visitWhile(this);
+        
+        return tRet;        
+    }    
+    
     public Object visit(IfNode node)
-    {
-//        checkSuperCall(node);
-//
-//        Symbol testType = (Symbol) node.visitTest(this);
-//
-//        if (testType != sTable.get("boolean"))
-//            error("Test expression in if statement must be of type boolean, found: '" + testType.getKey() + "' in expression: ", node);
-//
-//        node.visitThen(this);
-//
-//        return sTable.get("void");
-    	return null;
+    {    	
+    	IdType type = (IdType) node.visitTest(this);    		
+    	IdType tRet = IdType.ERR;
+    	
+    	if (type != IdType.BOOL)
+    		error("Test expression in if statement must be of type boolean, found: '" + type + "' in expression: ", node);
+    	else
+    		tRet = type;
+
+        node.visitThen(this);
+        
+        return tRet;        
     }
+    
+
+	public Object visit(IfElseNode node) 
+	{
+    	IdType type = (IdType) node.visitTest(this);    		
+    	IdType tRet = IdType.ERR;
+    	
+    	if (type != IdType.BOOL)
+    		error("Test expression in if statement must be of type boolean, found: '" + type + "' in expression: ", node);
+    	else
+    		tRet = type;
+
+        node.visitThen(this);
+        
+        node.visitElse(this);
+        
+        return tRet;
+	}
+    
 
 //    public Object visit(PrintNode node)
 //    {
@@ -333,37 +266,36 @@ public class SemanticChecker extends Visitor
 
     public Object visit(ReturnNode node)
     {
-//        checkSuperCall(node);
-//
-//        Object valueType = node.visitValue(this);
-//
-//        if (valueType == null)
-//        {
-//            if (returnType != sTable.get("void"))
-//                error("Return type does not match method declaration expected: '" + returnType.getName() + "' found: 'void'. ", node);
-//        }
-//        else
-//        {
-//            if (valueType instanceof TypeSymbol)
-//            {
-//                if (returnType instanceof ClassSymbol && valueType == sTable.get("null"))
-//                {
-//                    //this is OK - expects an object, but gets null
-//                }
-//                else if (valueType != returnType)
-//                    error("Return type does not match method declaration expected: '" + returnType.getName() + "' found: '" + ((TypeSymbol)valueType).getName() + "'. ", node);
-//            }
-//            else if (!((ClassSymbol)valueType).symbolEquals(returnType))
-//                error("Return type does not match method declaration expected: '" + returnType.getName() + "' found: '" + ((ClassSymbol)valueType).getName() + "'. ", node);
-//        }
-//
-//        returned = true;
-//
-//        return sTable.get("void");
-    	
-    	return null;
+        IdType valueType = (IdType) node.visitValue(this);
+
+        if (valueType == IdType.NULL)// "return;"
+        {
+            if (returnType != IdType.VOID)
+                error("Return type does not match function declaration expected: '" + returnType + "' found: 'void'. ", node);
+        }
+        else
+        {                        
+            if (valueType != returnType)
+                error("Return type does not match function declaration expected: '" + returnType + "' found: '" + (IdType)valueType + "'. ", node);            
+        }
+
+        returned = true;
+
+    	return valueType;
     }
-    
+
+	public Object visit(CastNode node) {
+		IdType type = (IdType) node.visitChild(this);
+		
+		
+		if (type == IdType.FLOAT || type == IdType.INT)
+			return IdType.INT;
+		else 
+			error("Cannot cast " + type + " to int.", node);
+		return IdType.ERR;
+
+	}
+	
     //------------------------------------- BINARY OPERATORS ------------------------------------- 
     public Object visit(ModNode node)
     {
@@ -497,6 +429,9 @@ public class SemanticChecker extends Visitor
     
     //-------------------------------------------------------------------------- 
     
+    
+    //------------------------------------- UNARY OPERATORS -------------------------------------
+    
     public Object visit(SignNode node)
     {
         return visitUnaryOp(Operator.SIGN, node);
@@ -532,10 +467,11 @@ public class SemanticChecker extends Visitor
             
         return tRet;    	
     }
+    
+    //--------------------------------------------------------------------------
 
     public Object visit(BoolNode node)
-    {
-        //return sTable.get("boolean");
+    {    
     	return node.getType();
     }
 
@@ -545,15 +481,8 @@ public class SemanticChecker extends Visitor
     }
 
     public Object visit(StringNode node)
-    {
-        //return sTable.get("String");
-    	return null;
-    }
-
-    public Object visit(NullNode node)
-    {
-        //return sTable.get("null");
-    	return null;
+    {     
+    	return node.getType();
     }
 
 	public Object visit(FloatNode node) {
@@ -564,30 +493,13 @@ public class SemanticChecker extends Visitor
 		return null;
 	}
 
-
-	@Override
-	public Object visit(NegNode node) {
-		// TODO Auto-generated method stub
-		return null;
+	public Object visit(NullNode node)
+	{
+		return node.getType();
 	}
-
-
-	@Override
-	public Object visit(IfElseNode node) {
-		// TODO Auto-generated method stub
+	
+	public Object visit(NegNode node) 
+	{
 		return null;
-	}
-
-	@Override
-	public Object visit(CastNode node) {
-		IdType type = (IdType) node.visitChild(this);
-		
-		
-		if (type == IdType.FLOAT || type == IdType.INT)
-			return IdType.INT;
-		else 
-			error("Cannot cast " + type + " to int.", node);
-		return IdType.ERR;
-
 	}
 }

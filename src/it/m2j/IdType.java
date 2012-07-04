@@ -37,6 +37,12 @@ public enum IdType {
 			return "error"; 
 		}		
 	},
+	NULL{
+		public String toString() 
+		{
+			return "null"; 
+		}
+	},
 	VARIABLE{
 		public String toString()
 		{

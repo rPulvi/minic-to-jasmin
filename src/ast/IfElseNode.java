@@ -7,7 +7,7 @@ public class IfElseNode extends Node
 {
     private ExprNode testExpr;
     private Node thenStmt;
-    private BlockNode elseStmt;
+    private Node elseStmt;
 
     public IfElseNode(ExprNode testExpr, BlockNode thenStmt, BlockNode elseStmt, int lineNumber, int colNumber)
     {
@@ -31,7 +31,12 @@ public class IfElseNode extends Node
     {
         return thenStmt.accept(v);
     }
-
+    
+    public Object visitElse(Visitor v)
+    {
+    	return elseStmt.accept(v);
+    }
+    
     public String toString()
     {
         return "if (" + testExpr + ")";

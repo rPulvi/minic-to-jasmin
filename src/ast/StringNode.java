@@ -20,10 +20,10 @@ public class StringNode extends ExprNode
         return v.visit(this);
     }
 
-//    public String toString()
-//    {
-//        return "\"" + ParamUtils.escape(value) + "\"";
-//    }
+    public String toString()
+    {
+        return value;
+    }
 
     public IdType getType()
     {

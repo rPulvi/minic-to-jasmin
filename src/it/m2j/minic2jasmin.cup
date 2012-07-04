@@ -546,7 +546,8 @@ expr_list ::= expr:x 					{: RESULT = new ListNode(x,null); :}
         | expr_list:l COMMA expr:x    	{: RESULT = new ListNode(l,x); :}    // for argument in function call
         ;
 
-expr ::=  expr:x OP_PLUS:n expr:y		{: RESULT = new AddNode(x, y, nleft, nright); :}             
+expr ::=								{: RESULT = new NullNode(-1,-1); :}  
+		|expr:x OP_PLUS:n expr:y		{: RESULT = new AddNode(x, y, nleft, nright); :}             
         | expr:x OP_DIFF:n expr:y    	{: RESULT = new SubNode(x, y, nleft, nright); :}
         | expr:x OP_MUL:n expr:y		{: RESULT = new MulNode(x, y, nleft, nright); :}              
         | expr:x OP_DIV:n expr:y		{: RESULT = new DivNode(x, y, nleft, nright); :}              
