@@ -35,13 +35,12 @@ public class SemanticChecker extends Visitor
     private boolean inAssignment = false;
     
     public Object visit(AssignNode node)
-    {
-    	//IdType type1 = sTable.getVariableType(node.getVar(),node.getBlockNumber());    	
+    {    	    
     	IdType type1 = (IdType) node.visitVar(this);
     	IdType type2 = (IdType) node.visitValue(this);  
 
     	if (type1 == IdType.ERR || type2 == IdType.ERR)
-        	error("Error in assignment",node);
+        	;//error("Error in assignment",node);
 
         // If operands are of two different types and they aren't numerics print error
         else if ( !type1.toString().equals(type2.toString()) ) 
@@ -364,44 +363,75 @@ public class SemanticChecker extends Visitor
     	
     	return null;
     }
-
+    
+    //------------------------------------- BINARY OPERATORS ------------------------------------- 
+    public Object visit(ModNode node)
+    {
+    	return visitBinaryOp(Operator.MOD, node);
+    }
+    
     public Object visit(DivNode node)
     {
-//        return visitBinaryOp("/", "int", node);
-    	return null;
+        return visitBinaryOp(Operator.DIV, node);
     }
 
     public Object visit(AddNode node)
     {    	
-        return visitBinaryOp(Operator.PLUS, IdType.INT, node);    	
+        return visitBinaryOp(Operator.PLUS, node);    	
     }
 
     public Object visit(SubNode node)
     {
-        //return visitBinaryOp("-", "int", node);
-    	return null;
+        return visitBinaryOp(Operator.DIFF, node);    	
     }
 
     public Object visit(MulNode node)
     {
-        //return visitBinaryOp("*", "int", node);
-    	return null;
+        return visitBinaryOp(Operator.MUL, node);    	
     }
 
     public Object visit(OrNode node)
     {
-        //return visitBinaryOp("||", "boolean", node);
-    	return null;
+        return visitBinaryOp(Operator.OR, node);    	
     }
 
     public Object visit(AndNode node)
     {
-        //return visitBinaryOp("&&", "boolean", node);
-    	return null;
+    	return visitBinaryOp(Operator.AND, node);    	
+    }
+    
+    public Object visit(EqNode node)
+    {
+    	return visitBinaryOp(Operator.EQ, node);
     }
 
+    public Object visit(NotEqNode node)
+    {
+    	return visitBinaryOp(Operator.NEQ, node);
+    }
+    
+    public Object visit(LTNode node)
+    {
+    	return visitBinaryOp(Operator.LT, node);
+    }
+
+    public Object visit(LETNode node)
+    {
+    	return visitBinaryOp(Operator.LET, node);
+    }    
+    
+    public Object visit(GTNode node)
+    {
+    	return visitBinaryOp(Operator.GT, node);
+    }
+
+    public Object visit(GETNode node)
+    {
+    	return visitBinaryOp(Operator.GET, node);
+    }    
+    
     //shared functionality for &&, ||, +, -, / and * operators
-    private IdType visitBinaryOp(Operator op, IdType type, BinaryNode node)
+    private IdType visitBinaryOp(Operator op, BinaryNode node)
     {
     	IdType type1 = (IdType) node.visitLeft(this);    	
     	IdType type2 = (IdType) node.visitRight(this);    	
@@ -462,62 +492,46 @@ public class SemanticChecker extends Visitor
 				break;
 		}
 
-      //return new SymbolDesc(t);
 		return t;
     }
-
-    public Object visit(EqNode node)
-    {
-        //return visitEqStyleNode("==", node);
-    	return null;
-    }
-
-    public Object visit(NotEqNode node)
-    {
-        //return visitEqStyleNode("!=", node);
-    	return null;
-    }
-
-    //common functionality for == and != operators
-//    private Symbol visitEqStyleNode(String op, BinaryNode node)
-//    {
-//        Symbol leftType = (Symbol) node.visitLeft(this);
-//        Symbol rightType = (Symbol) node.visitRight(this);
-//
-//        if (leftType == sTable.get("void") || rightType == sTable.get("void"))
-//            error("Arguments to operator " + op + " must have type, found: 'void' in expression: ", node);
-//        if (!((leftType == sTable.get("int") && rightType == sTable.get("int"))
-//            || (leftType == sTable.get("boolean") && rightType == sTable.get("boolean"))
-//            || (leftType.symbolEquals(sTable.get("Object")) && rightType.symbolEquals(sTable.get("Object")))))
-//            error("Type mis-match in operator " + op + ", found: '" + leftType.getKey() + "' and '" + rightType.getKey() + "' in expression: ", node);
-//
-//        return sTable.get("boolean");
-//    	return null;
-//    }
-
+    
+    //-------------------------------------------------------------------------- 
+    
     public Object visit(SignNode node)
     {
-        //return visitUnaryOp("-", "int", node);
-    	return null;
+        return visitUnaryOp(Operator.SIGN, node);
     }
 
     public Object visit(NotNode node)
     {
-        //return visitUnaryOp("!", "boolean", node);
-    	return null;
+        return visitUnaryOp(Operator.NOT, node);    	
     }
 
     //shared functionality for - and ! operators
-//    private Symbol visitUnaryOp(String op, String type, UnaryNode node)
-//    {
-//        Symbol childType = (Symbol)node.visitChild(this);
-//
-//        if (childType != sTable.get(type))
-//            error("Argument to operator " + op + " must be of type " + type + ", found: '" + childType.getKey() + "' in expression: ", node);
-//
-//        return sTable.get(type);
-//    	return null;
-//    }
+    private IdType visitUnaryOp(Operator op, UnaryNode node)
+    {
+    	IdType type = (IdType) node.visitChild(this);
+    	IdType tRet = IdType.ERR;
+    	
+    	switch(op)
+		{
+			case NOT:
+				if (type == IdType.BOOL)
+					tRet = type;
+				else
+					error("Argument to operator " + op + " must be of type " + IdType.BOOL + ", found: '" + type + "' in expression: ", node);
+				
+				break;
+			case SIGN:
+				if(type == IdType.INT || type == IdType.FLOAT)
+					tRet = type;
+				else
+					error("Argument to operator " + op + " must be int or float, found: '" + type + "' in expression: ", node);				
+				break;
+		}    	    	
+            
+        return tRet;    	
+    }
 
     public Object visit(BoolNode node)
     {

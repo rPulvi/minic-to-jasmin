@@ -6,8 +6,7 @@ public enum Operator {
 	PLUS,              
     DIFF,
     MUL,              
-    DIV,               
-	SIGN,           
+    DIV,
 	MOD,
 	
 	//Logical operators
@@ -20,5 +19,9 @@ public enum Operator {
     GT,     
     GET,   
     EQ,   
-    NEQ 	
+    NEQ,
+    
+    //Unary operators
+    NOT,
+    SIGN
 }

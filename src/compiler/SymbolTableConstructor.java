@@ -301,15 +301,48 @@ public class SymbolTableConstructor extends Visitor
 		return null;
 	}
 
-	@Override
 	public Object visit(IfElseNode node) {
 		
 		return null;
 	}
 
-	@Override
 	public Object visit(CastNode node) {
 		
+		return null;
+	}
+
+	public Object visit(ModNode modNode) {
+
+		return null;
+	}
+
+	@Override
+	public Object visit(LTNode letNode) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Object visit(LETNode letNode) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Object visit(GTNode letNode) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Object visit(GETNode letNode) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Object visit(SignNode letNode) {
+		// TODO Auto-generated method stub
 		return null;
 	}
 }

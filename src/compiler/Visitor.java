@@ -62,4 +62,10 @@ public abstract class Visitor
     public abstract Object visit(VarNode node);    
 	public abstract Object visit(IfElseNode node);
 	public abstract Object visit(CastNode node);
+	public abstract Object visit(ModNode modNode);
+	public abstract Object visit(LTNode letNode);
+	public abstract Object visit(LETNode letNode);
+	public abstract Object visit(GTNode letNode);
+	public abstract Object visit(GETNode letNode);
+	public abstract Object visit(SignNode letNode);
 }

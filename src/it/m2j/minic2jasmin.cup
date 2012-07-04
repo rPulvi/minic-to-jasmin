@@ -386,7 +386,7 @@ terminal TYPE_BOOL, TYPE_INT, TYPE_STRING, TYPE_VOID, TYPE_FLOAT;
 terminal EXTERN;
 terminal String IF, ELSE, WHILE;
 terminal ASSIGN, NEW, RETURN;
-terminal OP_PLUS, OP_DIFF, OP_MUL, OP_DIV, OP_MOD, OP_SIGN;
+terminal String OP_PLUS, OP_DIFF, OP_MUL, OP_DIV, OP_MOD, OP_SIGN;
 terminal OP_EQ, OP_NEQ, OP_LT, OP_LET, OP_GT, OP_GET, OP_AND, OP_OR, OP_NOT;
 terminal COMMA, SEMI;
 terminal BRA_O, BRA_C, BRA_OS, BRA_CS, BRA_OG, BRA_CG;
@@ -550,8 +550,8 @@ expr ::=  expr:x OP_PLUS:n expr:y		{: RESULT = new AddNode(x, y, nleft, nright);
         | expr:x OP_DIFF:n expr:y    	{: RESULT = new SubNode(x, y, nleft, nright); :}
         | expr:x OP_MUL:n expr:y		{: RESULT = new MulNode(x, y, nleft, nright); :}              
         | expr:x OP_DIV:n expr:y		{: RESULT = new DivNode(x, y, nleft, nright); :}              
-		| OP_PLUS:n expr:x   			{: RESULT = new SignNode(x, nleft, nright); :} %prec OP_SIGN
-		| OP_DIFF:n expr:x   			{: RESULT = new SignNode(x, nleft, nright); :} %prec OP_SIGN      
+		| OP_PLUS:n expr:x   			{: RESULT = new SignNode(n, x, nleft, nright); :} %prec OP_SIGN
+		| OP_DIFF:n expr:x   			{: RESULT = new SignNode(n, x, nleft, nright); :} %prec OP_SIGN      
         | expr:x OP_AND:n expr:y		{: RESULT = new AndNode(x, y, nleft, nright); :}              
         | expr:x OP_OR:n expr:y			{: RESULT = new OrNode(x, y, nleft, nright); :}               
         | OP_NOT:n expr:x               {: RESULT = new NotNode(x, nleft, nright); :}				        
