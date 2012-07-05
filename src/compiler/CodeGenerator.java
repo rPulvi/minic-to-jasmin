@@ -244,51 +244,37 @@ public class CodeGenerator extends Visitor
     //extracted functionallity to visit either a constructor or method node
     private void visitFunction(FunctionNode node)
     {
-//        MethodSymbol symbol = node.getSymbol();
-//
-//        NumberGenerator.getInstance().resetLocals();
-//
-//        writeStmt("\n;" + symbol.getKey() + "-----------------------------");
-//        writeStmt(NumberGenerator.getInstance().makeMethodLabel(symbol.getMethodNumber()) + ":");
-//
-//        //store all the params as local variables
-//        //l --> r
-//        //we do this in r --> l order so for meth(int i1, int i2, int i3) the parameters
-//        //should be on the stack in order ... i1, i2, i3, top of stack.
-//        paramMagicNumber = symbol.getParamTypeArray().length + 2*NumberGenerator.getInstance().getTotalLocals() - 1;
+    	IdType retType = node.getType();
+    	String name = node.getName();
+    	Node [] params = node.getParams().toArray();
+    	
         node.visitParams(this);
-//
-//        //pop this
-//        CodeGenerator.popToStack(out);
-//        writeStmt("istore 0");
-//
-//        curTable = symbol.getSymbolTable();
+
+//        .method public static distSq(II)I
+//        writeStmt(".method public static " + name + "(" + )
+        
         node.visitBody(this);
-//        curTable = curTable.getParent();
-//
-//        if (symbol.getType().equals("void"))
-//        {
-//            CodeGenerator.pushConst(0, out);
-//            writeStmt("goto returnTable");
-//        }
-//        else
-//        {
-//            writeStmt("ldc \"Method '" + symbol.getKey() + "' never returns\"");
-//            writeStmt("goto errorMsg");
-//        }
-//
-//        writeStmt(";end of " + symbol.getKey() + "-----------------------------");
+      
     }
 
     public Object visit(ArgNode node)
     {
-//        int local = NumberGenerator.getInstance().getLocal();
-//        ParamSymbol symbol = node.getSymbol();
-//        symbol.setLocalVar(paramMagicNumber - local);
-//        CodeGenerator.popToStack(out);
-//        writeStmt("istore " + (paramMagicNumber - local));
-
-        return null;
+    	IdType type = node.getType();
+    	switch(type)
+    	{
+    		case INT:
+    			//paramType = "I";
+    			break;
+    		
+    		case FLOAT:
+    			//paramType = "F";
+    			break;
+    		
+    		case BOOL:
+    			
+    	}
+    	
+    	return null;
     }
 
     public Object visit(FuncCallNode node)
