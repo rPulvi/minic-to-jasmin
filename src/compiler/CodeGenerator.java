@@ -36,8 +36,6 @@ public class CodeGenerator extends Visitor
         
         indentCounter = 0;
         varCounter = 0;
-//        curTable = st;
-//        this.codeGen = codeGen;
         
         writeJasminHeader();
     }
@@ -134,24 +132,12 @@ public class CodeGenerator extends Visitor
     			break;
     	}
     	
-    	
-    	
-    	
-//        inExpr = true;
-//
-//        VariableSymbol varSymbol = node.getSymbol();
-//        writeStmt("; " + type + " " + name + "----------------------------");
-//        //get the value and leave it on the stack
-//        node.visitValue(this);
-//        //store in a new local variable
-//        int local = NumberGenerator.getInstance().getLocal();
-//        writeStmt("istore " + local);
-//        //store the local variable in the symbol table
-//        varSymbol.setLocalVar(local);
+		//Add JVM variable in the SymbolTable
+		sTable.getVarDesc(name, node.getBlockNumber()).setJvmVar(varCounter);
     	
     	return null;
     }
-
+ 
     //if we are in the lhs of an assignment statement
     //private boolean assignLHS = false;
     

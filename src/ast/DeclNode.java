@@ -13,7 +13,7 @@ public class DeclNode extends ExprNode
 
     public DeclNode(VarNode e, IdType type, int lineNumber, int colNumber)
     {
-        super(lineNumber, colNumber);
+        super(e.getBlockNumber(), lineNumber, colNumber);
         vNode = e;
         vNode.setType(type);
     }   
@@ -36,5 +36,10 @@ public class DeclNode extends ExprNode
     public String getName()
     {
     	return vNode.getName();
+    }
+    
+    public IdType getType()
+    {
+    	return vNode.getType();
     }
 }

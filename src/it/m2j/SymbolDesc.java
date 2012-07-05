@@ -8,13 +8,14 @@ public class SymbolDesc{
     private IdType kind;
     private int nBlock;
     private ArrayList<IdType> paramList;
-        
-
+    private int jvmVar;
+    
     public SymbolDesc(){
     	this.type = IdType.VOID;
     	this.kind = IdType.VOID; 
     	this.nBlock = 0;
     	this.paramList = null;
+    	this.jvmVar = 0;
     }    
     
     public void setVariableSymbol(IdType type, int block){
@@ -58,5 +59,15 @@ public class SymbolDesc{
             return true;
         else
             return false;
+    }
+    
+    public void setJvmVar(int var)
+    {
+    	this.jvmVar = var;
+    }
+    
+    public int getJvmVar()
+    {
+    	return this.jvmVar;
     }
 }

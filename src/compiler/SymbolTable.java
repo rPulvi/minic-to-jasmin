@@ -162,4 +162,25 @@ public class SymbolTable
     	return typeRet;
     }    
     
+    public SymbolDesc getVarDesc(String key, int blockNumber)
+    {
+    	SymbolDesc sdRet = null;
+    	ArrayList<SymbolDesc> varDesc = get(key);
+    	
+    	if(varDesc.size() > 0)
+    	{
+    		Iterator<SymbolDesc> it = varDesc.listIterator();			
+			
+			while (it.hasNext()) {
+				SymbolDesc s = it.next();
+				
+				if(s.getBlock() == blockNumber && s.getKind() == IdType.VARIABLE){
+					sdRet = s;
+					break;
+				}
+			}
+    	}
+    	
+    	return sdRet;
+    }
 }
