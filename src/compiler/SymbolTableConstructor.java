@@ -133,11 +133,10 @@ public class SymbolTableConstructor extends Visitor
     {    	    	    	
     	SymbolDesc varDesc = (SymbolDesc) node.visitVar(this);
     	
-    	if (sTable.putVariable(node.getName(), varDesc.getType(), varDesc.getBlock()) == false)    		
-    		//error("Variable '" + node.getName() + "' already declared.", node);
+    	if (sTable.putVariable(node.getName(), varDesc.getType(), varDesc.getBlock()) == false)
     		error("Variable already declared: ", node);
         
-    	return null;
+    	return null;	
     }
 
     /**

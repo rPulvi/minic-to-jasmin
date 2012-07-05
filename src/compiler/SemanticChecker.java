@@ -24,7 +24,7 @@ public class SemanticChecker extends Visitor
     }
 
     public Object visit(DeclNode node)
-    {    	
+    {
     	return null;
     }
 
@@ -53,7 +53,9 @@ public class SemanticChecker extends Visitor
 
     public Object visit(VarNode node)
     {    	    	
-    	return sTable.getVariableType(node.getName(), node.getBlockNumber()); 	    	
+    	IdType t = sTable.getVariableType(node.getName(), node.getBlockNumber()); 
+
+    	return t;
     }
 
     public Object visit(BlockNode node)

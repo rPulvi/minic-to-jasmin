@@ -54,26 +54,27 @@ parser code {:
 /*--------------------------------ACTION CODE ----------------------------------*/
 action code {:
 	
-    int blockCounter = 0;
+    int blockCounter = 0; //The official
+    
+    int tempBlockCounter = 0; //keeps track of the max block number. Never decreases.
+    int tempBlockRem = 0; //+1 on "{" and -1 on "}". Always.
+    
     int nErrors = 0;
     	
 	public void addBlock()
-	{
-		blockCounter++;		
-		//System.out.println("***BLOCCO: " + blockCounter);
+	{	
+		tempBlockRem++;
+		tempBlockCounter++;
+		blockCounter=tempBlockCounter;
 	}
 	
 	public void remBlock()
 	{
+		tempBlockRem--;			
 		blockCounter--;
 		
-		if (blockCounter <= 0)
-		{
-			blockCounter = 0;
-			//parser.SymbolDesc_table.clear();
-		}		
-		
-		//System.out.println("***BLOCCO: " + blockCounter);		
+		if (tempBlockRem <= 1)
+			blockCounter = 1;
 	}
 	
 	public int getBlockNumber()
@@ -432,7 +433,7 @@ start with prog;
 prog ::= function:x	{: RESULT = x; :}	
         ;
 
-decl ::= type:t var:x      			{: RESULT = new DeclNode(x, t, xleft, xright); :}                    
+decl ::= type:t var:x      			{: RESULT = new DeclNode(x, t, xleft, xright); :}
         ;
 
 var ::= ID:x 						{: RESULT = new VarNode(x, getBlockNumber(), xleft, xright); :}

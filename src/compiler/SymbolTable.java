@@ -42,14 +42,14 @@ public class SymbolTable
 			while (it.hasNext()) {
 				SymbolDesc s = it.next();
 			      
-			      if (s.getBlock() <= blockNumber){
-			      	blockFound = true;	//Block Found
+			      if (s.getBlock() == blockNumber){
+			      	blockFound = true;	//Variable found in block
 			      	bRet = false;
 			      	break;
 			      }		   
 			}
 
-		    if(blockFound == false) //Block not found
+		    if(blockFound == false) //Block not found - Add variable for the specific block
 			{
 		    	SymbolDesc symbol = new SymbolDesc();
 		    	symbol.setVariableSymbol(type, blockNumber);
@@ -129,19 +129,23 @@ public class SymbolTable
     	
     	if (varDesc.size() > 0)
     	{    		
+    		IdType t = IdType.ERR;
     		Iterator<SymbolDesc> it = varDesc.listIterator();			
 			
 			while (it.hasNext()) {
 				SymbolDesc s = it.next();
 
-				if(s.getBlock() <= block)
-				{
+				if(s.getBlock() == 1)
+					t = s.getType();
+				
+				if(s.getBlock() == block) //A variable can be declared in its block or in block 1 (global var)
 					typeRet = s.getType();
-					break;
-				}
+				
+				if (typeRet == IdType.ERR)
+					typeRet = t;				
 			}
     	}
-
+    	
     	return typeRet;
     }
     
