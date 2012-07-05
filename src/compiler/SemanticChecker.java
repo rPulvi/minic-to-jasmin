@@ -337,6 +337,10 @@ public class SemanticChecker extends Visitor
 
 	}
 	
+	public Object visit(ArrayNode node) {
+		return node.getType();	
+	}
+	
     //------------------------------------- BINARY OPERATORS ------------------------------------- 
     public Object visit(ModNode node)
     {

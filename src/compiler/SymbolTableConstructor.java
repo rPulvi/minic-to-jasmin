@@ -337,4 +337,10 @@ public class SymbolTableConstructor extends Visitor
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	public Object visit(ArrayNode letNode) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

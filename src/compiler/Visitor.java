@@ -67,5 +67,6 @@ public abstract class Visitor
 	public abstract Object visit(GETNode letNode);
 	public abstract Object visit(SignNode letNode);
 	public abstract Object visit(WhileNode letNode);
-	public abstract Object visit(NullNode letNode);	
+	public abstract Object visit(NullNode letNode);
+	public abstract Object visit(ArrayNode letNode);
 }
