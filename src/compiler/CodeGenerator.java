@@ -1,5 +1,7 @@
 package compiler;
 
+import it.m2j.IdType;
+
 import java.io.FileWriter;
 import java.io.PrintWriter;
 
@@ -10,7 +12,9 @@ public class CodeGenerator extends Visitor
     private StringBuffer out = new StringBuffer();
     private SymbolTable sTable; //the top level symbol table
     private String jasminClassName;
-    //private SymbolTable curTable; //the current scope's symbol table
+    
+    private int indentCounter;
+    private int varCounter;
 
     //private CodeGenerator codeGen;
     
@@ -29,6 +33,9 @@ public class CodeGenerator extends Visitor
 
         sTable = st;
         jasminClassName = className;
+        
+        indentCounter = 0;
+        varCounter = 0;
 //        curTable = st;
 //        this.codeGen = codeGen;
         
@@ -81,12 +88,59 @@ public class CodeGenerator extends Visitor
     }
 
     public Object visit(DeclNode node)
-    {
+    {	
+    	String name = (String) node.visitVar(this);
+    	IdType type = node.getType();
+    	
+    	writeStmt("; " + type + " " + name + " ----------------------------");
+    	
+    	switch(type)
+    	{
+    		case INT:
+    			writeStmt("iconst_0");
+    			writeStmt("istore " + varCounter);
+    			
+    			varCounter++;
+    			break;
+    		
+    		case FLOAT:
+    			writeStmt("fconst_0");
+    			writeStmt("fstore " + varCounter);
+    			
+    			varCounter++;
+    			break;
+    		
+    		case BOOL:
+    			/*
+    			 * JVM does not have a boolean type. 
+    			 * We will use 1 to encode true and 0 to encode false.
+    			 * Boolean variable are initialized to false.
+    			 */
+    			
+    			writeStmt("iconst_0");
+    			writeStmt("istore " + varCounter);
+    			
+    			varCounter++;
+    			break;
+    		
+    		case STRING:
+    			writeStmt("ldc	\"\"");
+    			writeStmt("astore " + varCounter);
+    			
+    			varCounter++;
+    			break;
+    		
+    		default:
+    			break;
+    	}
+    	
+    	
+    	
+    	
 //        inExpr = true;
 //
 //        VariableSymbol varSymbol = node.getSymbol();
-//
-//        writeStmt(";" + node.toString() + "----------------------------");
+//        writeStmt("; " + type + " " + name + "----------------------------");
 //        //get the value and leave it on the stack
 //        node.visitValue(this);
 //        //store in a new local variable
@@ -94,9 +148,8 @@ public class CodeGenerator extends Visitor
 //        writeStmt("istore " + local);
 //        //store the local variable in the symbol table
 //        varSymbol.setLocalVar(local);
-//
-//        inExpr = false;
-        return null;
+    	
+    	return null;
     }
 
     //if we are in the lhs of an assignment statement
@@ -104,6 +157,7 @@ public class CodeGenerator extends Visitor
     
     public Object visit(AssignNode node)
     {
+    	
 //        boolean oldExpr = inExpr;
 //        inExpr = true;
 //        writeStmt(";" + node.toString() + "-----------------------------------");
@@ -146,7 +200,7 @@ public class CodeGenerator extends Visitor
 //        //move scope
 //        curTable = node.getSymbol().getSymbolTable();
 //
-//        node.visitChildren(this);
+        node.visitChildren(this);
 //
 //        //restore the scope
 //        curTable = curTable.getParent();
@@ -156,6 +210,8 @@ public class CodeGenerator extends Visitor
 
     public Object visit(VarNode node)
     {
+    	return node.getName();
+    	
 //        if (node.isThis())
 //        {
 //            writeStmt("iload 0"); //put the this pointer on the stack
@@ -186,9 +242,6 @@ public class CodeGenerator extends Visitor
 //
 //            return null;
 //        }
-    	
-    	//da levare...
-    	return null;
     }
 
     //its not really magic! If we wanted local vars (y) 7, 6, 5 but have (x) 5, 6, 7
@@ -197,13 +250,13 @@ public class CodeGenerator extends Visitor
 
     public Object visit(FunctionNode node)
     {
-//        visitMethod(node);
+    	visitFunction(node);
 
         return null;
     }
 
     //extracted functionallity to visit either a constructor or method node
-    private void visitMethod(FunctionNode node)
+    private void visitFunction(FunctionNode node)
     {
 //        MethodSymbol symbol = node.getSymbol();
 //
@@ -217,14 +270,14 @@ public class CodeGenerator extends Visitor
 //        //we do this in r --> l order so for meth(int i1, int i2, int i3) the parameters
 //        //should be on the stack in order ... i1, i2, i3, top of stack.
 //        paramMagicNumber = symbol.getParamTypeArray().length + 2*NumberGenerator.getInstance().getTotalLocals() - 1;
-//        node.visitParams(this);
+        node.visitParams(this);
 //
 //        //pop this
 //        CodeGenerator.popToStack(out);
 //        writeStmt("istore 0");
 //
 //        curTable = symbol.getSymbolTable();
-//        node.visitBody(this);
+        node.visitBody(this);
 //        curTable = curTable.getParent();
 //
 //        if (symbol.getType().equals("void"))
@@ -734,7 +787,6 @@ public class CodeGenerator extends Visitor
 		return null;
 	}
 
-	
 	@Override
 	public Object visit(CastNode node) {
 		// TODO Auto-generated method stub
