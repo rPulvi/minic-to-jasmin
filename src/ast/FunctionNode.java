@@ -50,7 +50,13 @@ public class FunctionNode extends SlotNode
     {
         this.params = params;
     }
-
+    
+    public ListNode getParams()
+    {
+    	return this.params;
+    }
+    
+    
 //    public void setSymbol(MethodSymbol symbol)
 //    {
 //        this.symbol = symbol;

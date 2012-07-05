@@ -2,8 +2,10 @@ package compiler;
 
 import it.m2j.IdType;
 import it.m2j.Operator;
+import it.m2j.SymbolDesc;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
 
 import ast.*;
 
@@ -100,9 +102,47 @@ public class SemanticChecker extends Visitor
     //determined at run time
     public Object visit(FuncCallNode node)
     {
-//        checkSuperCall(node);
-//
-//        //check the parameters
+    	//Node[] paramsCall = node.getParams(); //Call Params
+    	Object[] paramsCall = node.visitParams(this); //Call Params
+
+    	ArrayList<SymbolDesc> funcDesc = sTable.getSpecific(node.getName(), IdType.FUNCTION);
+    	
+    	if(funcDesc.size() > 0)
+    	{
+    		ArrayList<IdType> paramsDecl = funcDesc.get(0).getParamList();//Declaration Params
+    		
+    		if(paramsDecl.size() == paramsCall.length)
+    		{    		    			
+        		for(int i=0; i< paramsCall.length; i++)
+            	{           			
+        			System.out.println("ToString1: " + paramsCall[i]);
+        			        			
+            		if(! paramsCall[i].toString().equals(paramsDecl.get(i).toString()) )
+        			{
+            			error("Function \""+node.getName()+"\": expected " + paramsDecl.get(i).toString() + ", found " + paramsCall[i].toString() + " ", node);
+        			}
+            	}       			
+    		}
+    		else
+    		{
+    			if(paramsCall.length > 0)
+    			{
+					String args=paramsCall[0].toString();
+
+					for(int i=1;i<paramsCall.length;i++)
+						args= args + ", " + paramsCall[i].toString();
+
+	                error("Function \""+node.getName()+"\" is not applicable for the arguments: (" + args + ").", node);			                    				
+    			}
+    			else
+    				error("Function \""+node.getName()+"\" is not applicable without arguments.", node);
+    		}
+    	}
+
+    	return sTable.getFunctionType(node.getName());
+
+
+    	//        //check the parameters
 //        String[] typeNames = ParamUtils.makeTypeArray(node.visitParams(this));
 //
 //        //check the target
@@ -133,8 +173,7 @@ public class SemanticChecker extends Visitor
 //        if (returnType == null)
 //            return sTable.get("unknown"); //the error will be caught when the method is resolved
 //        else
-//            return returnType;
-    	return null;
+//            return returnType;    	
     }
 
     public Object visit(ArgNode node)

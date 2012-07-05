@@ -144,4 +144,18 @@ public class SymbolTable
 
     	return typeRet;
     }
+    
+    public IdType getFunctionType(String key)
+    {
+    	ArrayList<SymbolDesc> varDesc = new ArrayList<SymbolDesc>();
+    	IdType typeRet = IdType.ERR;
+    	
+    	varDesc = getSpecific(key, IdType.FUNCTION);
+    	
+    	if (varDesc.size() > 0)
+    		typeRet = varDesc.get(0).getType();
+
+    	return typeRet;
+    }    
+    
 }

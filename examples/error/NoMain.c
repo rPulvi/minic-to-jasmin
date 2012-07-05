@@ -1,4 +1,4 @@
-int funzione(){
+int funzione(int c){
 	int a;
 	float b;
 	bool bRet;
@@ -14,5 +14,8 @@ int funzione(){
 		c = "mai provato";
 	}
 	
+	a = funzione(b, a);
+	
 	return a; 	
+	
 }

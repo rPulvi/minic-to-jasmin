@@ -6,40 +6,38 @@ import compiler.*;
 
 public class FuncCallNode extends ExprNode implements InvocNode
 {    
-    private String methodName;
+    private String functionName;
     private ListNode params;
 
     //the static method to call
     //private MethodSymbol symbol = null;
 
-    public FuncCallNode(String methodName, ListNode params, int lineNumber, int colNumber)
+    public FuncCallNode(String functionName, ListNode params, int lineNumber, int colNumber)
     {
         super(lineNumber, colNumber);        
-        this.methodName = methodName;
-        this.params = params; //No Params
+        this.functionName = functionName;
+        this.params = params;
     }
 
-    public FuncCallNode(String methodName, int lineNumber, int colNumber)
+    public FuncCallNode(String functionName, int lineNumber, int colNumber)
     {
         super(lineNumber, colNumber);        
-        this.methodName = methodName;
-        this.params = null;
+        this.functionName = functionName;
+        this.params = null; //No Params
     }
-
     
     public Object accept(Visitor v)
     {
         return v.visit(this);
     }
     public String toString()
-    {
-    	return ""; //SISTEMARE
-        //return target + "." + methodName + "(" + ParamUtils.makeSourceList(params) + ")";
+    {    	
+    	return functionName + "(" + params +")";
     }
 
     public String getName()
     {
-        return methodName;
+        return functionName;
     }
 
 //    public void setSymbol(MethodSymbol symbol)

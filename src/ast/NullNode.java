@@ -4,9 +4,9 @@ import compiler.Visitor;
 
 public class NullNode extends ExprNode
 {
-    public NullNode(int lineNumber, int colNumber)
+    public NullNode()
     {
-        super(lineNumber, colNumber);
+        super(-1, -1);
     }
 
     public Object accept(Visitor v)

@@ -2,9 +2,11 @@ package compiler;
 
 import ast.*;
 
+import it.m2j.IdType;
 import it.m2j.SymbolDesc;
 
 import java.io.*;
+import java.util.ArrayList;
 
 
 public class SymbolTableConstructor extends Visitor
@@ -146,43 +148,41 @@ public class SymbolTableConstructor extends Visitor
      */
     public Object visit(FunctionNode node)
     {    	
-        visitFunction(node, "method", false);
+        visitFunction(node);
 
         return null;
     }
 
-    //visit a method or constructor definition
-    private void visitFunction(FunctionNode node, String methodType, boolean constructor)
+    private ArrayList<IdType> functionParams = new ArrayList<IdType>();
+    
+    //visit a function definition
+    private void visitFunction(FunctionNode node)
     {
     	//TODO: fix the param list
-    	if (sTable.putFunction(node.getName(), node.getType(), null) == false)
+    	if (sTable.get(node.getName()) != null)
     		error("Function '" + node.getName() + "' already declared.", node);    
-    	else //TODO: VERIFICARE!!!
+    	else
     	{
-    		node.visitParams(this);            	
-        	node.visitBody(this);
+    		node.visitParams(this);
+    		
+    		sTable.putFunction(node.getName(), node.getType(), functionParams);
+    		
+        	node.visitBody(this);        	        	
     	}
     }
 
     /**
-     * visits a node representing a single parameter to a method, adding it to the symbol table
+     * visits a node representing a single parameter to a function, adding it to the symbol table
      * @param node an ArgNode to visit
      * @return null
      */
     public Object visit(ArgNode node)
     {
-//        ParamSymbol param = new ParamSymbol(node.getName(), node.getType(), node);
-//
-//        //check if the parameter is a duplicate, if not add it to the symbol table
-//        if (!sTable.canBeDeclared(param.getKey()))
-//            error("Duplicate parameter: ", node);
-//        else
-//        {
-//            sTable.put(param);
-//            node.setSymbol(param);
-//        }
-
-        return null;
+    	IdType type = node.getType();
+    	
+    	functionParams.add(type);
+    	
+    	return type;
     }
 
     public Object visit(IfNode node)
