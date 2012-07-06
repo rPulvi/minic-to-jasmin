@@ -250,10 +250,11 @@ public class CodeGenerator extends Visitor
     	
         node.visitParams(this);
 
-//        .method public static distSq(II)I
-//        writeStmt(".method public static " + name + "(" + )
+        writeStmt(".method public static " + name + "(" + getParamTypes(node.getParams().toArray()) + ")" + getJVMType(retType));
         
         node.visitBody(this);
+        
+        writeStmt(".end method");
       
     }
 
@@ -818,4 +819,33 @@ public class CodeGenerator extends Visitor
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+    private String getParamTypes(Node[] nodes)
+    {
+    	String sRet = "";
+    	
+    	for(int i=0;i<nodes.length;i++)
+    		sRet += getJVMType(nodes[i].getType());
+    	
+    	return sRet;
+    }
+    
+    private String getJVMType(IdType t)
+    {
+    	switch(t)
+		{
+			case INT:
+				return "I";
+			case FLOAT:
+				return "F";
+			case STRING:
+				return "S";
+			case BOOL:
+				return "I";
+			case VOID:
+				return "V";
+			default:
+				return "V";
+		}
+    }
 }

@@ -122,28 +122,21 @@ public class SymbolTable
 
     public IdType getVariableType(String key, int block)
     {
-    	ArrayList<SymbolDesc> varDesc = new ArrayList<SymbolDesc>();
     	IdType typeRet = IdType.ERR;
     	
-    	varDesc = getSpecific(key, IdType.VARIABLE);
+    	SymbolDesc mainBlock;
+    	SymbolDesc specificBlock;
     	
-    	if (varDesc.size() > 0)
-    	{    		
-    		IdType t = IdType.ERR;
-    		Iterator<SymbolDesc> it = varDesc.listIterator();			
-			
-			while (it.hasNext()) {
-				SymbolDesc s = it.next();
+    	mainBlock = getVarDesc(key, 1);
 
-				if(s.getBlock() == 1)
-					t = s.getType();
-				
-				if(s.getBlock() == block) //A variable can be declared in its block or in block 1 (global var)
-					typeRet = s.getType();
-				
-				if (typeRet == IdType.ERR)
-					typeRet = t;				
-			}
+    	if(mainBlock != null)
+    	{
+	    	specificBlock = getVarDesc(key, block);
+	    	
+			if (specificBlock == null)
+				typeRet = mainBlock.getType();
+			else
+				typeRet = specificBlock.getType();
     	}
     	
     	return typeRet;

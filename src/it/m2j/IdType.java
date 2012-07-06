@@ -1,7 +1,7 @@
 package it.m2j;
 
 public enum IdType {
-	INT {		
+	INT {
 		public String toString() 
 		{
 			return "int"; 
