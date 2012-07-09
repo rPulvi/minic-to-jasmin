@@ -1,6 +1,7 @@
 package compiler;
 
 import it.m2j.IdType;
+import it.m2j.SymbolDesc;
 
 import java.io.FileWriter;
 import java.io.PrintWriter;
@@ -11,16 +12,9 @@ public class CodeGenerator extends Visitor
 {
     private StringBuffer out = new StringBuffer();
     private SymbolTable sTable; //the top level symbol table
+    
     private String jasminClassName;
-    
-    private int indentCounter;
     private int varCounter;
-
-    //private CodeGenerator codeGen;
-    
-    //this variable is true when the result of an expression will be used
-    //when it is false the statement should not leave anything on the stack
-    //private boolean inExpr = false;
 
     /**
      * Creates a new Code Generation visitor object
@@ -33,8 +27,6 @@ public class CodeGenerator extends Visitor
 
         sTable = st;
         jasminClassName = className;
-        
-        indentCounter = 0;
         varCounter = 0;
         
         writeJasminHeader();
@@ -137,16 +129,26 @@ public class CodeGenerator extends Visitor
     	
     	return null;
     }
- 
-    //if we are in the lhs of an assignment statement
-    //private boolean assignLHS = false;
     
     public Object visit(AssignNode node)
     {
+    	String varName = "";
     	
-//        boolean oldExpr = inExpr;
-//        inExpr = true;
-//        writeStmt(";" + node.toString() + "-----------------------------------");
+    	writeStmt(";" + node.toString() + " -----------------------------------");
+    	
+    	varName = (String)node.visitVar(this);
+    	
+    	String secondMember = (String)node.visitValue(this);
+    	SymbolDesc firstMember = sTable.getVarDesc(varName, node.getBlockNumber());
+
+    	writeStmt("ldc " + node.visitValue(this));
+    	writeStmt("istore_" + firstMember.getJvmVar());
+    	
+    	System.out.println("#1: " + firstMember.getJvmVar());
+    	System.out.println("#2: " + secondMember);
+    	
+    	
+    	
 //        //save register 5
 //        CodeGenerator.pushVar(5, out);
 //
@@ -183,14 +185,8 @@ public class CodeGenerator extends Visitor
 
     public Object visit(BlockNode node)
     {
-//        //move scope
-//        curTable = node.getSymbol().getSymbolTable();
-//
         node.visitChildren(this);
-//
-//        //restore the scope
-//        curTable = curTable.getParent();
-
+        
         return null;
     }
 
@@ -232,7 +228,7 @@ public class CodeGenerator extends Visitor
 
     //its not really magic! If we wanted local vars (y) 7, 6, 5 but have (x) 5, 6, 7
     //then pMN = 7 + 5 = 12 and y = pMN - x, eg 12 - 5 = 7
-    private int paramMagicNumber = -1;
+    //private int paramMagicNumber = -1;
 
     public Object visit(FunctionNode node)
     {
@@ -241,7 +237,6 @@ public class CodeGenerator extends Visitor
         return null;
     }
 
-    //extracted functionallity to visit either a constructor or method node
     private void visitFunction(FunctionNode node)
     {
     	IdType retType = node.getType();
@@ -255,7 +250,6 @@ public class CodeGenerator extends Visitor
         node.visitBody(this);
         
         writeStmt(".end method");
-      
     }
 
     public Object visit(ArgNode node)
@@ -719,12 +713,11 @@ public class CodeGenerator extends Visitor
 
     public Object visit(StringNode node)
     {
-//        writeStmt(";" + node.toString());
-//        //push the String onto the stack
-//        writeStmt("ldc " + node.toString());
-//        //convert the java.lang.String to a new String object
-//        codeGen.newString(out);
+        writeStmt(";" + node.toString());
         
+        //push the String onto the stack
+        writeStmt("ldc " + node.toString());
+   
         return null;
     }
 
@@ -733,10 +726,10 @@ public class CodeGenerator extends Visitor
         //push the boolean onto the stack
 
         //booleans are represented as 0/1
-//        if (node.getValue())
-//            writeStmt("iconst_1");
-//        else
-//            writeStmt("iconst_0");
+        if (node.getValue() == false)
+            writeStmt("iconst_1");
+        else
+            writeStmt("iconst_0");
 
         return null;
     }
@@ -744,13 +737,17 @@ public class CodeGenerator extends Visitor
     public Object visit(IntNode node)
     {
         //push the number onto the stack
-//        writeStmt("ldc " + node.toString());
+        writeStmt("ldc " + node.toString());
+        
         return null;
     }
 
 	@Override
-	public Object visit(FloatNode node) {
-		// TODO Auto-generated method stub
+	public Object visit(FloatNode node) 
+	{
+		//push the number onto the stack
+        writeStmt("ldc " + node.toString());
+        
 		return null;
 	}
 
