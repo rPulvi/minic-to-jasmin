@@ -89,15 +89,11 @@ public class CodeGenerator extends Visitor
     		case INT:
     			writeStmt("iconst_0");
     			writeStmt("istore " + varCounter);
-    			
-    			varCounter++;
     			break;
     		
     		case FLOAT:
     			writeStmt("fconst_0");
     			writeStmt("fstore " + varCounter);
-    			
-    			varCounter++;
     			break;
     		
     		case BOOL:
@@ -109,20 +105,18 @@ public class CodeGenerator extends Visitor
     			
     			writeStmt("iconst_0");
     			writeStmt("istore " + varCounter);
-    			
-    			varCounter++;
     			break;
     		
     		case STRING:
     			writeStmt("ldc	\"\"");
     			writeStmt("astore " + varCounter);
-    			
-    			varCounter++;
     			break;
     		
     		default:
     			break;
     	}
+    	
+    	varCounter++;
     	
 		//Add JVM variable in the SymbolTable
 		sTable.getVarDesc(name, node.getBlockNumber()).setJvmVar(varCounter);
@@ -138,14 +132,13 @@ public class CodeGenerator extends Visitor
     	
     	varName = (String)node.visitVar(this);
     	
-    	String secondMember = (String)node.visitValue(this);
-    	SymbolDesc firstMember = sTable.getVarDesc(varName, node.getBlockNumber());
-
-    	writeStmt("ldc " + node.visitValue(this));
-    	writeStmt("istore_" + firstMember.getJvmVar());
+    	node.visitValue(this);
     	
-    	System.out.println("#1: " + firstMember.getJvmVar());
-    	System.out.println("#2: " + secondMember);
+    	SymbolDesc firstMember = sTable.getVarDesc(varName, node.getBlockNumber());
+    	
+    	System.out.println("###### :" + firstMember.toString());
+
+    	writeStmt("istore_" + firstMember.getJvmVar());
     	
     	
     	
@@ -192,7 +185,7 @@ public class CodeGenerator extends Visitor
 
     public Object visit(VarNode node)
     {
-    	return node.getName();
+    	return null;
     	
 //        if (node.isThis())
 //        {
@@ -226,10 +219,6 @@ public class CodeGenerator extends Visitor
 //        }
     }
 
-    //its not really magic! If we wanted local vars (y) 7, 6, 5 but have (x) 5, 6, 7
-    //then pMN = 7 + 5 = 12 and y = pMN - x, eg 12 - 5 = 7
-    //private int paramMagicNumber = -1;
-
     public Object visit(FunctionNode node)
     {
     	visitFunction(node);
@@ -241,15 +230,29 @@ public class CodeGenerator extends Visitor
     {
     	IdType retType = node.getType();
     	String name = node.getName();
-    	Node [] params = node.getParams().toArray();
+    	Node [] params;
     	
-        node.visitParams(this);
+    	//No params
+    	if(node.getParams() == null)
+    	{
+            writeStmt(".method public static " + name + "()" + getJVMType(retType));
+            
+            node.visitBody(this);
+            
+            writeStmt(".end method");    	
+    	}
+    	//Params
+    	else{
+    		params = node.getParams().toArray();
+    		
+            node.visitParams(this);
 
-        writeStmt(".method public static " + name + "(" + getParamTypes(node.getParams().toArray()) + ")" + getJVMType(retType));
-        
-        node.visitBody(this);
-        
-        writeStmt(".end method");
+            writeStmt(".method public static " + name + "(" + getParamTypes(node.getParams().toArray()) + ")" + getJVMType(retType));
+            
+            node.visitBody(this);
+            
+            writeStmt(".end method");
+    	}
     }
 
     public Object visit(ArgNode node)
@@ -564,6 +567,13 @@ public class CodeGenerator extends Visitor
     //visit &&, ||, +, -, * or / nodes
     private void visitBinaryNode(BinaryNode node, String op)
     {
+    	node.visitLeft(this);
+    	node.visitRight(this);
+    	
+    	writeStmt(op);
+    	
+
+    	
 //        writeStmt(";" + node.toString());
 //
 //        //save register 5
@@ -812,8 +822,8 @@ public class CodeGenerator extends Visitor
 
 	@Override
 	public Object visit(SimpleVarNode node) {
-		// TODO Auto-generated method stub
-		return null;
+		
+		return node.getName();
 	}
 
 	@Override
