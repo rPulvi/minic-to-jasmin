@@ -15,9 +15,6 @@ public class SemanticChecker extends Visitor
     //pointer to the global symbol table
     private SymbolTable sTable;    
 
-    //the class that we are currently checking
-    //private ClassSymbol curClass = null;
-
     public SemanticChecker(SymbolTable sTable, PrintWriter out)
     {
         super(out);
@@ -68,8 +65,6 @@ public class SemanticChecker extends Visitor
     	return null;
     }
 
-    //only checks the method exists statically, the actual method to call is
-    //determined at run time
     public Object visit(FuncCallNode node)
     {    	
     	Object[] paramsCall = node.visitParams(this); //Call Params
@@ -85,8 +80,7 @@ public class SemanticChecker extends Visitor
         		for(int i=0; i< paramsCall.length; i++)
             	{
         			NodeInfo info = (NodeInfo)paramsCall[i];
-        			        			
-            		//if(! paramsCall[i].toString().equals(paramsDecl.get(i).toString()))
+
         			if( (info.getType() != paramsDecl.get(i).getType()) || info.getDim() != paramsDecl.get(i).getDim())
         			{
             			error("Function \""+node.getName()+"\": expected " + paramsDecl.get(i).toString() + ", found " + info.toString() + " ", node);
@@ -127,9 +121,7 @@ public class SemanticChecker extends Visitor
     public Object visit(FunctionNode node)
     {
     	returnType = node.getType();
-    	returnDim = node.getDimension();    
-    	
-    	System.out.println("FUNCTION DIM: " + returnDim);
+    	returnDim = node.getDimension();
 
         visitParamsAndBody(node, returnType);
 
@@ -148,11 +140,9 @@ public class SemanticChecker extends Visitor
 
         //setup return type checking
         returned = false;
-        //this.returnType = returnType;
 
         node.visitBody(this);            	    	
     }
-
 
     public Object visit(ListNode node)
     {
@@ -186,7 +176,6 @@ public class SemanticChecker extends Visitor
 
         return null;        
     }
-    
 
 	public Object visit(IfElseNode node) 
 	{
@@ -201,22 +190,6 @@ public class SemanticChecker extends Visitor
         
         return null;
 	}
-    
-
-//    public Object visit(PrintNode node)
-//    {
-//        checkSuperCall(node);
-//
-//        Symbol valueType = (Symbol)node.visitValue(this);
-//
-//        //type of the expression in the print statement must not be void
-//        if (valueType == sTable.get("void"))
-//            error("Argument to print statement must have type: found 'void'. ", node);
-//
-//        node.setType(valueType.getName());
-//
-//        return sTable.get("void");
-//    }
 
     public Object visit(ReturnNode node)
     {
@@ -427,9 +400,6 @@ public class SemanticChecker extends Visitor
 		return infoRet;
     }
     
-    //-------------------------------------------------------------------------- 
-    
-    
     //------------------------------------- UNARY OPERATORS -------------------------------------
     
     public Object visit(SignNode node)
@@ -536,10 +506,8 @@ public class SemanticChecker extends Visitor
 		int nodeDim;		
 		
 		NodeInfo varInfo = (NodeInfo) node.visitVar(this);		
-		node.visitDim(this);
-		
-		//SymbolDesc varDesc = sTable.getVarDesc(node.getName(), node.getBlockNumber());
-    	
+		node.visitDim(this);	
+
 		varDim = varInfo.getDim();
 		nodeDim = node.getDimension();			
 		
@@ -547,9 +515,8 @@ public class SemanticChecker extends Visitor
 		{
 			//error("Variable "+ node.getName() + " exceeds dimension.", node);
 			return (new NodeInfo(IdType.ERR, nodeDim));
-		}
-		
-		//NodeInfo info = new NodeInfo(varDesc.getType(), varDesc.getDim() - node.getDimension()); // !!
+		}		
+
 		NodeInfo info = new NodeInfo(varInfo.getType(), varDim - nodeDim);
     	return info;			
 	}
@@ -566,7 +533,3 @@ public class SemanticChecker extends Visitor
 		return sRet;
 	}
 }
-
-
- 
- 

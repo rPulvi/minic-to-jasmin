@@ -15,9 +15,6 @@ public class SymbolTableConstructor extends Visitor
     //pointer to the current symbol table
     private SymbolTable sTable = new SymbolTable();    
 
-    //the class that we are currently checking
-    //private ClassSymbol curClass = null;
-
     /**
      * Create a new Symbol table constructor
      * @param out PrintWriter to be used for output
@@ -44,10 +41,10 @@ public class SymbolTableConstructor extends Visitor
         return null;
     }
 
-    //visit a compound statement node and it to the symbol table
+    //visit a block node and it to the symbol table
     public Object visit(BlockNode node)
     {
-    	//visit the statements in the block statement
+    	//visit the statements in the block node
         node.visitChildren(this);
 
         return null;
@@ -83,7 +80,6 @@ public class SymbolTableConstructor extends Visitor
         return null;
     }
 
-    //private ArrayList<IdType> functionParams = new ArrayList<IdType>();
     private ArrayList<NodeInfo> functionParams = new ArrayList<NodeInfo>();
     
     //visit a function definition
@@ -145,21 +141,6 @@ public class SymbolTableConstructor extends Visitor
 		return null;
 	}
 
-    //all the below methods do nothing, since none of these nodes define new symbols
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    public Object visit(StringNode node)
-    {
-        return null;
-    }
-    public Object visit(OrNode node)
-    {
-        return null;
-    }
-    public Object visit(PrintNode node)
-    {
-        return null;
-    }
-    
     public Object visit(SimpleVarNode node)
     {
         SymbolDesc varDesc = new SymbolDesc();
@@ -174,6 +155,21 @@ public class SymbolTableConstructor extends Visitor
         varDesc.setVariableSymbol(node.getType(), node.getDimension(), node.getBlockNumber());
     	
         return varDesc;
+    }
+    
+    //all the below methods do nothing, since none of these nodes define new symbols
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    public Object visit(StringNode node)
+    {
+        return null;
+    }
+    public Object visit(OrNode node)
+    {
+        return null;
+    }
+    public Object visit(PrintNode node)
+    {
+        return null;
     }
     
     public Object visit(AssignNode node)
@@ -233,72 +229,63 @@ public class SymbolTableConstructor extends Visitor
         return null;
     }
 	
-	public Object visit(FloatNode node) {
-		
+	public Object visit(FloatNode node) 
+	{	
 		return null;
 	}
 
-	public Object visit(CastNode node) {
-		
+	public Object visit(CastNode node) 
+	{	
 		return null;
 	}
 
-	public Object visit(ModNode node) {
-
+	public Object visit(ModNode node) 
+	{
 		return null;
 	}
 
-	@Override
-	public Object visit(LTNode node) {
-		// TODO Auto-generated method stub
+	public Object visit(LTNode node) 
+	{
 		return null;
 	}
 
-	@Override
-	public Object visit(LETNode node) {
-		// TODO Auto-generated method stub
+	public Object visit(LETNode node) 
+	{
+		return null;
+	}
+	
+	public Object visit(GTNode node) 
+	{
 		return null;
 	}
 
-	@Override
-	public Object visit(GTNode node) {
-		// TODO Auto-generated method stub
+	public Object visit(GETNode node) 
+	{
 		return null;
 	}
 
-	@Override
-	public Object visit(GETNode node) {
-		// TODO Auto-generated method stub
+	public Object visit(SignNode node) 
+	{
 		return null;
 	}
 
-	@Override
-	public Object visit(SignNode node) {
-		// TODO Auto-generated method stub
+	public Object visit(NullNode letNode) 
+	{
+		return null;
+	}
+	
+	public Object visit(ArrayNewNode node) 
+	{	
 		return null;
 	}
 
-	@Override
-	public Object visit(NullNode letNode) {
-		// TODO Auto-generated method stub
+	public Object visit(ArrayCallNode node) 
+	{
 		return null;
 	}
 
-	@Override
-	public Object visit(ArrayNewNode node) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Object visit(ArrayCallNode node) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Object visit(ArraySizeNode node) {
-		// TODO Auto-generated method stub
+	public Object visit(ArraySizeNode node) 
+	{
 		return null;
 	}
 }

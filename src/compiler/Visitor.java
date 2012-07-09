@@ -8,6 +8,7 @@ public abstract class Visitor
 {
     //output
     protected PrintWriter err;
+
     //keep track of the number of errors
     protected int errorCount = 0;
 
