@@ -326,54 +326,6 @@ public class CodeGenerator extends Visitor
         return null;
     }
 
-    public Object visit(NewNode node)
-    {
-//        ClassSymbol classSymbol = node.getClassSymbol();
-//
-//        writeStmt("\n;" + node.toString() + "---------------");
-//        //save register 5
-//        CodeGenerator.pushVar(5, out);
-//
-//        CodeGenerator.newObject(classSymbol, out);
-//        writeStmt("istore 5");
-//
-//        //call the constructor
-//        MethodSymbol method = node.getSymbol();
-//
-//        boolean oldExpr = inExpr;
-//        inExpr = true;
-//        int retAdd = pushPreMethodCall(node, 5);
-//        inExpr = oldExpr;
-//
-//        //figure out the method number (trivial)
-//        writeStmt("ldc " + method.getMethodNumber());  //now have the method number
-//
-//        //use the jump table
-//        writeStmt("goto jumpTable");
-//
-//        //the return label
-//        writeStmt(NumberGenerator.getInstance().makeRetAdd(retAdd) + ":");
-//
-//        //pop the result (void so we can ignore it)
-//        //writeStmt("pop");
-//        CodeGenerator.pop(out);
-//
-//        //restore the local variables and 'this'
-//        restoreVariables();
-//
-//        //leave a pointer to the new object on the stack
-//        if (inExpr)
-//            writeStmt("iload 5");
-//
-//        //restore register 5
-//        CodeGenerator.popToVar(5, out);
-//
-//
-//        writeStmt("; end of " + node.toString() + "---------------");
-
-        return null;
-    }
-
     private int pushPreMethodCall(InvocNode node, int target)
     {
 //        //save 'this' and local variables on to the stack
@@ -845,4 +797,28 @@ public class CodeGenerator extends Visitor
 				return "V";
 		}
     }
+
+	@Override
+	public Object visit(ArrayNewNode node) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Object visit(ArrayCallNode node) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Object visit(SimpleVarNode node) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Object visit(ArraySizeNode node) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
