@@ -8,8 +8,6 @@ import it.m2j.SymbolDesc;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
-import javax.swing.plaf.basic.BasicInternalFrameTitlePane.MaximizeAction;
-
 import ast.*;
 
 public class SemanticChecker extends Visitor
@@ -80,17 +78,18 @@ public class SemanticChecker extends Visitor
     	
     	if(funcDesc.size() > 0)
     	{
-    		ArrayList<IdType> paramsDecl = funcDesc.get(0).getParamList();//Declaration Params
+    		ArrayList<NodeInfo> paramsDecl = funcDesc.get(0).getParamList();//Declaration Params
     		
     		if(paramsDecl.size() == paramsCall.length)
     		{    		    			
         		for(int i=0; i< paramsCall.length; i++)
-            	{           			
-        			System.out.println("ToString1: " + paramsCall[i]);
+            	{
+        			NodeInfo info = (NodeInfo)paramsCall[i];
         			        			
-            		if(! paramsCall[i].toString().equals(paramsDecl.get(i).toString()) )
+            		//if(! paramsCall[i].toString().equals(paramsDecl.get(i).toString()))
+        			if( (info.getType() != paramsDecl.get(i).getType()) || info.getDim() != paramsDecl.get(i).getDim())
         			{
-            			error("Function \""+node.getName()+"\": expected " + paramsDecl.get(i).toString() + ", found " + paramsCall[i].toString() + " ", node);
+            			error("Function \""+node.getName()+"\": expected " + paramsDecl.get(i).toString() + ", found " + info.toString() + " ", node);
         			}
             	}       			
     		}
@@ -110,8 +109,7 @@ public class SemanticChecker extends Visitor
     		}
     	}
 
-    	return sTable.getFunctionType(node.getName());
-	
+    	return sTable.getFunctionType(node.getName());	
     }
 
     public Object visit(ArgNode node)
@@ -129,7 +127,9 @@ public class SemanticChecker extends Visitor
     public Object visit(FunctionNode node)
     {
     	returnType = node.getType();
-    	returnDim = node.getDimension();    	
+    	returnDim = node.getDimension();    
+    	
+    	System.out.println("FUNCTION DIM: " + returnDim);
 
         visitParamsAndBody(node, returnType);
 
@@ -241,8 +241,7 @@ public class SemanticChecker extends Visitor
         }
 
         returned = true;
-
-    	//return valueType;
+        
         return retInfo;
     }
 

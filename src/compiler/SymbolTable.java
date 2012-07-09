@@ -91,7 +91,7 @@ public class SymbolTable
     	return putFunction(id, symbolDesc.getType(),symbolDesc.getParamList(), symbolDesc.getDim());
     }
     
-    public boolean putFunction(String id, IdType type, ArrayList<IdType> params, int dim)
+    public boolean putFunction(String id, IdType type, ArrayList<NodeInfo> params, int dim)
     {
     	boolean bRet = false;
     	ArrayList<SymbolDesc> funDesc = this.getSpecific(id, IdType.FUNCTION);
@@ -100,7 +100,7 @@ public class SymbolTable
     	{
 	    	SymbolDesc symbol = new SymbolDesc();
 	    	ArrayList<SymbolDesc> descList = new ArrayList<SymbolDesc>();    	
-	
+
 	    	symbol.setFunctionSymbol(type, params, dim);
 	
 	    	descList.add(symbol);

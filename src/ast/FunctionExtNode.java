@@ -6,11 +6,13 @@ import compiler.Visitor;
 public class FunctionExtNode extends SlotNode{
 	
 	protected ListNode params;
+	private int dim;
 	
-	public FunctionExtNode(String name, IdType type, ListNode params, int lineNumber, int colNumber) {
+	public FunctionExtNode(String name, IdType type, int dim, ListNode params, int lineNumber, int colNumber) {
 		
 		super(name, type, lineNumber, colNumber);
 		this.params = params;
+		this.dim = dim;
 	}
 
 	@Override
@@ -23,7 +25,14 @@ public class FunctionExtNode extends SlotNode{
     {
         this.params = params;
     }
-
-
-
+    
+    public IdType getType()
+    {
+        return type;
+    }
+    
+    public int getDimension()
+    {
+    	return this.dim;
+    }
 }

@@ -73,7 +73,7 @@ public class SymbolTableConstructor extends Visitor
     /**
      * visit a method definition node and add the method, its parameters and any variables in its body
      * to the symbol table
-     * @param node a MethodNode to visit
+     * @param node a FunctionNode to visit
      * @return null
      */
     public Object visit(FunctionNode node)
@@ -83,7 +83,8 @@ public class SymbolTableConstructor extends Visitor
         return null;
     }
 
-    private ArrayList<IdType> functionParams = new ArrayList<IdType>();
+    //private ArrayList<IdType> functionParams = new ArrayList<IdType>();
+    private ArrayList<NodeInfo> functionParams = new ArrayList<NodeInfo>();
     
     //visit a function definition
     private void visitFunction(FunctionNode node)
@@ -106,10 +107,13 @@ public class SymbolTableConstructor extends Visitor
      * @return null
      */
     public Object visit(ArgNode node)
-    {
+    {   	
     	IdType type = node.getType();    	
-    	
-    	functionParams.add(type);
+    	int dim = node.getDimension();
+
+    	NodeInfo info = new NodeInfo(type, dim);
+
+    	functionParams.add(info); 
 
     	SymbolDesc varDesc = new SymbolDesc();
     	varDesc.setVariableSymbol(type, node.getDimension(), 1);

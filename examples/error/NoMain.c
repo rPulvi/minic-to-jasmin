@@ -1,4 +1,4 @@
-int funzione(int[] f){
+int[] funzione(int[] f){
 	int[][] a;
 	int[] b;
 	int c;
@@ -20,4 +20,8 @@ int funzione(int[] f){
 	e = d;
 	b = c[1.3];
 	a = b[0][0];
+	
+	funzione(4);
+	return 5;
+	
 }

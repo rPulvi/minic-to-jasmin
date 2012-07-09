@@ -2,6 +2,8 @@ package it.m2j;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.Vector;
 
 /**
  * <p>Title: MiniC to Jasmin</p>
@@ -15,7 +17,7 @@ public class SymbolDesc{
     private IdType type;
     private IdType kind;
     private int nBlock;
-    private ArrayList<IdType> paramList;
+    private ArrayList<NodeInfo> paramList;
     private int dim;
     private int jvmVar;
     
@@ -46,13 +48,13 @@ public class SymbolDesc{
      * @param typeList the arguments of the function
      * @param dim indicates the return value dimension. A value greater than zero means array.
      */
-    public void setFunctionSymbol(IdType type, ArrayList<IdType> typeList, int dim){
+    public void setFunctionSymbol(IdType type, ArrayList<NodeInfo> typeList, int dim){
         this.type = type;
         this.dim = dim;
-        this.paramList = new ArrayList<IdType>();
+        this.paramList = new ArrayList<NodeInfo>();
         
         if(typeList!=null)
-        	this.paramList = (ArrayList<IdType>) typeList.clone();
+        	this.paramList = (ArrayList<NodeInfo>) typeList.clone();
         
         this.kind = IdType.FUNCTION;        
     }        
@@ -85,7 +87,7 @@ public class SymbolDesc{
      * Return params list
      * @return the params as type list.
      */
-    public ArrayList<IdType> getParamList(){
+    public ArrayList<NodeInfo> getParamList(){
     	return this.paramList;
     }
 
@@ -130,4 +132,41 @@ public class SymbolDesc{
     {
     	return this.dim;
     }
+    
+    public String toString()
+    {
+    	if(kind == IdType.VARIABLE)
+    		return "Type: " + type + ", Kind: " + kind + ", Block: " + ", Dimension: " + dim + ", JVM Name: " + jvmVar;
+    	else
+    		return "Type: " + type + ", Kind: " + kind + ", Block: " + ", Params: " + getParams() + ", Dimension: " + dim + ", JVM Name: " + jvmVar;
+    }
+    
+    private String getParams()
+    {    	
+    	String sRet = "(";
+    	
+    	Iterator<NodeInfo> it = paramList.listIterator();
+    	
+    	while(it.hasNext())
+    	{
+    		NodeInfo info = it.next();
+    		sRet += info.getType() + getBrackets(info.getDim()) + ", " ;
+    	}
+    	
+    	sRet += ")";
+    	
+    	return sRet;
+    }
+    
+	private String getBrackets(int dim)
+	{
+		String sRet = "";	
+		
+		for(int i=0;i<dim;i++)
+		{
+			sRet += "[]";
+		}
+		
+		return sRet;
+	}    
 }

@@ -61,6 +61,7 @@ action code {:
     
     int nErrors = 0;
     int braCounter=0;
+    int funDim;
     	
 	public void addBlock()
 	{	
@@ -119,7 +120,7 @@ non terminal AssignNode assign_stmt;
 non terminal WhileNode while_stmt;
 non terminal IfNode if_then_stmt;
 non terminal IfElseNode if_then_else_stmt;
-non terminal IdType simple_type, type, ret_type;
+non terminal IdType simple_type, type, fun_ret, ret_type;
 non terminal ExprNode expr, if_condition, while_condition; 
 non terminal VarNode var;
 
@@ -171,11 +172,27 @@ array_dim ::= BRA_OS BRA_CS {: braCounter++; :}
         | array_dim BRA_OS BRA_CS  {: braCounter++; :}                     
         ;      	
 
-function ::= ret_type:x ID:y BRA_O param_list:params BRA_C block:b     						{: RESULT = new FunctionNode(y, params, x, braCounter, b, yleft, yright); :}  
-		| EXTERN CONST_STRING ret_type:x ID:y BRA_O decl_param:params BRA_C SEMI			{: RESULT = new FunctionExtNode(y, x, params, yleft, yright); :}
-		| ret_type ID param_list /* error */ 												{: PrintError("Error in function definition "); :}				
+function ::= fun_ret:x ID:y BRA_O param_list:params BRA_C block:b     						{: 
+																								RESULT = new FunctionNode(y, params, x, funDim, b, yleft, yright);
+																								braCounter = 0;
+																								funDim = 0;
+																							:}  
+		
+		| EXTERN CONST_STRING fun_ret:x ID:y BRA_O decl_param:params BRA_C SEMI				{: 
+																								RESULT = new FunctionExtNode(y, x, funDim, params, yleft, yright);
+																								braCounter = 0; 
+																							:}
+		
+		| fun_ret ID param_list /* error */ 												{: PrintError("Error in function definition "); :}				
 		;
 
+fun_ret ::= ret_type:f 		{:
+								RESULT = f;
+								funDim = braCounter;
+								braCounter = 0;
+							:}
+		;
+		
 decl_param ::=                             
 	    |/* empty */											
 		| decl_param_list:x {: RESULT = x; :}  

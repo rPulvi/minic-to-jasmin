@@ -20,4 +20,21 @@ public class NodeInfo {
 	{
 		return this.dim;
 	}
+	
+	public String toString()
+	{
+		return type + getBrackets(dim);
+	}
+	
+	private String getBrackets(int dim)
+	{
+		String sRet = "";	
+		
+		for(int i=0;i<dim;i++)
+		{
+			sRet += "[]";
+		}
+		
+		return sRet;
+	}
 }
