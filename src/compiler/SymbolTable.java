@@ -1,6 +1,7 @@
 package compiler;
 
 import java.util.*;
+
 import it.m2j.*;
 
 /**
@@ -225,5 +226,20 @@ public class SymbolTable
     	}
     	
     	return sdRet;
+    }
+    
+    public int varCount()
+    {
+    	int nVars=0;
+
+    	Iterator it = storage.keySet().iterator();
+    	
+    	while (it.hasNext())
+    	{    	
+    		String key = (String) it.next();    		
+    		nVars += getSpecific(key, IdType.VARIABLE).size(); 
+    	}
+    	
+    	return nVars;
     }
 }
