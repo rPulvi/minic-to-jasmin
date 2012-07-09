@@ -60,6 +60,7 @@ action code {:
     int tempBlockRem = 0; //+1 on "{" and -1 on "}". Always.
     
     int nErrors = 0;
+    int braCounter=0;
     	
 	public void addBlock()
 	{	
@@ -108,7 +109,7 @@ terminal Float   CONST_FLOAT;
 terminal String  CONST_STRING;
 
 // Non terminal tokens
-non terminal ListNode param_list, stmt_list, expr_list, decl_param, decl_param_list;
+non terminal ListNode param_list, stmt_list, expr_list, decl_param, decl_param_list, array_index;
 non terminal DeclNode decl; 
 non terminal Node prog, function, stmt;
 non terminal FuncCallNode func_call;
@@ -119,7 +120,7 @@ non terminal WhileNode while_stmt;
 non terminal IfNode if_then_stmt;
 non terminal IfElseNode if_then_else_stmt;
 non terminal IdType simple_type, type, ret_type;
-non terminal ExprNode expr, if_condition, while_condition, array_index;
+non terminal ExprNode expr, if_condition, while_condition; 
 non terminal VarNode var;
 
 non terminal array_dim, br_cg, br_og;
@@ -142,14 +143,22 @@ start with prog;
 prog ::= function:x	{: RESULT = x; :}	
         ;
 
-decl ::= type:t var:x      			{: RESULT = new DeclNode(x, t, xleft, xright); :}
+decl ::= type:t var:x      			{: 										
+										RESULT = new DeclNode(x, t, xleft, xright); 
+										braCounter = 0;
+									:}
         ;
 
-var ::= ID:x 						{: RESULT = new VarNode(x, getBlockNumber(), xleft, xright); :}
+var ::= ID:x 						{: 										
+										if (braCounter > 0)
+											RESULT = new ArrayNode(x, braCounter, getBlockNumber(), xleft, xright);
+										else
+											RESULT = new SimpleVarNode(x, getBlockNumber(), xleft, xright); 
+									:}
 		;
 		
-type ::= simple_type:x 				{: RESULT=x; :}                                       
-     	| simple_type:x array_dim   {: RESULT=x; :}                          
+type ::= simple_type:x 				{: RESULT=x; :}
+     	| simple_type:x array_dim   {: RESULT=x; :}
      	;
 
 simple_type ::= TYPE_BOOL			{: RESULT = IdType.BOOL; :}
@@ -158,11 +167,11 @@ simple_type ::= TYPE_BOOL			{: RESULT = IdType.BOOL; :}
         | TYPE_STRING				{: RESULT = IdType.STRING; :}
         ;
 
-array_dim ::= BRA_OS BRA_CS
-        | array_dim BRA_OS BRA_CS                       
+array_dim ::= BRA_OS BRA_CS {: braCounter++; :}
+        | array_dim BRA_OS BRA_CS  {: braCounter++; :}                     
         ;      	
 
-function ::= ret_type:x ID:y BRA_O param_list:params BRA_C block:b     						{: RESULT = new FunctionNode(y, params, x, b, yleft, yright); :}  
+function ::= ret_type:x ID:y BRA_O param_list:params BRA_C block:b     						{: RESULT = new FunctionNode(y, params, x, braCounter, b, yleft, yright); :}  
 		| EXTERN CONST_STRING ret_type:x ID:y BRA_O decl_param:params BRA_C SEMI			{: RESULT = new FunctionExtNode(y, x, params, yleft, yright); :}
 		| ret_type ID param_list /* error */ 												{: PrintError("Error in function definition "); :}				
 		;
@@ -172,13 +181,25 @@ decl_param ::=
 		| decl_param_list:x {: RESULT = x; :}  
 		;
 		
-decl_param_list ::= type:t				{: RESULT = new ListNode(new ArgNode(t, tleft, tright), null); :}                                  
-        | decl_param_list:l COMMA type:t	{: RESULT = new ListNode(l,new ArgNode(t, tleft, tright)); :}
+decl_param_list ::= type:t					{: 
+												RESULT = new ListNode(new ArgNode(t, braCounter, tleft, tright), null); 
+												braCounter=0; 
+											:}                                  
+        | decl_param_list:l COMMA type:t	{: 
+        										RESULT = new ListNode(l,new ArgNode(t, braCounter, tleft, tright)); 
+												braCounter=0;        										
+        									:}
         ;
                 		
 param_list ::= /* empty */						{: RESULT = null; :} 
-		| type:t ID:x  							{: RESULT = new ListNode(new ArgNode(x, t, xleft, xright), null); :}                                    
-		| param_list:l COMMA type:t ID:x  		{: RESULT = new ListNode(l,new ArgNode(x, t, xleft, xright)); :}                      
+		| type:t ID:x  							{: 
+													RESULT = new ListNode(new ArgNode(x, t, braCounter, xleft, xright), null);
+													braCounter=0;													 
+												:}                                    
+		| param_list:l COMMA type:t ID:x  		{: 
+													RESULT = new ListNode(l,new ArgNode(x, t, braCounter, xleft, xright));
+													braCounter=0;													 
+												:}                      
 		| param_list type ID /* error */ 		{: PrintError("Missing ',' before identifier"); :}            
 		;
 
@@ -218,15 +239,9 @@ assign_stmt ::= var:x ASSIGN expr:y SEMI				{: RESULT = new AssignNode(x, y, get
 		| error ASSIGN expr SEMI 					{: PrintError("Error in assigment"); :}
         ;
 
-array_index ::= BRA_OS expr:x BRA_CS    			{: 
-														
-														if(x.getType() != IdType.INT)
-															PrintError("Array argument must be int.");
-														
-														RESULT = x;
-													:}
-        | error BRA_CS 								{: PrintError("Error in vector"); :} 
-		| array_index BRA_OS expr:x BRA_CS  		{: RESULT = x; :}
+array_index ::= BRA_OS expr:x BRA_CS    			{: RESULT = new ListNode(new ArraySizeNode(x, xleft, xright), null); :}
+		| array_index:l BRA_OS expr:x BRA_CS  		{: RESULT = new ListNode(l , new ArraySizeNode(x, xleft, xright)); :}
+        | error BRA_CS 								{: PrintError("Error in vector"); :}
         ;
 
 func_call ::= ID:x BRA_O /* no params */ BRA_C   	{: RESULT = new FuncCallNode(x, xleft, xright); :}
@@ -272,20 +287,20 @@ expr ::=								{: RESULT = new NullNode(); :}
         | expr:x OP_AND:n expr:y		{: RESULT = new AndNode(x, y, nleft, nright); :}              
         | expr:x OP_OR:n expr:y			{: RESULT = new OrNode(x, y, nleft, nright); :}               
         | OP_NOT:n expr:x               {: RESULT = new NotNode(x, nleft, nright); :}				        
-        | BRA_O TYPE_INT:n BRA_C expr:x /* cast */ {: RESULT = new CastNode(x, nleft, nright); :}
+        | BRA_O TYPE_INT:n BRA_C expr:x {: RESULT = new CastNode(x, nleft, nright); :} /* cast */
         									        
-        | expr:x OP_LT:n expr:y			{: RESULT = new LTNode(x, y, nleft, nright); :}
-        | expr:x OP_LET:n expr:y        {: RESULT = new LETNode(x, y, nleft, nright); :}    
-        | expr:x OP_GT:n expr:y         {: RESULT = new GTNode(x, y, nleft, nright); :}
-        | expr:x OP_GET:n expr:y        {: RESULT = new GETNode(x, y, nleft, nright); :}   
-        | expr:x OP_EQ:n expr:y         {: RESULT = new EqNode(x, y, nleft, nright); :}   
-        | expr:x OP_NEQ:n expr:y        {: RESULT = new NotEqNode(x, y, nleft, nright); :}    
-        | expr:x OP_MOD:n expr:y        {: RESULT = new ModNode(x, y, nleft, nright); :}    
-        | BRA_O expr:x BRA_C			{: RESULT = new BracketNode(x, xleft, xright); :}
-        | BRA_O error BRA_C				{: PrintError("Error in expression"); :}   //errore da gestire
-        | func_call:x 					{: RESULT = x; :}                  
-        | var:x array_index				{: RESULT = x; :}                        
-        | NEW simple_type:x array_index {: RESULT = new ArrayNode(x, xleft, xright); :}
+        | expr:x OP_LT:n expr:y				{: RESULT = new LTNode(x, y, nleft, nright); :}
+        | expr:x OP_LET:n expr:y        	{: RESULT = new LETNode(x, y, nleft, nright); :}    
+        | expr:x OP_GT:n expr:y         	{: RESULT = new GTNode(x, y, nleft, nright); :}
+        | expr:x OP_GET:n expr:y        	{: RESULT = new GETNode(x, y, nleft, nright); :}   
+        | expr:x OP_EQ:n expr:y         	{: RESULT = new EqNode(x, y, nleft, nright); :}   
+        | expr:x OP_NEQ:n expr:y        	{: RESULT = new NotEqNode(x, y, nleft, nright); :}    
+        | expr:x OP_MOD:n expr:y        	{: RESULT = new ModNode(x, y, nleft, nright); :}    
+        | BRA_O expr:x BRA_C				{: RESULT = new BracketNode(x, xleft, xright); :}
+        | BRA_O error BRA_C					{: PrintError("Error in expression"); :}   //errore da gestire
+        | func_call:x 						{: RESULT = x; :}                  
+        | var:x array_index:l				{: RESULT = new ArrayCallNode(x, l, xleft, xright); :}                     
+        | NEW simple_type:t array_index:l 	{: RESULT = new ArrayNewNode(t, l, tleft, tright); :}
         									             
         | var:x 				{: RESULT = x; :}                                         
         | CONST_BOOL:x			{: RESULT = new BoolNode(x, xleft, xright); :}                                

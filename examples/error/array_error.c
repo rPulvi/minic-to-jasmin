@@ -11,6 +11,8 @@ void main(){
 	a = new int[2][3];
 	b = new int[3.2];
 
+	b=a[0];
+	
 	e = d;
 	b = c[1];
 	a = b[0][0];

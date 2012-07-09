@@ -6,16 +6,14 @@ import compiler.*;
 
 public class DeclNode extends ExprNode
 {
-
     private VarNode vNode;
+    private IdType type;
 
-    //private VariableSymbol symbol = null;
-
-    public DeclNode(VarNode e, IdType type, int lineNumber, int colNumber)
+    public DeclNode(VarNode node, IdType type, int lineNumber, int colNumber)
     {
-        super(e.getBlockNumber(), lineNumber, colNumber);
-        vNode = e;
-        vNode.setType(type);
+        super(node.getBlockNumber(), lineNumber, colNumber);
+        this.type = type;
+        vNode = node;
     }   
     
     public Object accept(Visitor v)
@@ -30,7 +28,7 @@ public class DeclNode extends ExprNode
     
     public String toString()
     {
-        return vNode.toString();
+        return type + " " + vNode.toString();
     }
     
     public String getName()
@@ -40,6 +38,6 @@ public class DeclNode extends ExprNode
     
     public IdType getType()
     {
-    	return vNode.getType();
-    }
+    	return type;
+    }       
 }

@@ -3,20 +3,39 @@ package compiler;
 import java.util.*;
 import it.m2j.*;
 
+/**
+ * <p>Title: MiniC to Jasmin</p>
+ * <p>Description: a MiniC to Jasmin Compiler developed for the "Progetto di Compilatori e interpreti" course at the Universitˆ degli studi di Catania</p>
+ * <p>Website: http://code.google.com/p/minic-to-jasmin/ </p>
+ * @author Alessandro Nicolosi, Riccardo Pulvirenti, Giuseppe Ravidˆ
+ * @version 1.0
+ */
+
 public class SymbolTable
 {
     //storage for the entries
     HashMap<String,ArrayList<SymbolDesc> > storage = new HashMap<String,ArrayList<SymbolDesc> >();    
 
     /**
-     * create a symbol table for the global (top level) scope
+     * Puts a variable in the symbol table.
+     * @param id the name of the variable
+     * @param symbolDesc the variable descriptor
+     * @return true if the variable can be added. False otherwise.
      */
-    public SymbolTable()
+    public boolean putVariable(String id, SymbolDesc symbolDesc)
     {
-        
+    	return putVariable(id, symbolDesc.getType(), symbolDesc.getBlock(), symbolDesc.getDim());
     }
-
-    public boolean putVariable(String id, IdType type, int blockNumber)
+    
+    /**
+     * Puts a variable in the symbol table.
+     * @param id the name of the variable.
+     * @param type the type of the variable.
+     * @param blockNumber the block where the variable is declared.
+     * @param dim the dimension of the variable. A value greater than zero means array.
+     * @return true if the variable can be added. False otherwise.
+     */
+    public boolean putVariable(String id, IdType type, int blockNumber, int dim)
     {    	 
     	boolean bRet = false;
     	ArrayList<SymbolDesc> varDesc = this.getSpecific(id, IdType.VARIABLE);        	
@@ -26,7 +45,7 @@ public class SymbolTable
         	ArrayList<SymbolDesc> descList = new ArrayList<SymbolDesc>();
         	SymbolDesc symbol = new SymbolDesc();
 
-        	symbol.setVariableSymbol(type, blockNumber);
+        	symbol.setVariableSymbol(type, dim, blockNumber);
 
         	descList.add(symbol);
 
@@ -52,7 +71,7 @@ public class SymbolTable
 		    if(blockFound == false) //Block not found - Add variable for the specific block
 			{
 		    	SymbolDesc symbol = new SymbolDesc();
-		    	symbol.setVariableSymbol(type, blockNumber);
+		    	symbol.setVariableSymbol(type, dim, blockNumber);
 		    	this.get(id).add(symbol);
 		    	bRet = true;
 			}
@@ -61,7 +80,18 @@ public class SymbolTable
     	return bRet;
     }
     
-    public boolean putFunction(String id, IdType type, ArrayList<IdType> params)
+    /**
+     * Puts a function in the symbol table.
+     * @param id the name of the function.
+     * @param symbolDesc the descriptor of the function.
+     * @return true if the function can be added. False otherwise.
+     */
+    public boolean putFunction(String id, SymbolDesc symbolDesc)
+    {
+    	return putFunction(id, symbolDesc.getType(),symbolDesc.getParamList(), symbolDesc.getDim());
+    }
+    
+    public boolean putFunction(String id, IdType type, ArrayList<IdType> params, int dim)
     {
     	boolean bRet = false;
     	ArrayList<SymbolDesc> funDesc = this.getSpecific(id, IdType.FUNCTION);
@@ -71,7 +101,7 @@ public class SymbolTable
 	    	SymbolDesc symbol = new SymbolDesc();
 	    	ArrayList<SymbolDesc> descList = new ArrayList<SymbolDesc>();    	
 	
-	    	symbol.setFunctionSymbol(type, params);
+	    	symbol.setFunctionSymbol(type, params, dim);
 	
 	    	descList.add(symbol);
 	
@@ -124,20 +154,27 @@ public class SymbolTable
     {
     	IdType typeRet = IdType.ERR;
     	
-    	SymbolDesc mainBlock;
-    	SymbolDesc specificBlock;
-    	
-    	mainBlock = getVarDesc(key, 1);
+//    	SymbolDesc mainBlock;
+//    	SymbolDesc specificBlock;
+//    	
+//    	mainBlock = getVarDesc(key, 1);
+//
+//    	if(mainBlock != null)
+//    	{
+//	    	specificBlock = getVarDesc(key, block);
+//	    	
+//			if (specificBlock == null)
+//				typeRet = mainBlock.getType();
+//			else
+//				typeRet = specificBlock.getType();
+//    	}
 
-    	if(mainBlock != null)
-    	{
-	    	specificBlock = getVarDesc(key, block);
-	    	
-			if (specificBlock == null)
-				typeRet = mainBlock.getType();
-			else
-				typeRet = specificBlock.getType();
-    	}
+    	SymbolDesc varDesc = getVarDesc(key,block);
+    	
+    	if (varDesc == null)
+    		typeRet = IdType.ERR;
+    	else
+    		typeRet = varDesc.getType();
     	
     	return typeRet;
     }
@@ -156,6 +193,19 @@ public class SymbolTable
     }    
     
     public SymbolDesc getVarDesc(String key, int blockNumber)
+    {
+    	SymbolDesc retDesc = null;
+    	
+    	retDesc = lookupVar(key, blockNumber);
+
+    	if(retDesc == null)
+    		retDesc = lookupVar(key, 1);
+    	
+    	return retDesc;
+    	
+    }
+    
+    private SymbolDesc lookupVar(String key, int blockNumber)
     {
     	SymbolDesc sdRet = null;
     	ArrayList<SymbolDesc> varDesc = get(key);

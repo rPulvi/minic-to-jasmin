@@ -1,19 +1,17 @@
 package ast;
 
-import it.m2j.IdType;
 import compiler.Visitor;
 
-public class ArrayNode extends ExprNode{
+public class ArrayNode extends VarNode{
 
-	private IdType type;
+	private int dim;
 	
-	public ArrayNode(IdType type, int lineNumber, int colNumber) 
+	public ArrayNode(String name, int dim, int blockNumber, int lineNumber, int colNumber) 
 	{
-		super(lineNumber, colNumber);
-		this.type = type;
+		super(name, blockNumber, lineNumber, colNumber);
+		this.dim = dim;
 	}
 
-	@Override
 	public Object accept(Visitor v)  
 	{
 		return v.visit(this);
@@ -21,11 +19,24 @@ public class ArrayNode extends ExprNode{
 	
 	public String toString()
 	{
-		return "This is a fuckin' array bro!";
+		return /*type + " " + */ this.getName() + getBrackets();
 	}
 	
-	public IdType getType()
+	public int getDimension()
 	{
-		return type;
+		return this.dim;
+	}
+	
+	private String getBrackets()
+	{
+		String sRet="";
+		
+		for(int i=0; i<dim; i++)
+		{
+			sRet += "[]";
+		}
+		
+		return sRet;
+		
 	}
 }

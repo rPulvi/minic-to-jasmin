@@ -8,14 +8,14 @@ public class FunctionNode extends SlotNode
 {
     protected ListNode params;
     private BlockNode body;
+    private int dim;
 
-    //private MethodSymbol symbol = null;
-
-    public FunctionNode(String name, ListNode params, IdType type, BlockNode body, int lineNumber, int colNumber)
+    public FunctionNode(String name, ListNode params, IdType type, int dim, BlockNode body, int lineNumber, int colNumber)
     {
         super(name, type, lineNumber, colNumber);
         this.params = params;
         this.body = body;
+        this.dim = dim;
     }
 
     public Object accept(Visitor v)
@@ -31,7 +31,6 @@ public class FunctionNode extends SlotNode
 
     public String toString()
     {
-        //return access + " " + name + "(" + ParamUtils.makeSourceList(params) + ")";
     	return name /*+ params.toString()*/;
     }
 
@@ -56,14 +55,8 @@ public class FunctionNode extends SlotNode
     	return this.params;
     }
     
-    
-//    public void setSymbol(MethodSymbol symbol)
-//    {
-//        this.symbol = symbol;
-//    }
-//
-//    public MethodSymbol getSymbol()
-//    {
-//        return symbol;
-//    }
+    public int getDimension()
+    {
+    	return this.dim;
+    }
 }

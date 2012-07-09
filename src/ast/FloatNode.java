@@ -10,7 +10,7 @@ public class FloatNode extends ExprNode{
     public FloatNode(Float value, int lineNumber, int colNumber)
     {
         super(lineNumber, colNumber);
-        this.value = value.floatValue();
+        this.value = value.floatValue();                
     }
 
     public Object accept(Visitor v)

@@ -8,22 +8,24 @@ public class ArgNode extends Node
 {
     private IdType type;
     private String name;
-
+    private int dim;
     //private ParamSymbol symbol = null;
 
-    public ArgNode(String name, IdType type, int lineNumber, int colNumber)
+    public ArgNode(String name, IdType type, int dim, int lineNumber, int colNumber)
     {
         super(lineNumber, colNumber);
         this.name = name;
         this.type = type;
+        this.dim = dim;
     }
 
     //For "Extern" function declaration
-    public ArgNode(IdType type, int lineNumber, int colNumber)
+    public ArgNode(IdType type, int dim, int lineNumber, int colNumber)
     {
         super(lineNumber, colNumber);
         this.name = "";
         this.type = type;
+        this.dim = dim;
     }
     
     public Object accept(Visitor v)
@@ -45,14 +47,9 @@ public class ArgNode extends Node
     {
         return type.toString() + " " + name;
     }
-    /*
-    public void setSymbol(ParamSymbol symbol)
+
+    public int getDimension()
     {
-        this.symbol = symbol;
+    	return this.dim;
     }
-    public ParamSymbol getSymbol()
-    {
-        return symbol;
-    }
-    */
 }

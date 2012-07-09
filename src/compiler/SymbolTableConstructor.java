@@ -3,6 +3,7 @@ package compiler;
 import ast.*;
 
 import it.m2j.IdType;
+import it.m2j.NodeInfo;
 import it.m2j.SymbolDesc;
 
 import java.io.*;
@@ -23,65 +24,7 @@ public class SymbolTableConstructor extends Visitor
      */
     public SymbolTableConstructor(PrintWriter out)
     {
-        super(out);               
-
-//        //add the built in types to the type table
-//        sTable.put(new TypeSymbol("unknown"));
-//        sTable.put(new TypeSymbol("void"));
-//        sTable.put(new TypeSymbol("int"));
-//        sTable.put(new TypeSymbol("boolean"));
-//        sTable.put(new TypeSymbol("null"));
-//
-//        //Object
-//        SymbolTable objectST = new SymbolTable(sTable, true);
-//
-//        MethodSymbol objectInit = new MethodSymbol("Object", "void", new Symbol[0], Modifier.PUBLIC, null, null, true);
-//        objectInit.setMethodNumber(NumberGenerator.getInstance().getMethodNumber(objectInit));
-//        objectST.put(objectInit);
-//
-//        MethodSymbol objectToString = new MethodSymbol("toString", "String", new Symbol[0], Modifier.PUBLIC, null, null, false);
-//        objectToString.setMethodNumber(NumberGenerator.getInstance().getMethodNumber(objectToString));
-//        objectST.put(objectToString);
-//
-//        ClassSymbol object = new ClassSymbol("Object", null, objectST);
-//        objectInit.setOwner(object);
-//        objectToString.setOwner(object);
-//        sTable.put(object);
-//
-//        //String
-//        SymbolTable stringST = new SymbolTable(sTable, true);
-//
-//
-//        MethodSymbol stringInit = new MethodSymbol("String", "void", new Symbol[0], Modifier.PUBLIC, null, null, true);
-//        stringInit.setMethodNumber(NumberGenerator.getInstance().getMethodNumber(stringInit));
-//        stringST.put(stringInit);
-//
-//        MethodSymbol stringInitString = new MethodSymbol("String", "void", new Symbol[] {new ParamSymbol("str", "String", null)}, Modifier.PUBLIC, null, null, true);
-//        stringInitString.setMethodNumber(NumberGenerator.getInstance().getMethodNumber(stringInitString));
-//        stringST.put(stringInitString);
-//
-//        MethodSymbol stringToString = new MethodSymbol("toString", "String", new Symbol[0], Modifier.PUBLIC, null, null, false);
-//        stringToString.setMethodNumber(NumberGenerator.getInstance().getMethodNumber(stringToString));
-//        stringST.put(stringToString);
-//
-//        MethodSymbol stringLength = new MethodSymbol("length", "int", new Symbol[0], Modifier.PUBLIC, null, null, false);
-//        stringLength.setMethodNumber(NumberGenerator.getInstance().getMethodNumber(stringLength));
-//        stringST.put(stringLength);
-//
-//        MethodSymbol stringCharAt = new MethodSymbol("charAt", "String", new Symbol[] {new ParamSymbol("index", "int", null)}, Modifier.PUBLIC, null, null, false);
-//        stringCharAt.setMethodNumber(NumberGenerator.getInstance().getMethodNumber(stringCharAt));
-//        stringST.put(stringCharAt);
-//
-//        stringST.put(new StringFieldSymbol());
-//
-//        ClassSymbol string = new ClassSymbol("String", object, stringST);
-//        stringInit.setOwner(string);
-//        stringInitString.setOwner(string);
-//        stringToString.setOwner(string);
-//        stringLength.setOwner(string);
-//        stringCharAt.setOwner(string);
-//
-//        sTable.put(string);
+        super(out);
     }
 
     /**
@@ -104,22 +47,8 @@ public class SymbolTableConstructor extends Visitor
     //visit a compound statement node and it to the symbol table
     public Object visit(BlockNode node)
     {
-//        //create a symbol table for the compound statement
-//        sTable = new SymbolTable(sTable);
-//
-//        //create an entry in the symbol table for the cs
-//        ScopeSymbol scope = ScopeSymbol.getInstance(sTable, node);
-
-    	//visit the statements in the compound statement
+    	//visit the statements in the block statement
         node.visitChildren(this);
-//
-//        //restore the symbol table
-//        sTable = sTable.getParent();
-//
-//        //add the compound statement
-//        sTable.put(scope);
-//
-//        node.setSymbol(scope);
 
         return null;
     }
@@ -131,9 +60,11 @@ public class SymbolTableConstructor extends Visitor
      */
     public Object visit(DeclNode node)
     {    	    	    	
+    	//Setting variable descriptor
     	SymbolDesc varDesc = (SymbolDesc) node.visitVar(this);
+    	varDesc.setType(node.getType());
     	
-    	if (sTable.putVariable(node.getName(), varDesc.getType(), varDesc.getBlock()) == false)
+    	if (sTable.putVariable(node.getName(), varDesc) == false)
     		error("Variable already declared: ", node);
         
     	return null;	
@@ -157,14 +88,13 @@ public class SymbolTableConstructor extends Visitor
     //visit a function definition
     private void visitFunction(FunctionNode node)
     {
-    	//TODO: fix the param list
     	if (sTable.get(node.getName()) != null)
     		error("Function '" + node.getName() + "' already declared.", node);    
     	else
     	{
     		node.visitParams(this);
     		
-    		sTable.putFunction(node.getName(), node.getType(), functionParams);
+    		sTable.putFunction(node.getName(), node.getType(), functionParams, node.getDimension());
     		
         	node.visitBody(this);        	        	
     	}
@@ -177,10 +107,16 @@ public class SymbolTableConstructor extends Visitor
      */
     public Object visit(ArgNode node)
     {
-    	IdType type = node.getType();
+    	IdType type = node.getType();    	
     	
     	functionParams.add(type);
-    	
+
+    	SymbolDesc varDesc = new SymbolDesc();
+    	varDesc.setVariableSymbol(type, node.getDimension(), 1);
+    	    	
+    	if (sTable.putVariable(node.getName(), varDesc) == false)
+    		error("Variable already declared: ", node);
+
     	return type;
     }
 
@@ -219,13 +155,23 @@ public class SymbolTableConstructor extends Visitor
     {
         return null;
     }
-    public Object visit(VarNode node)
+    
+    public Object visit(SimpleVarNode node)
     {
         SymbolDesc varDesc = new SymbolDesc();
-        varDesc.setVariableSymbol(node.getType(), node.getBlockNumber());
+        varDesc.setVariableSymbol(node.getType(), 0, node.getBlockNumber());    	        
+        
+        return varDesc;    	
+    }
+    
+    public Object visit(ArrayNode node)
+    {
+        SymbolDesc varDesc = new SymbolDesc();
+        varDesc.setVariableSymbol(node.getType(), node.getDimension(), node.getBlockNumber());
     	
         return varDesc;
     }
+    
     public Object visit(AssignNode node)
     {
         return null;
@@ -282,10 +228,6 @@ public class SymbolTableConstructor extends Visitor
     {
         return null;
     }
-    public Object visit(NewNode node)
-    {
-        return null;
-    }
 	
 	public Object visit(FloatNode node) {
 		
@@ -339,7 +281,19 @@ public class SymbolTableConstructor extends Visitor
 	}
 
 	@Override
-	public Object visit(ArrayNode letNode) {
+	public Object visit(ArrayNewNode node) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Object visit(ArrayCallNode node) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Object visit(ArraySizeNode node) {
 		// TODO Auto-generated method stub
 		return null;
 	}
