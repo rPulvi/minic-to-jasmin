@@ -13,7 +13,8 @@ import java.util.ArrayList;
 public class SymbolTableConstructor extends Visitor
 {
     //pointer to the current symbol table
-    private SymbolTable sTable = new SymbolTable();    
+    private SymbolTable sTable;
+    private int varCounter;
 
     /**
      * Create a new Symbol table constructor
@@ -22,6 +23,8 @@ public class SymbolTableConstructor extends Visitor
     public SymbolTableConstructor(PrintWriter out)
     {
         super(out);
+        sTable = new SymbolTable();
+        varCounter = 0;
     }
 
     /**
@@ -112,10 +115,12 @@ public class SymbolTableConstructor extends Visitor
     	functionParams.add(info); 
 
     	SymbolDesc varDesc = new SymbolDesc();
-    	varDesc.setVariableSymbol(type, node.getDimension(), 1);
+    	varDesc.setVariableSymbol(type, node.getDimension(), 1, varCounter);
     	    	
     	if (sTable.putVariable(node.getName(), varDesc) == false)
     		error("Variable already declared: ", node);
+    	else
+    		varCounter++;
 
     	return type;
     }
@@ -144,7 +149,9 @@ public class SymbolTableConstructor extends Visitor
     public Object visit(SimpleVarNode node)
     {
         SymbolDesc varDesc = new SymbolDesc();
-        varDesc.setVariableSymbol(node.getType(), 0, node.getBlockNumber());    	        
+        varDesc.setVariableSymbol(node.getType(), 0, node.getBlockNumber(), varCounter);    	        
+        
+        varCounter++;
         
         return varDesc;    	
     }
@@ -152,8 +159,10 @@ public class SymbolTableConstructor extends Visitor
     public Object visit(ArrayNode node)
     {
         SymbolDesc varDesc = new SymbolDesc();
-        varDesc.setVariableSymbol(node.getType(), node.getDimension(), node.getBlockNumber());
+        varDesc.setVariableSymbol(node.getType(), node.getDimension(), node.getBlockNumber(), varCounter);
     	
+        varCounter++;
+        
         return varDesc;
     }
     

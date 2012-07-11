@@ -35,11 +35,12 @@ public class SymbolDesc{
 	 * @param dim the dimension of the specific entry. A value greater than zero means array.
 	 * @param block the block number.
 	 */
-    public void setVariableSymbol(IdType type, int dim, int block){
+    public void setVariableSymbol(IdType type, int dim, int block, int jvmName){
         this.type = type;
         this.nBlock = block;
         this.kind = IdType.VARIABLE;
         this.dim = dim;
+        this.jvmVar = jvmName;
     }   
     
     /**

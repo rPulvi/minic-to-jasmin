@@ -25,7 +25,7 @@ public class SymbolTable
      */
     public boolean putVariable(String id, SymbolDesc symbolDesc)
     {
-    	return putVariable(id, symbolDesc.getType(), symbolDesc.getBlock(), symbolDesc.getDim());
+    	return putVariable(id, symbolDesc.getType(), symbolDesc.getBlock(), symbolDesc.getDim(), symbolDesc.getJvmVar());
     }
     
     /**
@@ -36,7 +36,7 @@ public class SymbolTable
      * @param dim the dimension of the variable. A value greater than zero means array.
      * @return true if the variable can be added. False otherwise.
      */
-    public boolean putVariable(String id, IdType type, int blockNumber, int dim)
+    public boolean putVariable(String id, IdType type, int blockNumber, int dim, int jvmName)
     {    	 
     	boolean bRet = false;
     	ArrayList<SymbolDesc> varDesc = this.getSpecific(id, IdType.VARIABLE);        	
@@ -46,7 +46,7 @@ public class SymbolTable
         	ArrayList<SymbolDesc> descList = new ArrayList<SymbolDesc>();
         	SymbolDesc symbol = new SymbolDesc();
 
-        	symbol.setVariableSymbol(type, dim, blockNumber);
+        	symbol.setVariableSymbol(type, dim, blockNumber, jvmName);
 
         	descList.add(symbol);
 
@@ -72,7 +72,7 @@ public class SymbolTable
 		    if(blockFound == false) //Block not found - Add variable for the specific block
 			{
 		    	SymbolDesc symbol = new SymbolDesc();
-		    	symbol.setVariableSymbol(type, dim, blockNumber);
+		    	symbol.setVariableSymbol(type, dim, blockNumber, jvmName);
 		    	this.get(id).add(symbol);
 		    	bRet = true;
 			}

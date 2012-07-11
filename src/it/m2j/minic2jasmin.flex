@@ -34,6 +34,7 @@ Identifier = [a-zA-Z_]+[a-zA-Z0-9_]*
 
 %{
 	minic2jasminSym symClass;
+	StringBuffer string = new StringBuffer();
 	
 	private Symbol sym(int type)
 	{
@@ -73,13 +74,14 @@ Identifier = [a-zA-Z_]+[a-zA-Z0-9_]*
 "\""                { yybegin(quote); }
 
 <quote>"\""         { 	yybegin(YYINITIAL); 
-						return sym(CONST_STRING); 	
+						return sym(CONST_STRING, string.toString()); 	
 					}
-
+  
 
 <quote>"\\".        { ; } // gestire sequenza di escape all'interno di una stringa quotata
 <quote><<EOF>>      { error("Fine inattesa della stringa"); }
-<quote>[^\\\n\"]+   { ; }
+
+<quote>[^\\\n\"]+   { string.append( yytext() ); }
 
 
 "bool"              { return sym(TYPE_BOOL); }

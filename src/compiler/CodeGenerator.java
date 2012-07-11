@@ -1,6 +1,9 @@
 package compiler;
 
+import it.m2j.GenNodeInfo;
 import it.m2j.IdType;
+import it.m2j.NodeInfo;
+import it.m2j.Operator;
 import it.m2j.SymbolDesc;
 
 import java.io.FileWriter;
@@ -8,13 +11,20 @@ import java.io.PrintWriter;
 
 import ast.*;
 
+/**
+ * <p>Title: MiniC to Jasmin</p>
+ * <p>Description: a MiniC to Jasmin Compiler developed for the "Progetto di Compilatori e interpreti" course at the Universitˆ degli studi di Catania</p>
+ * <p>Website: http://code.google.com/p/minic-to-jasmin/ </p>
+ * @author Alessandro Nicolosi, Riccardo Pulvirenti, Giuseppe Ravidˆ
+ * @version 1.0
+ */
+
 public class CodeGenerator extends Visitor
 {
     private StringBuffer out = new StringBuffer();
     private SymbolTable sTable; //the top level symbol table
     
-    private String jasminClassName;
-    private int varCounter;
+    private String jasminClassName;    
 
     /**
      * Creates a new Code Generation visitor object
@@ -27,7 +37,6 @@ public class CodeGenerator extends Visitor
 
         sTable = st;
         jasminClassName = className;
-        varCounter = 0;
         
         writeJasminHeader();
     }
@@ -67,112 +76,58 @@ public class CodeGenerator extends Visitor
         return null;
     }
 
-    //store an int on the heap at the next available index
-    private void storeOnHeap(int x)
-    {
-//        writeStmt("aload 1");  //push the heap onto the stack
-//        writeStmt("iload 2");  //push the heap index onto the stack
-//        writeStmt("ldc " + x);  //push the value to store onto the stack
-//        writeStmt("iastore");  //store it in the heap
-//        writeStmt("iinc 2 1"); //increment the heap index
-    }
-
     public Object visit(DeclNode node)
     {	
-    	String name = (String) node.visitVar(this);
-    	IdType type = node.getType();
+    	GenNodeInfo varInfo = (GenNodeInfo)node.visitVar(this);
+    	GenNodeInfo initInfo;
+    	IdType type = varInfo.getType();
+    	String value = "";
     	
-    	writeStmt("; " + type + " " + name + " ----------------------------");
+    	writeStmt("; " + type + " " + varInfo.getName() + " ----------------------------");
     	
     	switch(type)
     	{
-    		case INT:
-    			writeStmt("iconst_0");
-    			writeStmt("istore " + varCounter);
-    			break;
-    		
-    		case FLOAT:
-    			writeStmt("fconst_0");
-    			writeStmt("fstore " + varCounter);
-    			break;
-    		
-    		case BOOL:
-    			/*
-    			 * JVM does not have a boolean type. 
-    			 * We will use 1 to encode true and 0 to encode false.
-    			 * Boolean variable are initialized to false.
-    			 */
-    			
-    			writeStmt("iconst_0");
-    			writeStmt("istore " + varCounter);
-    			break;
-    		
-    		case STRING:
-    			writeStmt("ldc	\"\"");
-    			writeStmt("astore " + varCounter);
-    			break;
-    		
-    		default:
-    			break;
+	    	case INT:
+	    	case BOOL:
+	    		value = "0";
+	    		break;
+	    		
+	    	case FLOAT:
+	    		value = "0.0";
+	    		break;
+	    		
+	    	case STRING:
+	    		value = "";
+	    		break;
+	    		
+			default:
+				break;
     	}
     	
-    	varCounter++;
+    	initInfo = new GenNodeInfo("", value, type, varInfo.getDim());
     	
-		//Add JVM variable in the SymbolTable
-		sTable.getVarDesc(name, node.getBlockNumber()).setJvmVar(varCounter);
+    	//init variable
+    	pushInStack(node, initInfo);
+    	
+    	//load in local variable
+    	popFromStack(node, varInfo);
     	
     	return null;
     }
     
     public Object visit(AssignNode node)
-    {
-    	String varName = "";
+    {	
+    	writeStmt("; " + node + " ----------------------------");
     	
-    	writeStmt(";" + node.toString() + " -----------------------------------");
+    	GenNodeInfo left = (GenNodeInfo)node.visitVar(this);
+    	GenNodeInfo right = (GenNodeInfo)node.visitValue(this);
     	
-    	varName = (String)node.visitVar(this);
-    	
-    	node.visitValue(this);
-    	
-    	SymbolDesc firstMember = sTable.getVarDesc(varName, node.getBlockNumber());
-    	
-    	System.out.println("###### :" + firstMember.toString());
+    	if(right != null)
+    		pushInStack(node, right);
 
-    	writeStmt("istore_" + firstMember.getJvmVar());
-    	
-    	
-    	
-//        //save register 5
-//        CodeGenerator.pushVar(5, out);
-//
-//        //visit the lhs
-//        assignLHS = true;
-//        //the return value is the name of the local variable to assign to
-//        String localVar = (String)node.visitTarget(this);
-//        assignLHS = false;
-//
-//        if (localVar == null)  //store the result on the heap
-//        {
-//            writeStmt("istore 5");
-//            node.visitValue(this); //visit the rhs and leave the value on top of the stack
-//            writeStmt("aload 1");
-//            writeStmt("swap");
-//            writeStmt("iload 5");
-//            writeStmt("swap");
-//            writeStmt("iastore");
-//        }
-//        else   //store the result in a local variable
-//        {
-//            //visit the rhs and leave the value on top of the stack
-//            node.visitValue(this);
-//            //store the result in the determined local variable
-//            writeStmt("istore " + localVar);
-//        }
-//
-//        //restore register 5
-//        CodeGenerator.popToVar(5, out);
-//
-//        inExpr = oldExpr;
+    	//pop from stack and store in my local variable
+    	popFromStack(node, left);
+ 
         return null;
     }
 
@@ -181,42 +136,6 @@ public class CodeGenerator extends Visitor
         node.visitChildren(this);
         
         return null;
-    }
-
-    public Object visit(VarNode node)
-    {
-    	return null;
-    	
-//        if (node.isThis())
-//        {
-//            writeStmt("iload 0"); //put the this pointer on the stack
-//            return null;
-//        }
-//
-//        //this.var - field access
-//        if (node.isField())
-//        {
-//            writeStmt("iload 0"); //push the address of 'this' onto the stack
-//
-//            FieldSymbol field = node.getFieldSymbol();
-//            loadField(field, curClass, node);
-//
-//            return null;
-//        }
-//        else
-//        //a local variable
-//        {
-//            if (assignLHS)
-//            {
-//                //find the local variable name from the symbol table and return it
-//                return String.valueOf(node.getSymbol().getLocalVar());
-//            }
-//
-//            //load the value onto the stack
-//            writeStmt("iload " + node.getSymbol().getLocalVar());
-//
-//            return null;
-//        }
     }
 
     public Object visit(FunctionNode node)
@@ -232,27 +151,29 @@ public class CodeGenerator extends Visitor
     	String name = node.getName();
     	Node [] params;
     	
+    	int numLocals = 0;
+    	
     	//No params
     	if(node.getParams() == null)
-    	{
             writeStmt(".method public static " + name + "()" + getJVMType(retType));
-            
-            node.visitBody(this);
-            
-            writeStmt(".end method");    	
-    	}
     	//Params
     	else{
     		params = node.getParams().toArray();
     		
             node.visitParams(this);
 
-            writeStmt(".method public static " + name + "(" + getParamTypes(node.getParams().toArray()) + ")" + getJVMType(retType));
-            
-            node.visitBody(this);
-            
-            writeStmt(".end method");
+            writeStmt(".method public static " + name + "(" + getParamTypes(node.getParams().toArray()) +
+            		")" + getJVMType(retType));
     	}
+    	
+        numLocals = sTable.varCount();
+        
+        writeStmt(".limit locals " + numLocals);
+        writeStmt(".limit stack " + numLocals);
+        
+        node.visitBody(this);
+        
+        writeStmt(".end method");
     }
 
     public Object visit(ArgNode node)
@@ -395,22 +316,29 @@ public class CodeGenerator extends Visitor
 
     public Object visit(ReturnNode node)
     {
-//        boolean oldExpr = inExpr;
-//        inExpr = true;
-//        writeStmt(";" + node.toString());
-//
-//        if (node.noReturnValue()) //return;
-//            CodeGenerator.pushConst(0, out);
-//        else  //return x;
-//        {
-//            node.visitValue(this);
-//            CodeGenerator.pushFromStack(out);
-//        }
-//
-//        writeStmt("goto returnTable");
-//        inExpr = oldExpr;
+    	GenNodeInfo retInfo = (GenNodeInfo)node.visitValue(this);
     	
-        return null;
+    	if(retInfo != null)
+    		pushInStack(node, retInfo);
+    	
+    	switch(retInfo.getType())
+    	{
+    		case INT:
+    		case BOOL:
+    			writeStmt("ireturn");
+    			break;
+    		case FLOAT:
+    			writeStmt("freturn");
+    			break;
+    		case STRING:
+    			writeStmt("areturn");
+    			break;
+    		default:
+    			writeStmt("return");
+    			break;
+    	}
+    	
+    	return null;      
     }
 
     public Object visit(PrintNode node)
@@ -530,69 +458,184 @@ public class CodeGenerator extends Visitor
 
     public Object visit(SubNode node)
     {
-        visitBinaryNode(node, "isub");
+        visitBinaryNode(node, Operator.DIFF);
         return null;
     }
 
     public Object visit(DivNode node)
     {
-        visitBinaryNode(node, "idiv");
+        visitBinaryNode(node, Operator.DIV);
         return null;
     }
 
     public Object visit(AddNode node)
     {
-        visitBinaryNode(node, "iadd");
+        visitBinaryNode(node, Operator.PLUS);
         return null;
     }
     
     public Object visit(MulNode node)
     {
-        visitBinaryNode(node, "imul");
+        visitBinaryNode(node, Operator.MUL);
         return null;
     }
 
     public Object visit(OrNode node)
     {
-        visitBinaryNode(node, "ior");
+        visitBinaryNode(node, Operator.OR);
         return null;
     }
 
     public Object visit(AndNode node)
     {
-        visitBinaryNode(node, "iand");
+        visitBinaryNode(node, Operator.AND);
         return null;
     }
 
-    //visit &&, ||, +, -, * or / nodes
-    private void visitBinaryNode(BinaryNode node, String op)
+    private void visitBinaryNode(BinaryNode node, Operator op)
     {
-    	node.visitLeft(this);
-    	node.visitRight(this);
+    	//Left Hand
+    	GenNodeInfo left = (GenNodeInfo) node.visitLeft(this);
     	
-    	writeStmt(op);
-    	
+    	//Right Hand
+    	GenNodeInfo right = (GenNodeInfo) node.visitRight(this);
 
+    	//push in stack using iload or fload or ldc and check float type
+    	pushInStack(node, left);
+    	pushInStack(node, right);
     	
-//        writeStmt(";" + node.toString());
-//
-//        //save register 5
-//        CodeGenerator.pushVar(5, out);
-//
-//        //push the two arguments on the stack
-//        node.visitLeft(this);
-//        writeStmt("istore 5");
-//        node.visitRight(this);
-//        writeStmt("iload 5");
-//        writeStmt("swap");
-//
-//        //operate on the top two stack values
-//        writeStmt(op);
-//
-//        //restore register 5
-//        CodeGenerator.popToVar(5, out);
+    	switch(op)
+    	{
+    		case PLUS:
+    			if(left.getType() == IdType.FLOAT || right.getType() == IdType.FLOAT)
+    				writeStmt("fadd");
+    			else 
+    				writeStmt("iadd");
+    			break;
+    			
+    		case DIFF:
+    			
+    			break;
+    			
+    		case MUL:
+    			
+    			break;
+    			
+    		case DIV:
+    			
+    			break;
+    			
+    		default:
+    			break;
+    	}
     }
+    
+    private void pushInStack(Node node, GenNodeInfo info) 
+    {
+    	SymbolDesc varDesc = null;
+    	
+    	String name = info.getName();
+    	IdType type = info.getType();
+    	String value = info.getValue();
+    	
+    	/*
+    	 * If it has name, it is variable.
+    	 * If name is empty, it is number.
+    	 */
+    	if (!name.equals(""))
+    	{
+    		varDesc = sTable.getVarDesc(name, node.getBlockNumber());
+    		
+    		switch(type)
+    		{
+	    		case INT:
+	    			writeStmt("iload " + varDesc.getJvmVar());
+	    			break;
+	    		case FLOAT:
+	    			writeStmt("fload " + varDesc.getJvmVar());
+	    			break;
+	    		case STRING:
+	    			writeStmt("aload " + varDesc.getJvmVar());
+	    			break;
+    		}
+    	}
+    	else
+    		{
+    			switch(type)
+    			{
+    				case BOOL:
+    				case INT:
+    					int iValue = Integer.parseInt(value);
+    					
+    				      if(iValue == -1) {
+    				          writeStmt("iconst_m1");
+    				       } else if(iValue >= 0 && iValue <= 5) {
+    				    	  writeStmt("iconst_" + iValue);
+    				       } else if(iValue >= -128 && iValue <= 127) {
+    				          writeStmt("bipush " + iValue);
+    				       } else if(iValue >= -32768 && iValue <= 32767) {
+    				          writeStmt("sipush " + iValue);
+    				       } else {
+    				          writeStmt("ldc " + iValue);
+    				       }
+    				      
+    					break;
+    					
+    				case FLOAT:
+    					float fValue = Float.parseFloat(value);
+    					
+    				      if(fValue == 0.0) {
+    				          writeStmt("fconst_0");
+    				       } else if(fValue == 1.0) {
+    				    	   writeStmt("fconst_1");
+    				       } else if(fValue == 2.0) {
+    				    	   writeStmt("fconst_2");
+    				       } else {
+    				    	   writeStmt("ldc " + fValue);
+    				       }
+    				      
+    					break;
+    					
+    				case STRING:
+    					writeStmt("ldc " + "\"" + value + "\"");
+    					break;
+    					
+    				default:
+    					break;
+    			}
+    		}
+	}
 
+    private void popFromStack(Node node, GenNodeInfo info) 
+    {
+    	SymbolDesc varDesc = null;
+    	
+    	String name = info.getName();
+    	IdType type = info.getType();
+    	
+    	/*
+    	 * If it has name, it is variable.
+    	 * If name is empty, it is number.
+    	 */
+    	if (!name.equals(""))
+    	{
+    		varDesc = sTable.getVarDesc(name, node.getBlockNumber());
+    		
+    		switch(type)
+    		{
+	    		case INT:
+	    			writeStmt("istore " + varDesc.getJvmVar());
+	    			break;
+	    		case FLOAT:
+	    			writeStmt("fstore " + varDesc.getJvmVar());
+	    			break;
+	    		case STRING:
+	    			writeStmt("astore " + varDesc.getJvmVar());
+	    			break;
+    		}
+    	}
+	}
+    
     public Object visit(EqNode node)
     {
 //        writeStmt(";" + node.toString());
@@ -674,43 +717,34 @@ public class CodeGenerator extends Visitor
     }
 
     public Object visit(StringNode node)
-    {
-        writeStmt(";" + node.toString());
-        
-        //push the String onto the stack
-        writeStmt("ldc " + node.toString());
-   
-        return null;
+    {	
+        GenNodeInfo info = new GenNodeInfo("", node.toString(), node.getType(), 0);
+        return info;
     }
 
     public Object visit(BoolNode node)
     {
-        //push the boolean onto the stack
-
-        //booleans are represented as 0/1
-        if (node.getValue() == false)
-            writeStmt("iconst_1");
-        else
-            writeStmt("iconst_0");
-
-        return null;
+    	String sRet = "";
+    	
+    	if(node.toString() == "true")
+    		sRet = "1";
+    	else
+    		sRet = "0";
+    	
+        GenNodeInfo info = new GenNodeInfo("", sRet, node.getType(), 0);
+        return info;
     }
 
     public Object visit(IntNode node)
     {
-        //push the number onto the stack
-        writeStmt("ldc " + node.toString());
-        
-        return null;
+        GenNodeInfo info = new GenNodeInfo("", node.toString(), node.getType(), 0);
+        return info;
     }
 
-	@Override
 	public Object visit(FloatNode node) 
 	{
-		//push the number onto the stack
-        writeStmt("ldc " + node.toString());
-        
-		return null;
+		GenNodeInfo info = new GenNodeInfo("", node.toString(), node.getType(), 0);
+        return info;
 	}
 
 	@Override
@@ -798,7 +832,7 @@ public class CodeGenerator extends Visitor
 			case FLOAT:
 				return "F";
 			case STRING:
-				return "S";
+				return "Ljava/lang/String;";
 			case BOOL:
 				return "I";
 			case VOID:
@@ -820,10 +854,13 @@ public class CodeGenerator extends Visitor
 		return null;
 	}
 
-	@Override
-	public Object visit(SimpleVarNode node) {
+	public Object visit(SimpleVarNode node) 
+	{
+		SymbolDesc varDesc = sTable.getVarDesc(node.getName(), node.getBlockNumber());
 		
-		return node.getName();
+		GenNodeInfo info = new GenNodeInfo(node.getName(), node.toString(), varDesc.getType(), varDesc.getDim());
+		
+		return info;
 	}
 
 	@Override
