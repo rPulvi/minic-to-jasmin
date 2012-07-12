@@ -24,7 +24,9 @@ public class CodeGenerator extends Visitor
     private StringBuffer out = new StringBuffer();
     private SymbolTable sTable; //the top level symbol table
     
-    private String jasminClassName;    
+    private String jasminClassName;
+    private int labelCounter;
+    private boolean isCondition;
 
     /**
      * Creates a new Code Generation visitor object
@@ -37,6 +39,8 @@ public class CodeGenerator extends Visitor
 
         sTable = st;
         jasminClassName = className;
+        labelCounter = 0;
+        isCondition = false;
         
         writeJasminHeader();
     }
@@ -138,6 +142,11 @@ public class CodeGenerator extends Visitor
 
     public Object visit(BlockNode node)
     {
+    	if(isCondition){
+    		writeStmt("#" + labelCounter + ":");
+    		isCondition = false;
+    	}
+    	
         node.visitChildren(this);
         
         return null;
@@ -303,18 +312,12 @@ public class CodeGenerator extends Visitor
 
     public Object visit(IfNode node)
     {
-//        boolean oldExpr = inExpr;
-//        inExpr = true;
-//
-//        node.visitTest(this); //put the result of the test on the stack
-//
-//        inExpr = oldExpr;
-//
-//        String endLabel = NumberGenerator.getInstance().getLabel();
-//
-//        writeStmt("ifeq " + endLabel); //jump if false-+
-//        node.visitThen(this); //execute the then part  |
-//        writeStmt(endLabel + ":");    // <-------------+
+    	isCondition = true;
+    	
+    	node.visitTest(this);
+    	node.visitThen(this);
+    	
+    	labelCounter++;
 
         return null;
     }
@@ -564,6 +567,15 @@ public class CodeGenerator extends Visitor
     			sOperator += "rem";
     			break;
     			
+    		case GT:
+    			if(left.getType() == IdType.FLOAT || right.getType() == IdType.FLOAT)
+    				;
+    				//writeStmt("if_icmpgt " + labelCounter);
+    			else
+    				writeStmt("if_icmpgt " + "#" + labelCounter);
+    			
+    			break;
+    			
     		default:
     			break;
     	}
@@ -573,7 +585,6 @@ public class CodeGenerator extends Visitor
 		
 		return retType;
     }
-
     
     private void pushInStack(Node node, GenNodeInfo info) 
     {
@@ -681,86 +692,112 @@ public class CodeGenerator extends Visitor
     	}
 	}
     
-    public Object visit(EqNode node)
-    {
-//        writeStmt(";" + node.toString());
-//
-//        //save register 5
-//        CodeGenerator.pushVar(5, out);
-//
-//        //visit the left and right nodes and push them onto the stack
-//        node.visitLeft(this);
-//        writeStmt("istore 5");
-//        node.visitRight(this);
-//        writeStmt("iload 5");
-//        writeStmt("swap");
-//
-//        String notEqLabel = NumberGenerator.getInstance().getLabel();
-//        String endLabel = NumberGenerator.getInstance().getLabel();
-//        writeStmt("if_icmpne " + notEqLabel); //jump if not equal
-//        writeStmt("iconst_1"); //equal so push 1            //  |
-//        writeStmt("goto " + endLabel);  //jump to end label ----+--+
-//        writeStmt(notEqLabel + ":");  //    <-------------------+  |
-//        writeStmt("iconst_0"); //not equal so push 0               |
-//        writeStmt(endLabel + ":");    //    <----------------------+
-//
-//        //restore register 5
-//        CodeGenerator.popToVar(5, out);
+  //*************************************** Comparing Nodes **********************************************
+	
+  	@Override
+  	public Object visit(LTNode node) {
+  		visitBinaryNode(node, Operator.LT);
+          
+  		return null;
+  	}
 
-        return null;
-    }
+  	@Override
+  	public Object visit(LETNode node) {
+  		visitBinaryNode(node, Operator.LET);
+          
+  		return null;
+  	}
 
-    public Object visit(NotEqNode node)
-    {
-//        writeStmt(";" + node.toString());
-//
-//        //save register 5
-//        CodeGenerator.pushVar(5, out);
-//
-//        //visit the left and right nodes and push them onto the stack
-//        node.visitLeft(this);
-//        writeStmt("istore 5");
-//        node.visitRight(this);
-//        writeStmt("iload 5");
-//        writeStmt("swap");
-//
-//        String eqLabel = NumberGenerator.getInstance().getLabel();
-//        String endLabel = NumberGenerator.getInstance().getLabel();
-//        writeStmt("if_icmpeq " + eqLabel);          //jump if equal
-//        writeStmt("iconst_1"); //equal so push 1            //  |
-//        writeStmt("goto " + endLabel);  //jump to end label ----+--+
-//        writeStmt(eqLabel + ":");     //    <-------------------+  |
-//        writeStmt("iconst_0"); //not equal so push 0               |
-//        writeStmt(endLabel + ":");    //    <----------------------+
-//
-//        //restore register 5
-//        CodeGenerator.popToVar(5, out);
+  	@Override
+  	public Object visit(GTNode node) {
+  		visitBinaryNode(node, Operator.GT);
+          
+  		return null;
+  	}
 
-        return null;
-    }
+  	@Override
+  	public Object visit(GETNode node) {
+  		visitBinaryNode(node, Operator.GET);
+          
+  		return null;
+  	}
+  	
+  	public Object visit(EqNode node)
+      {
+  		visitBinaryNode(node, Operator.EQ);
+          
+  		return null;
+  		
+//          writeStmt(";" + node.toString());
+  //
+//          //save register 5
+//          CodeGenerator.pushVar(5, out);
+  //
+//          //visit the left and right nodes and push them onto the stack
+//          node.visitLeft(this);
+//          writeStmt("istore 5");
+//          node.visitRight(this);
+//          writeStmt("iload 5");
+//          writeStmt("swap");
+  //
+//          String notEqLabel = NumberGenerator.getInstance().getLabel();
+//          String endLabel = NumberGenerator.getInstance().getLabel();
+//          writeStmt("if_icmpne " + notEqLabel); //jump if not equal
+//          writeStmt("iconst_1"); //equal so push 1            //  |
+//          writeStmt("goto " + endLabel);  //jump to end label ----+--+
+//          writeStmt(notEqLabel + ":");  //    <-------------------+  |
+//          writeStmt("iconst_0"); //not equal so push 0               |
+//          writeStmt(endLabel + ":");    //    <----------------------+
+  //
+//          //restore register 5
+//          CodeGenerator.popToVar(5, out);
+      }
 
-    public Object visit(NegNode node)
-    {
-//        node.visitChild(this);
-//
-//        //negate the number on top of the stack
-//        writeStmt("ineg");
-        
-        return null;
-    }
+  	public Object visit(NotEqNode node)
+  	{
+  		visitBinaryNode(node, Operator.NEQ);
 
-    public Object visit(NotNode node)
-    {
-//        node.visitChild(this);
-//
-//        //push true onto the stack and xor the top two values
-//        //effectivly negating the previous top of the stack (if it was 0 or 1)
-//        writeStmt("iconst_1");
-//        writeStmt("ixor");
-        
-        return null;
-    }
+  		return null;
 
+  		//          writeStmt(";" + node.toString());
+  		//
+  		//          //save register 5
+  		//          CodeGenerator.pushVar(5, out);
+  		//
+  		//          //visit the left and right nodes and push them onto the stack
+  		//          node.visitLeft(this);
+  		//          writeStmt("istore 5");
+  		//          node.visitRight(this);
+  		//          writeStmt("iload 5");
+  		//          writeStmt("swap");
+  		//
+  		//          String eqLabel = NumberGenerator.getInstance().getLabel();
+  		//          String endLabel = NumberGenerator.getInstance().getLabel();
+  		//          writeStmt("if_icmpeq " + eqLabel);          //jump if equal
+  		//          writeStmt("iconst_1"); //equal so push 1            //  |
+  		//          writeStmt("goto " + endLabel);  //jump to end label ----+--+
+  		//          writeStmt(eqLabel + ":");     //    <-------------------+  |
+  		//          writeStmt("iconst_0"); //not equal so push 0               |
+  		//          writeStmt(endLabel + ":");    //    <----------------------+
+  		//
+  		//          //restore register 5
+  		//          CodeGenerator.popToVar(5, out);
+  	}
+	
+  	public Object visit(NotNode node)
+  	{
+  		//          node.visitChild(this);
+  		//
+  		//          //push true onto the stack and xor the top two values
+  		//          //effectivly negating the previous top of the stack (if it was 0 or 1)
+  		//          writeStmt("iconst_1");
+  		//          writeStmt("ixor");
+
+  		return null;
+  	}
+      
+  //********************************************************************************************************
+    
     public Object visit(StringNode node)
     {	
         GenNodeInfo info = new GenNodeInfo("", node.toString(), node.getType(), 0);
@@ -804,31 +841,6 @@ public class CodeGenerator extends Visitor
 		return null;
 	}
 
-	@Override
-	public Object visit(LTNode letNode) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Object visit(LETNode letNode) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Object visit(GTNode letNode) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Object visit(GETNode letNode) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public Object visit(SignNode letNode) {
 		// TODO Auto-generated method stub
 		return null;

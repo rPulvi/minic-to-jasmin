@@ -48,7 +48,6 @@ public abstract class Visitor
     public abstract Object visit(FuncCallNode node);
     public abstract Object visit(FunctionNode node);
     public abstract Object visit(MulNode node);
-    public abstract Object visit(NegNode node);    
     public abstract Object visit(NotEqNode node);
     public abstract Object visit(NotNode node);
     public abstract Object visit(IntNode node);

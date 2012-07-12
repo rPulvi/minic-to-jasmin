@@ -478,11 +478,6 @@ public class SemanticChecker extends Visitor
 		return info;
 	}
 	
-	public Object visit(NegNode node) 
-	{
-		return null;
-	}
-	
 	public Object visit(ArrayNewNode node) 
 	{
 		node.visitDim(this);

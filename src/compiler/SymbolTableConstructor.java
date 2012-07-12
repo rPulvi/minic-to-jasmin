@@ -229,10 +229,6 @@ public class SymbolTableConstructor extends Visitor
     {
         return null;
     }
-    public Object visit(NegNode node)
-    {
-        return null;
-    }
     public Object visit(NotNode node)
     {
         return null;
