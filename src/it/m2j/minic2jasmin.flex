@@ -31,6 +31,8 @@ import static it.m2j.minic2jasminSym.*;
 Integer = ([1-9][0-9]*|0)
 Float = ([1-9]{1,1}[0-9]*"."[0-9]+)|(0"."[0-9]+)
 Identifier = [a-zA-Z_]+[a-zA-Z0-9_]*
+EOL = \r|\n|\r\n
+
 
 %{
 	minic2jasminSym symClass;
@@ -134,10 +136,18 @@ Identifier = [a-zA-Z_]+[a-zA-Z0-9_]*
 {Float}             { return sym(CONST_FLOAT, new Float(yytext())); }
 {Identifier}        { return sym(ID); }
 
-"\n"                { ; }
-"\t"				{ ; }
+/* whitespace */		//MODIFICATO ---------
+//{WhiteSpace} { }		//MODIFICATO ---------
+
+
+//"\n"                { ; }
+EOL					{ ; }
+"\t"				{ if (yycolumn==0) yycolumn+=4; 
+					  else yycolumn+=3;}
 " "					{ ; }
 
+	
+	
 [0-9]+{Identifier}	{ error("identificatore non valido"); }
 
 .                   { error("Simbolo sconosciuto"); } // ERROR: unknown token

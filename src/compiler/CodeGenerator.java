@@ -13,9 +13,9 @@ import ast.*;
 
 /**
  * <p>Title: MiniC to Jasmin</p>
- * <p>Description: a MiniC to Jasmin Compiler developed for the "Progetto di Compilatori e interpreti" course at the Universitˆ degli studi di Catania</p>
+ * <p>Description: a MiniC to Jasmin Compiler developed for the "Progetto di Compilatori e interpreti" course at the Universitï¿½ degli studi di Catania</p>
  * <p>Website: http://code.google.com/p/minic-to-jasmin/ </p>
- * @author Alessandro Nicolosi, Riccardo Pulvirenti, Giuseppe Ravidˆ
+ * @author Alessandro Nicolosi, Riccardo Pulvirenti, Giuseppe Ravidï¿½
  * @version 1.0
  */
 
@@ -122,9 +122,14 @@ public class CodeGenerator extends Visitor
     	GenNodeInfo left = (GenNodeInfo)node.visitVar(this);
     	GenNodeInfo right = (GenNodeInfo)node.visitValue(this);
     	
-    	if(right != null)
-    		pushInStack(node, right);
-
+    	if(right != null) {
+	    	//when the left hand type of assignment is int and the right is float we prom the left to float 
+//	    	if(left.getType() == IdType.FLOAT && right.getType() == IdType.INT) {
+//	    		writeStmt("i2f");
+//	    	}
+	    	pushInStack(node, right);
+    	}
+    	
     	//pop from stack and store in my local variable
     	popFromStack(node, left);
  
@@ -458,27 +463,38 @@ public class CodeGenerator extends Visitor
 
     public Object visit(SubNode node)
     {
-        visitBinaryNode(node, Operator.DIFF);
-        return null;
+    	IdType type = visitBinaryNode(node, Operator.DIFF);
+        //return new GenNodeInfo("", "", type, 0);
+    	return null;
     }
 
     public Object visit(DivNode node)
     {
-        visitBinaryNode(node, Operator.DIV);
-        return null;
+    	IdType type = visitBinaryNode(node, Operator.DIV);
+        //return new GenNodeInfo("", "", type, 0);
+    	return null;
+
     }
 
     public Object visit(AddNode node)
     {
-        visitBinaryNode(node, Operator.PLUS);
-        return null;
+        IdType type = visitBinaryNode(node, Operator.PLUS);
+        //return new GenNodeInfo("", "", type, 0);
+    	return null;
     }
     
     public Object visit(MulNode node)
     {
-        visitBinaryNode(node, Operator.MUL);
-        return null;
+    	IdType type = visitBinaryNode(node, Operator.MUL);
+        //return new GenNodeInfo("", "", type, 0);
+    	return null;
     }
+    
+	public Object visit(ModNode node) {
+		IdType type = visitBinaryNode(node, Operator.MOD);
+        //return new GenNodeInfo("", "", type, 0);
+        return null;
+	}
 
     public Object visit(OrNode node)
     {
@@ -492,43 +508,72 @@ public class CodeGenerator extends Visitor
         return null;
     }
 
-    private void visitBinaryNode(BinaryNode node, Operator op)
+    private IdType visitBinaryNode(BinaryNode node, Operator op)
     {
     	//Left Hand
     	GenNodeInfo left = (GenNodeInfo) node.visitLeft(this);
     	
     	//Right Hand
     	GenNodeInfo right = (GenNodeInfo) node.visitRight(this);
+    	
+    	String sOperator = "";
+    	IdType retType;
 
     	//push in stack using iload or fload or ldc and check float type
-    	pushInStack(node, left);
-    	pushInStack(node, right);
+
+    	if(left.getType() == IdType.FLOAT || right.getType() == IdType.FLOAT) {
+			
+			float lValue = Float.parseFloat(left.getValue()); //convert the string (int value) in float
+			left.setValue(Float.toString(lValue));
+			left.setType(IdType.FLOAT);
+			
+			float rValue = Float.parseFloat(right.getValue()); //convert the string (int value) in float
+			right.setValue(Float.toString(rValue));
+			right.setType(IdType.FLOAT);
+			
+			retType = IdType.FLOAT;
+			sOperator = "f"; //float 
+    	}
+    	
+    	else {
+    		
+			retType = IdType.INT;
+    		sOperator = "i"; //int
+    	}
     	
     	switch(op)
     	{
     		case PLUS:
-    			if(left.getType() == IdType.FLOAT || right.getType() == IdType.FLOAT)
-    				writeStmt("fadd");
-    			else 
-    				writeStmt("iadd");
+    			
+    			sOperator += "add";
     			break;
     			
     		case DIFF:
-    			
+    			sOperator += "sub";
     			break;
     			
     		case MUL:
-    			
+    			sOperator += "mul";
     			break;
     			
     		case DIV:
-    			
+    			sOperator += "div";
+    			break;
+    		
+    		case MOD:
+    			sOperator += "rem";
     			break;
     			
     		default:
     			break;
     	}
+    	pushInStack(node, left);
+		pushInStack(node, right);
+		writeStmt(sOperator);
+		
+		return retType;
     }
+
     
     private void pushInStack(Node node, GenNodeInfo info) 
     {
@@ -760,12 +805,6 @@ public class CodeGenerator extends Visitor
 	}
 
 	@Override
-	public Object visit(ModNode modNode) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
 	public Object visit(LTNode letNode) {
 		// TODO Auto-generated method stub
 		return null;
@@ -858,7 +897,7 @@ public class CodeGenerator extends Visitor
 	{
 		SymbolDesc varDesc = sTable.getVarDesc(node.getName(), node.getBlockNumber());
 		
-		GenNodeInfo info = new GenNodeInfo(node.getName(), node.toString(), varDesc.getType(), varDesc.getDim());
+		GenNodeInfo info = new GenNodeInfo(node.getName(), "", varDesc.getType(), varDesc.getDim());
 		
 		return info;
 	}

@@ -33,4 +33,13 @@ public class GenNodeInfo {
 	{
 		return dim;
 	}
+	
+	
+	public void setValue(String value) {
+		this.value = value;
+	}
+	
+	public void setType(IdType type) {
+		this.type = type;
+	}
 }
