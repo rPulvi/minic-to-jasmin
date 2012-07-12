@@ -2,13 +2,15 @@ package it.m2j;
 
 public class GenNodeInfo {
 	private String name;
+	private IdType kind;
 	private String value;
 	private IdType type;
 	private int dim;
 	
-	public GenNodeInfo(String name, String value, IdType type, int dimension)
+	public GenNodeInfo(String name, IdType kind, String value, IdType type, int dimension)
 	{
 		this.name = name;
+		this.kind = kind;
 		this.value = value;
 		this.type = type;
 		this.dim = dimension;
@@ -34,6 +36,9 @@ public class GenNodeInfo {
 		return dim;
 	}
 	
+	public IdType getKind() {
+		return kind;
+	}
 	
 	public void setValue(String value) {
 		this.value = value;
@@ -41,5 +46,9 @@ public class GenNodeInfo {
 	
 	public void setType(IdType type) {
 		this.type = type;
+	}
+	
+	public void setKind(IdType kind) {
+		this.kind = kind;
 	}
 }

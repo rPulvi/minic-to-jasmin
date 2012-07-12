@@ -54,6 +54,12 @@ public enum IdType {
 		{
 			return "Function";
 		}
+	},
+	CONST{
+		public String toString()
+		{
+			return "Constant";
+		}
 	};	
 	
 	public boolean IsNumeric()

@@ -6,9 +6,9 @@ import it.m2j.*;
 
 /**
  * <p>Title: MiniC to Jasmin</p>
- * <p>Description: a MiniC to Jasmin Compiler developed for the "Progetto di Compilatori e interpreti" course at the Universitˆ degli studi di Catania</p>
+ * <p>Description: a MiniC to Jasmin Compiler developed for the "Progetto di Compilatori e interpreti" course at the Universitï¿½ degli studi di Catania</p>
  * <p>Website: http://code.google.com/p/minic-to-jasmin/ </p>
- * @author Alessandro Nicolosi, Riccardo Pulvirenti, Giuseppe Ravidˆ
+ * @author Alessandro Nicolosi, Riccardo Pulvirenti, Giuseppe Ravidï¿½
  * @version 1.0
  */
 
@@ -211,18 +211,21 @@ public class SymbolTable
     	SymbolDesc sdRet = null;
     	ArrayList<SymbolDesc> varDesc = get(key);
     	
-    	if(varDesc.size() > 0)
-    	{
-    		Iterator<SymbolDesc> it = varDesc.listIterator();			
-			
-			while (it.hasNext()) {
-				SymbolDesc s = it.next();
+    	if(varDesc != null) {
+    		
+	    	if(varDesc.size() > 0)
+	    	{
+	    		Iterator<SymbolDesc> it = varDesc.listIterator();			
 				
-				if(s.getBlock() == blockNumber && s.getKind() == IdType.VARIABLE){
-					sdRet = s;
-					break;
+				while (it.hasNext()) {
+					SymbolDesc s = it.next();
+					
+					if(s.getBlock() == blockNumber && s.getKind() == IdType.VARIABLE){
+						sdRet = s;
+						break;
+					}
 				}
-			}
+	    	}
     	}
     	
     	return sdRet;

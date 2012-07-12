@@ -64,8 +64,18 @@ public class CodeGenerator extends Visitor
 	//write a statement to the output StringBuffer
     private void writeStmt(String stmt)
     {
-        out.append(stmt);
+        out.append("\t" + stmt);
         out.append("\n");
+    }
+    
+    private void writeComment(String comment) {
+    	out.append("; " + comment);
+    	out.append("\n");
+    }
+    
+    private void writeLabel() {
+    	out.append("#" + labelCounter + ":");
+    	out.append("\n");
     }
 
     public String getOutput()
@@ -87,7 +97,7 @@ public class CodeGenerator extends Visitor
     	IdType type = varInfo.getType();
     	String value = "";
     	
-    	writeStmt("; " + type + " " + varInfo.getName() + " ----------------------------");
+    	writeComment(type + " " + varInfo.getName() + " ----------------------------");
     	
     	switch(type)
     	{
@@ -108,7 +118,7 @@ public class CodeGenerator extends Visitor
 				break;
     	}
     	
-    	initInfo = new GenNodeInfo("", value, type, varInfo.getDim());
+    	initInfo = new GenNodeInfo("", IdType.CONST, value, type, varInfo.getDim());
     	
     	//init variable
     	pushInStack(node, initInfo);
@@ -121,19 +131,22 @@ public class CodeGenerator extends Visitor
     
     public Object visit(AssignNode node)
     {	
-    	writeStmt("; " + node + " ----------------------------");
+    	writeComment(node + " ----------------------------");
     	
     	GenNodeInfo left = (GenNodeInfo)node.visitVar(this);
     	GenNodeInfo right = (GenNodeInfo)node.visitValue(this);
     	
-    	if(right != null) {
-	    	//when the left hand type of assignment is int and the right is float we prom the left to float 
-//	    	if(left.getType() == IdType.FLOAT && right.getType() == IdType.INT) {
-//	    		writeStmt("i2f");
-//	    	}
-	    	pushInStack(node, right);
+    	if(right.getKind() != IdType.NULL) {
+    		
+    		pushInStack(node, right);
     	}
     	
+    	else
+    		//when the left hand type of assignment is int and the right is float we prom the left to float 
+	    	if(left.getType() == IdType.FLOAT && right.getType() == IdType.INT) {
+	    		writeStmt("i2f");
+	    	}
+
     	//pop from stack and store in my local variable
     	popFromStack(node, left);
  
@@ -143,7 +156,7 @@ public class CodeGenerator extends Visitor
     public Object visit(BlockNode node)
     {
     	if(isCondition){
-    		writeStmt("#" + labelCounter + ":");
+    		writeLabel();
     		isCondition = false;
     	}
     	
@@ -187,7 +200,7 @@ public class CodeGenerator extends Visitor
         
         node.visitBody(this);
         
-        writeStmt(".end method");
+        writeStmt("\n.end method");
     }
 
     public Object visit(ArgNode node)
@@ -474,29 +487,24 @@ public class CodeGenerator extends Visitor
     public Object visit(DivNode node)
     {
     	IdType type = visitBinaryNode(node, Operator.DIV);
-        //return new GenNodeInfo("", "", type, 0);
-    	return null;
-
+        return new GenNodeInfo("", IdType.NULL, "", type, 0);
     }
 
     public Object visit(AddNode node)
     {
         IdType type = visitBinaryNode(node, Operator.PLUS);
-        //return new GenNodeInfo("", "", type, 0);
-    	return null;
+        return new GenNodeInfo("", IdType.NULL, "", type, 0);
     }
     
     public Object visit(MulNode node)
     {
     	IdType type = visitBinaryNode(node, Operator.MUL);
-        //return new GenNodeInfo("", "", type, 0);
-    	return null;
+        return new GenNodeInfo("", IdType.NULL, "", type, 0);
     }
     
 	public Object visit(ModNode node) {
 		IdType type = visitBinaryNode(node, Operator.MOD);
-        //return new GenNodeInfo("", "", type, 0);
-        return null;
+        return new GenNodeInfo("", IdType.NULL, "", type, 0);
 	}
 
     public Object visit(OrNode node)
@@ -522,26 +530,37 @@ public class CodeGenerator extends Visitor
     	String sOperator = "";
     	IdType retType;
 
-    	//push in stack using iload or fload or ldc and check float type
-
+    	// if one or both operands are float
     	if(left.getType() == IdType.FLOAT || right.getType() == IdType.FLOAT) {
-			
-			float lValue = Float.parseFloat(left.getValue()); //convert the string (int value) in float
-			left.setValue(Float.toString(lValue));
-			left.setType(IdType.FLOAT);
-			
-			float rValue = Float.parseFloat(right.getValue()); //convert the string (int value) in float
-			right.setValue(Float.toString(rValue));
-			right.setType(IdType.FLOAT);
-			
-			retType = IdType.FLOAT;
+    		
+    		retType = IdType.FLOAT;
 			sOperator = "f"; //float 
+    		
+    		if(left.getType() == IdType.INT) {
+	        	//push in stack using iload or fload or ldc and check float type
+	        	pushInStack(node, left);
+	    		writeStmt("i2f");
+	        	pushInStack(node, right);
+    		}
+    		
+    		else if(right.getType() == IdType.INT) {
+    			//push in stack using iload or fload or ldc and check float type
+	        	pushInStack(node, left);
+	        	pushInStack(node, right);
+	        	writeStmt("i2f");
+    		}
+    		else {
+    			pushInStack(node, left);
+	        	pushInStack(node, right);
+    		}
     	}
     	
     	else {
     		
 			retType = IdType.INT;
     		sOperator = "i"; //int
+    		pushInStack(node, left);
+        	pushInStack(node, right);
     	}
     	
     	switch(op)
@@ -568,19 +587,69 @@ public class CodeGenerator extends Visitor
     			break;
     			
     		case GT:
-    			if(left.getType() == IdType.FLOAT || right.getType() == IdType.FLOAT)
-    				;
-    				//writeStmt("if_icmpgt " + labelCounter);
+    			if(sOperator.equals("f")) {
+    				sOperator = "fcmpg\n";
+    				sOperator+= "ifgt " + "#" + labelCounter;
+    			}
     			else
-    				writeStmt("if_icmpgt " + "#" + labelCounter);
+    				sOperator = "if_icmpgt " + "#" + labelCounter;
     			
     			break;
+    			
+    		case GET:
+    			if(sOperator.equals("f")) {
+    				sOperator = "fcmpg\n";
+    				sOperator+= "ifge " + "#" + labelCounter;
+    			}
+    			else
+    				sOperator = "if_icmpge " + "#" + labelCounter;
+    			
+    			break;	
+    		
+    		case LT:
+    			if(sOperator.equals("f")) {
+    				sOperator = "fcmpl\n";
+    				sOperator+= "iflt " + "#" + labelCounter;
+    			}
+    			else
+    				sOperator = "if_icmplt " + "#" + labelCounter;
+    			
+    			break;
+    			
+    		case LET:
+    			if(sOperator.equals("f")) {
+    				sOperator = "fcmpl\n";
+    				sOperator+= "ifle " + "#" + labelCounter;
+    			}
+    			else
+    				sOperator = "if_icmple " + "#" + labelCounter;
+    			
+    			break;
+    			
+//    		case EQ:
+//    			if(sOperator.equals("f")) {
+//    				sOperator = "fcmpg\n";
+//    				sOperator+= "ifgt " + "#" + labelCounter;
+//    			}
+//    			else
+//    				sOperator = "if_icmpgt " + "#" + labelCounter;
+//    			
+//    			break;
+//    			
+//    		case NEQ:
+//    			if(sOperator.equals("f")) {
+//    				sOperator = "fcmpg\n";
+//    				sOperator+= "ifgt " + "#" + labelCounter;
+//    			}
+//    			else
+//    				sOperator = "if_icmpgt " + "#" + labelCounter;
+//    			
+//    			break;
     			
     		default:
     			break;
     	}
-    	pushInStack(node, left);
-		pushInStack(node, right);
+    	
 		writeStmt(sOperator);
 		
 		return retType;
@@ -593,12 +662,10 @@ public class CodeGenerator extends Visitor
     	String name = info.getName();
     	IdType type = info.getType();
     	String value = info.getValue();
+    	IdType kind = info.getKind();
     	
-    	/*
-    	 * If it has name, it is variable.
-    	 * If name is empty, it is number.
-    	 */
-    	if (!name.equals(""))
+
+    	if (kind == IdType.VARIABLE)
     	{
     		varDesc = sTable.getVarDesc(name, node.getBlockNumber());
     		
@@ -615,8 +682,8 @@ public class CodeGenerator extends Visitor
 	    			break;
     		}
     	}
-    	else
-    		{
+    	else if(kind == IdType.CONST)
+    	{
     			switch(type)
     			{
     				case BOOL:
@@ -692,7 +759,7 @@ public class CodeGenerator extends Visitor
     	}
 	}
     
-  //*************************************** Comparing Nodes **********************************************
+  //*************************************** Comparison Nodes **********************************************
 	
   	@Override
   	public Object visit(LTNode node) {
@@ -800,7 +867,7 @@ public class CodeGenerator extends Visitor
     
     public Object visit(StringNode node)
     {	
-        GenNodeInfo info = new GenNodeInfo("", node.toString(), node.getType(), 0);
+        GenNodeInfo info = new GenNodeInfo("",IdType.CONST, node.toString(), node.getType(), 0);
         return info;
     }
 
@@ -813,19 +880,19 @@ public class CodeGenerator extends Visitor
     	else
     		sRet = "0";
     	
-        GenNodeInfo info = new GenNodeInfo("", sRet, node.getType(), 0);
+        GenNodeInfo info = new GenNodeInfo("",IdType.CONST, sRet, node.getType(), 0);
         return info;
     }
 
     public Object visit(IntNode node)
     {
-        GenNodeInfo info = new GenNodeInfo("", node.toString(), node.getType(), 0);
+        GenNodeInfo info = new GenNodeInfo("",IdType.CONST, node.toString(), node.getType(), 0);
         return info;
     }
 
 	public Object visit(FloatNode node) 
 	{
-		GenNodeInfo info = new GenNodeInfo("", node.toString(), node.getType(), 0);
+		GenNodeInfo info = new GenNodeInfo("",IdType.CONST, node.toString(), node.getType(), 0);
         return info;
 	}
 
@@ -909,7 +976,7 @@ public class CodeGenerator extends Visitor
 	{
 		SymbolDesc varDesc = sTable.getVarDesc(node.getName(), node.getBlockNumber());
 		
-		GenNodeInfo info = new GenNodeInfo(node.getName(), "", varDesc.getType(), varDesc.getDim());
+		GenNodeInfo info = new GenNodeInfo(node.getName(), IdType.VARIABLE, "", varDesc.getType(), varDesc.getDim());
 		
 		return info;
 	}
