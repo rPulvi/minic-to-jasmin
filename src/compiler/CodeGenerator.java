@@ -77,6 +77,11 @@ public class CodeGenerator extends Visitor
     	out.append("#" + labelCounter + ":");
     	out.append("\n");
     }
+    
+    private void writeLabel(String label) {
+    	out.append(label + labelCounter + ":");
+    	out.append("\n");
+    }
 
     public String getOutput()
     {
@@ -139,15 +144,14 @@ public class CodeGenerator extends Visitor
     	if(right.getKind() != IdType.NULL) {
     		
     		pushInStack(node, right);
-    	}
-    	
+    	}    	
     	else
     		//when the left hand type of assignment is int and the right is float we prom the left to float 
 	    	if(left.getType() == IdType.FLOAT && right.getType() == IdType.INT) {
 	    		writeStmt("i2f");
 	    	}
 
-    	//pop from stack and store in my local variable
+    	//pop from stack and store in local variable
     	popFromStack(node, left);
  
         return null;
@@ -328,8 +332,11 @@ public class CodeGenerator extends Visitor
     	isCondition = true;
     	
     	node.visitTest(this);
-    	node.visitThen(this);
+    	writeStmt("goto endif" + labelCounter);
     	
+    	node.visitThen(this);
+    	writeLabel("endif");
+    
     	labelCounter++;
 
         return null;

@@ -24,7 +24,7 @@ public class SymbolTableConstructor extends Visitor
     {
         super(out);
         sTable = new SymbolTable();
-        varCounter = 0;
+        varCounter = 5; //the first 5 register are left free for code generation purposes
     }
 
     /**
