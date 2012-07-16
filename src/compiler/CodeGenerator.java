@@ -26,6 +26,7 @@ public class CodeGenerator extends Visitor
     
     private String jasminClassName;
     private int labelCounter;
+    private int ifLabelCounter;
     private boolean isCondition;
 
     /**
@@ -40,6 +41,7 @@ public class CodeGenerator extends Visitor
         sTable = st;
         jasminClassName = className;
         labelCounter = 0;
+        ifLabelCounter = 0;
         isCondition = false;
         
         writeJasminHeader();
@@ -160,7 +162,7 @@ public class CodeGenerator extends Visitor
     public Object visit(BlockNode node)
     {
     	if(isCondition){
-    		writeLabel();
+    		//writeLabel();
     		isCondition = false;
     	}
     	
@@ -199,8 +201,11 @@ public class CodeGenerator extends Visitor
     	
         numLocals = sTable.varCount();
         
-        writeStmt(".limit locals " + numLocals);
+        writeStmt(".limit locals " + numLocals*3);
         writeStmt(".limit stack " + numLocals);
+        
+        writeStmt("ldc 0");
+        writeStmt("istore 0");
         
         node.visitBody(this);
         
@@ -329,15 +334,18 @@ public class CodeGenerator extends Visitor
 
     public Object visit(IfNode node)
     {
-    	isCondition = true;
+    	isCondition = true;    	    	
     	
     	node.visitTest(this);
-    	writeStmt("goto endif" + labelCounter);
+    	writeStmt("goto EXIT_" + ifLabelCounter);
     	
+    	writeStmt("\rSTMT_" + ifLabelCounter + ":");
     	node.visitThen(this);
-    	writeLabel("endif");
+    	//writeLabel("EXIT_");
+    	writeStmt("\rEXIT_" + ifLabelCounter + ":"); // TODO: Fix with labelCreator class
     
     	labelCounter++;
+    	ifLabelCounter++;
 
         return null;
     }
@@ -516,30 +524,132 @@ public class CodeGenerator extends Visitor
 
     public Object visit(OrNode node)
     {
-        visitBinaryNode(node, Operator.OR);
-        return null;
+    	String sOperator = "";
+
+    	
+    	//Left Hand
+    	
+    	writeLabel();
+    	labelCounter++;
+    	
+    	writeStmt("iload 0");
+    	writeStmt("ifgt STMT_" + ifLabelCounter);
+    	
+
+    	GenNodeInfo left = (GenNodeInfo) node.visitLeft(this);    	
+
+    	if (left.getKind() == IdType.VARIABLE || left.getKind() == IdType.CONST)
+    	{    		    		
+    		pushInStack(node, left);
+
+    		//create a comparison with 0    		
+    		writeStmt("ifgt #" + labelCounter++);
+    		writeStmt("goto #" + labelCounter);
+    	}
+    	else
+    		writeStmt("goto #" + labelCounter);
+    	
+    	labelCounter --;
+    	writeLabel();
+    	writeStmt("ldc 1");
+    	writeStmt("istore 0");
+    	labelCounter++;
+    	
+    	//Right Hand
+    	writeLabel();
+    	labelCounter++;    	
+
+    	writeStmt("iload 0");
+    	writeStmt("ifgt STMT_" + ifLabelCounter);
+
+    	
+    	GenNodeInfo right = (GenNodeInfo) node.visitRight(this);    	
+    	    	
+    	if (right.getKind() == IdType.VARIABLE || right.getKind() == IdType.CONST)
+    	{
+    		
+    		pushInStack(node, right);
+    		
+    		//create a comparison with 0    		
+    		writeStmt("ifgt #" + labelCounter++);
+    		writeStmt("goto #" + labelCounter);
+    	}
+    	else
+    		writeStmt("goto #" + labelCounter);
+    	
+    	labelCounter --;
+    	writeLabel();
+    	writeStmt("ldc 1");
+    	writeStmt("istore 0");
+    	labelCounter++;
+
+    	writeLabel();
+    	writeStmt("iload 0");
+    	writeStmt("ifgt #STMT_" + ifLabelCounter);    	
+    	    	    	    	
+    	return new GenNodeInfo("", IdType.NULL, "", IdType.BOOL, 0);        
     }
 
     public Object visit(AndNode node)
-    {
-        visitBinaryNode(node, Operator.AND);
-        return null;
-    }
-
-    private IdType visitBinaryNode(BinaryNode node, Operator op)
-    {
+    {       	
+    	String sOperator = "";
+    	
+    	writeLabel();
+    	labelCounter++;
+    	
     	//Left Hand
-    	GenNodeInfo left = (GenNodeInfo) node.visitLeft(this);
+    	GenNodeInfo left = (GenNodeInfo) node.visitLeft(this);    	
+
+    	if (left.getKind() == IdType.VARIABLE || left.getKind() == IdType.CONST)
+    	{    
+    		//writeLabel();
+    		pushInStack(node, left);
+
+    		//create a comparison with 0    		
+    		writeStmt("ifgt #" + ++labelCounter);
+    		writeStmt("goto EXIT_" + ifLabelCounter);
+    	}
+    	else
+    		writeStmt("goto EXIT_" + ifLabelCounter);
+    	
+    	writeLabel();
+    	labelCounter++;
     	
     	//Right Hand
     	GenNodeInfo right = (GenNodeInfo) node.visitRight(this);
     	
+    	if (right.getKind() == IdType.VARIABLE || right.getKind() == IdType.CONST)
+    	{
+    		//writeLabel();
+    		pushInStack(node, right);
+    		
+    		//create a comparison with 0    		
+    		writeStmt("ifgt #" + ++labelCounter);
+    		writeStmt("goto EXIT_" + ifLabelCounter);
+    	}    	    	    	
+    	else
+    		writeStmt("goto EXIT_" + ifLabelCounter);
+
+    	writeLabel();
+    	writeStmt("goto STMT_" + ifLabelCounter);
+    	
+        return new GenNodeInfo("", IdType.NULL, "", IdType.BOOL, 0);
+    }
+
+    private IdType visitBinaryNode(BinaryNode node, Operator op)
+    {
     	String sOperator = "";
     	IdType retType;
+    	
+    	//Left Hand
+    	GenNodeInfo left = (GenNodeInfo) node.visitLeft(this);
+    	
+    	//Right Hand
+    	GenNodeInfo right = (GenNodeInfo) node.visitRight(this);    	
 
     	// if one or both operands are float
     	if(left.getType() == IdType.FLOAT || right.getType() == IdType.FLOAT) {
-    		
+
     		retType = IdType.FLOAT;
 			sOperator = "f"; //float 
     		
@@ -565,7 +675,9 @@ public class CodeGenerator extends Visitor
     	else {
     		
 			retType = IdType.INT;
-    		sOperator = "i"; //int
+    		
+			sOperator = "i"; //int
+    		
     		pushInStack(node, left);
         	pushInStack(node, right);
     	}
@@ -594,74 +706,91 @@ public class CodeGenerator extends Visitor
     			break;
     			
     		case GT:
-    			if(sOperator.equals("f")) {
-    				sOperator = "fcmpg\n";
-    				sOperator+= "ifgt " + "#" + labelCounter;
-    			}
-    			else
-    				sOperator = "if_icmpgt " + "#" + labelCounter;
-    			
-    			break;
-    			
-    		case GET:
-    			if(sOperator.equals("f")) {
-    				sOperator = "fcmpg\n";
-    				sOperator+= "ifge " + "#" + labelCounter;
-    			}
-    			else
-    				sOperator = "if_icmpge " + "#" + labelCounter;
-    			
-    			break;	
-    		
-    		case LT:
-    			if(sOperator.equals("f")) {
-    				sOperator = "fcmpl\n";
-    				sOperator+= "iflt " + "#" + labelCounter;
-    			}
-    			else
-    				sOperator = "if_icmplt " + "#" + labelCounter;
-    			
-    			break;
-    			
-    		case LET:
-    			if(sOperator.equals("f")) {
-    				sOperator = "fcmpl\n";
-    				sOperator+= "ifle " + "#" + labelCounter;
-    			}
-    			else
-    				sOperator = "if_icmple " + "#" + labelCounter;
-    			
-    			break;
-    			
-//    		case EQ:
-//    			if(sOperator.equals("f")) {
-//    				sOperator = "fcmpg\n";
-//    				sOperator+= "ifgt " + "#" + labelCounter;
-//    			}
-//    			else
-//    				sOperator = "if_icmpgt " + "#" + labelCounter;
-//    			
-//    			break;
-//    			
-//    		case NEQ:
-//    			if(sOperator.equals("f")) {
-//    				sOperator = "fcmpg\n";
-//    				sOperator+= "ifgt " + "#" + labelCounter;
-//    			}
-//    			else
-//    				sOperator = "if_icmpgt " + "#" + labelCounter;
-//    			
-//    			break;
-    			
-    		default:
-    			break;
+        			if(sOperator.equals("f")) {
+        				sOperator = "fcmpg\n";
+        				sOperator+= "\tifgt " + "#" + labelCounter++;
+        				//sOperator+= "\n\tgoto EXIT_" + ifLabelCounter;
+        			}
+        			else
+        			{
+        				sOperator = "if_icmpgt " + "#" + labelCounter++;
+        				//sOperator+= "\n\tgoto EXIT_" + ifLabelCounter;
+        			}
+        			
+        			break;
+        			
+        		case GET:
+        			if(sOperator.equals("f")) {
+        				sOperator = "fcmpg\n";
+        				sOperator+= "\tifge " + "#" + labelCounter++;
+        				//sOperator+= "\n\tgoto EXIT_" + ifLabelCounter;
+        			}
+        			else
+        			{
+        				sOperator = "if_icmpge " + "#" + labelCounter++;
+        				//sOperator+= "\n\tgoto EXIT_" + ifLabelCounter;
+        			}
+        			
+        			break;	
+        		
+        		case LT:
+        			if(sOperator.equals("f")) {
+        				sOperator = "fcmpl\n";
+        				sOperator+= "\tiflt " + "#" + labelCounter++;
+        				//sOperator+= "\n\tgoto EXIT_" + ifLabelCounter;
+        			}
+        			else
+        			{
+        				sOperator = "if_icmplt " + "#" + labelCounter++;
+        				//sOperator+= "\n\tgoto EXIT_" + ifLabelCounter;
+        			}
+        			
+        			break;
+        			
+        		case LET:
+        			if(sOperator.equals("f")) {
+        				sOperator = "fcmpl\n";
+        				sOperator+= "\tifle " + "#" + labelCounter++;
+        				//sOperator+= "\n\tgoto EXIT_" + ifLabelCounter;
+        			}
+        			else
+        			{
+        				sOperator = "if_icmple " + "#" + labelCounter++;
+        				//sOperator+= "\n\tgoto EXIT_" + ifLabelCounter;
+        			}
+        			break;
+        			
+//        		case EQ:
+//        			if(sOperator.equals("f")) {
+//        				sOperator = "fcmpg\n";
+//        				sOperator+= "ifgt " + "#" + labelCounter;
+//        			}
+//        			else
+//        				sOperator = "if_icmpgt " + "#" + labelCounter;
+//        			
+//        			break;
+//        			
+//        		case NEQ:
+//        			if(sOperator.equals("f")) {
+//        				sOperator = "fcmpg\n";
+//        				sOperator+= "ifgt " + "#" + labelCounter;
+//        			}
+//        			else
+//        				sOperator = "if_icmpgt " + "#" + labelCounter;
+//        			
+//        			break;  
+        		
+        		default:
+        			sOperator = "";
+        			break;        			
     	}
-    	
-		writeStmt(sOperator);
+
+    	if (sOperator.length()>0)
+    		writeStmt(sOperator);
 		
 		return retType;
     }
-    
+        
     private void pushInStack(Node node, GenNodeInfo info) 
     {
     	SymbolDesc varDesc = null;
@@ -678,6 +807,7 @@ public class CodeGenerator extends Visitor
     		
     		switch(type)
     		{
+    			case BOOL:
 	    		case INT:
 	    			writeStmt("iload " + varDesc.getJvmVar());
 	    			break;
@@ -753,7 +883,8 @@ public class CodeGenerator extends Visitor
     		
     		switch(type)
     		{
-	    		case INT:
+    			case BOOL: 
+	    		case INT:	    			
 	    			writeStmt("istore " + varDesc.getJvmVar());
 	    			break;
 	    		case FLOAT:
@@ -770,9 +901,12 @@ public class CodeGenerator extends Visitor
 	
   	@Override
   	public Object visit(LTNode node) {
-  		visitBinaryNode(node, Operator.LT);
+//  		writeLabel();
+//  		labelCounter++;
+  		
+  		IdType type = visitBinaryNode(node, Operator.LT);
           
-  		return null;
+  		return new GenNodeInfo("", IdType.NULL, "", type, 0);//TODO: FIxXx
   	}
 
   	@Override
@@ -784,9 +918,12 @@ public class CodeGenerator extends Visitor
 
   	@Override
   	public Object visit(GTNode node) {
-  		visitBinaryNode(node, Operator.GT);
+//  		writeLabel();
+//  		labelCounter++;
+  		
+  		IdType type = visitBinaryNode(node, Operator.GT);
           
-  		return null;
+  		return new GenNodeInfo("", IdType.NULL, "", type, 0);//TODO: FIxXx
   	}
 
   	@Override
