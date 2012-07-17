@@ -103,7 +103,8 @@ public class SemanticChecker extends Visitor
     		}
     	}
 
-    	return sTable.getFunctionType(node.getName());	
+    	//return sTable.getFunctionType(node.getName());
+    	return new NodeInfo(sTable.getFunctionType(node.getName()), 0);
     }
 
     public Object visit(ArgNode node)
