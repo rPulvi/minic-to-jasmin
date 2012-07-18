@@ -38,6 +38,8 @@ void main( void ){
 	print_string(f2s(espressione_complessa));
 	print_string(i2s(cast_val));
 	print_string(f2s(float_promote));
+	
+	Alessandro
 }
 
 puppo chi legge!
