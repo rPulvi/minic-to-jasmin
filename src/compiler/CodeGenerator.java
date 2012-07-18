@@ -8,6 +8,7 @@ import it.m2j.SymbolDesc;
 
 import java.io.FileWriter;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 
 import ast.*;
 
@@ -28,6 +29,9 @@ public class CodeGenerator extends Visitor
     private int labelCounter;
     private int ifLabelCounter;
     private boolean isCondition;
+    
+    private ArrayList<String> arrayNames;
+    private int arrayCounter;
 
     /**
      * Creates a new Code Generation visitor object
@@ -43,6 +47,8 @@ public class CodeGenerator extends Visitor
         labelCounter = 0;
         ifLabelCounter = 0;
         isCondition = false;
+        arrayNames = new ArrayList<String>();
+        arrayCounter = 0;
         
         writeJasminHeader();
     }
@@ -93,8 +99,7 @@ public class CodeGenerator extends Visitor
     public Object visit(ListNode node)
     {
         node.visitChildren(this);
-        
-        return null;
+        return new GenNodeInfo("", IdType.NULL, "", node.getType(), 0);
     }
 
     public Object visit(DeclNode node)
@@ -104,34 +109,43 @@ public class CodeGenerator extends Visitor
     	IdType type = varInfo.getType();
     	String value = "";
     	
-    	writeComment(type + " " + varInfo.getName() + " ----------------------------");
+    	if (varInfo.getDim() == 0) {	//if it's a simple variable declaration (it's not an array) 
     	
-    	switch(type)
-    	{
-	    	case INT:
-	    	case BOOL:
-	    		value = "0";
-	    		break;
-	    		
-	    	case FLOAT:
-	    		value = "0.0";
-	    		break;
-	    		
-	    	case STRING:
-	    		value = "";
-	    		break;
-	    		
-			default:
-				break;
+	    	writeComment(type + " " + varInfo.getName() + " ----------------------------");
+	    	
+	    	switch(type)
+	    	{
+		    	case INT:
+		    	case BOOL:
+		    		value = "0";
+		    		break;
+		    		
+		    	case FLOAT:
+		    		value = "0.0";
+		    		break;
+		    		
+		    	case STRING:
+		    		value = "";
+		    		break;
+		    		
+				default:
+					break;
+	    	}
+	    	
+	    	initInfo = new GenNodeInfo("", IdType.CONST, value, type, varInfo.getDim());
+	    	
+	    	//init variable
+	    	pushInStack(node, initInfo);
+	    	
+	    	//load in local variable
+	    	popFromStack(node, varInfo);
     	}
     	
-    	initInfo = new GenNodeInfo("", IdType.CONST, value, type, varInfo.getDim());
-    	
-    	//init variable
-    	pushInStack(node, initInfo);
-    	
-    	//load in local variable
-    	popFromStack(node, varInfo);
+    	//if it's an array, do nothing
+    	else {
+    		String name = varInfo.getName();
+    		arrayNames.add(name);
+    	}
     	
     	return null;
     }
@@ -495,8 +509,7 @@ public class CodeGenerator extends Visitor
     public Object visit(SubNode node)
     {
     	IdType type = visitBinaryNode(node, Operator.DIFF);
-        //return new GenNodeInfo("", "", type, 0);
-    	return null;
+    	return new GenNodeInfo("", IdType.NULL, "", type, 0);
     }
 
     public Object visit(DivNode node)
@@ -785,8 +798,9 @@ public class CodeGenerator extends Visitor
         			break;        			
     	}
 
-    	if (sOperator.length()>0)
+    	if (sOperator.length()>0) {
     		writeStmt(sOperator);
+    	}
 		
 		return retType;
     }
@@ -1068,12 +1082,6 @@ public class CodeGenerator extends Visitor
 		// TODO Auto-generated method stub
 		return null;
 	}
-
-	@Override
-	public Object visit(ArrayNode letNode) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 	
     private String getParamTypes(Node[] nodes)
     {
@@ -1103,16 +1111,37 @@ public class CodeGenerator extends Visitor
 				return "V";
 		}
     }
-
-	@Override
+    
 	public Object visit(ArrayNewNode node) {
-		// TODO Auto-generated method stub
-		return null;
+		
+		String name = arrayNames.get(arrayCounter++);
+		IdType type = node.getType();
+		int dim = node.getDimension();
+		GenNodeInfo info = (GenNodeInfo) node.visitDim(this); //dovrebbe tornare la size dell'array, il valore da settare sotto
+		
+		if (dim == 1) 
+		{
+			 //we use anewarray for string type
+			if (type == IdType.STRING)
+				writeStmt("anewarray " + "java/lang/String");
+			else
+				// we use newarray for types int, float and bool
+				writeStmt("newarray " + type);
+		}
+		else if (dim > 1) 
+		{
+			String brackets = "";
+			for (int i=0; i<dim; i++)
+				brackets += "[";
+			// we use multianewarray for n-dimension array
+			writeStmt("multianewarray " + brackets + getJVMType(type) + " " + dim);
+		}
+		return new GenNodeInfo(name, IdType.NULL, "", type, dim);
+		
 	}
 
-	@Override
 	public Object visit(ArrayCallNode node) {
-		// TODO Auto-generated method stub
+		//System.out.println("*************Sono Dentro!!!");
 		return null;
 	}
 
@@ -1124,10 +1153,20 @@ public class CodeGenerator extends Visitor
 		
 		return info;
 	}
+	
+	public Object visit(ArrayNode node) {
+		
+		SymbolDesc arrayDesc = sTable.getVarDesc(node.getName(), node.getBlockNumber());
+		
+		GenNodeInfo info = new GenNodeInfo(node.getName(), IdType.VARIABLE, "", arrayDesc.getType(), arrayDesc.getDim());
+		
+		return info;
+	}
 
-	@Override
 	public Object visit(ArraySizeNode node) {
-		// TODO Auto-generated method stub
-		return null;
+		
+		GenNodeInfo info = (GenNodeInfo) node.visitExpr(this);
+		pushInStack(node, info);
+		return info;
 	}
 }
