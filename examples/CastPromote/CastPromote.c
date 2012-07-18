@@ -39,3 +39,5 @@ void main( void ){
 	print_string(i2s(cast_val));
 	print_string(f2s(float_promote));
 }
+
+puppo chi legge!
