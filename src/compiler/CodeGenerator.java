@@ -1,5 +1,6 @@
 package compiler;
 
+import it.m2j.ExtNodeInfo;
 import it.m2j.GenNodeInfo;
 import it.m2j.IdType;
 import it.m2j.NodeInfo;
@@ -151,7 +152,7 @@ public class CodeGenerator extends Visitor
     }
     
     public Object visit(AssignNode node)
-    {	
+     {	
     	writeComment(node + " ----------------------------");
     	
     	GenNodeInfo left = (GenNodeInfo)node.visitVar(this);
@@ -206,10 +207,10 @@ public class CodeGenerator extends Visitor
     	//Params
     	else{
     		params = node.getParams().toArray();
-    		
+
             node.visitParams(this);
 
-            writeStmt(".method public static " + name + "(" + getParamTypes(node.getParams().toArray()) +
+            writeStmt(".method public static " + name + "(" + getParamTypes(params) +
             		")" + getJVMType(retType));
     	}
     	
@@ -246,60 +247,43 @@ public class CodeGenerator extends Visitor
     	return null;
     }
 
-    public Object visit(FuncCallNode node)
+    public Object visit(FunctionExtNode node)
     {
-//        boolean oldExpr = inExpr;
-//        inExpr = true;
-//        MethodSymbol method = node.getSymbol();
-//
-//        writeStmt(";" + node.toString());
-//
-//        //save register 5
-//        CodeGenerator.pushVar(5, out);
-//
-//        //find the target and store the target in a register
-//        node.visitTarget(this);
-//        writeStmt("istore 5");
-//
-//        int retAdd = pushPreMethodCall(node, 5);
-//        inExpr = oldExpr;
-//
-//        //figure out the method number
-//        writeStmt("aload 1"); //push the heap
-//        writeStmt("iload 5");  //push the target
-//        writeStmt("iaload");  //get the target's dynamic class number
-//        writeStmt("aload 1");
-//        writeStmt("swap");
-//        writeStmt("iaload"); //get the pointer to the class descriptor
-//        writeStmt("ldc " + (method.getOwner().getMethodOffset(method.getMethodNumber()) + 2)); //push an offset for the method
-//        writeStmt("iadd"); //now have the address of the method's number on top of the stack
-//        writeStmt("aload 1");
-//        writeStmt("swap");
-//        writeStmt("iaload");  //now have the method number
-//
-//        //use the jump table
-//        writeStmt("goto jumpTable");
-//
-//        //the return label
-//        writeStmt(NumberGenerator.getInstance().makeRetAdd(retAdd) + ":");
-//
-//        //pop the result (if its void we can ignore it)
-//        CodeGenerator.popToStack(out);
-//        writeStmt("istore 5");
-//
-//        //restore the local variables and 'this'
-//        restoreVariables();
-//
-//        //push the result (if the method is not void)
-//        if (!method.getType().equals("void") && inExpr)
-//            writeStmt("iload 5");
-//
-//        //restore register 5
-//        CodeGenerator.popToVar(5, out);
-
-        return null;
+    	ExtNodeInfo ext = new ExtNodeInfo(node.getName(), node.getPath(), null, node.getDimension(), node.getType());
+    	return ext;
     }
+    
+    public Object visit(FuncCallNode node)
+    {       	
+    	String name = node.getName();
+    	IdType retType = sTable.getFunctionType(name);
+    	
+    	
+    	
+    	//No params
+    	if(node.getParams() == null)
+            writeStmt("invokestatic " + jasminClassName + "/" + name + "()" + getJVMType(retType));
+    	
+    	//Params
+    	else
+    	{    	
+    		String s = "";
+            
+    		Object[] params = node.visitParams(this);
+    		
+    		for(int i=0;i<params.length;i++)
+    		{
+    			s += getJVMType(((GenNodeInfo)params[i]).getType());
+    			pushInStack(node, (GenNodeInfo)params[i]);
+    		}
+    		
+            writeStmt("invokestatic " + jasminClassName + "/" + name +  "(" + s +
+            		")" + getJVMType(retType));
+    	}
 
+        return new GenNodeInfo(name, IdType.NULL, "", retType, 0);
+    }
+    
     private int pushPreMethodCall(InvocNode node, int target)
     {
 //        //save 'this' and local variables on to the stack
@@ -1041,13 +1025,11 @@ public class CodeGenerator extends Visitor
 		GenNodeInfo info = new GenNodeInfo("",IdType.CONST, node.toString(), node.getType(), 0);
         return info;
 	}
-
 	@Override
 	public Object visit(IfElseNode node) {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
 	@Override
 	public Object visit(CastNode node) {
 		// TODO Auto-generated method stub
