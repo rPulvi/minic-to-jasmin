@@ -39,7 +39,7 @@ public class SemanticChecker extends Visitor
     	int dim2 = right.getDim();
 
     	if (dim1 != dim2)
-    		error("Type mismatch. Cannot convert from " + type2 + getBrackets(dim2) + " to " + type1 + getBrackets(dim1), node);
+    		error("Type mismatch. Cannot convert from " + type2 + getBrackets(dim2) + " to " + type1 + getBrackets(dim1) + " ", node);
     	else
     	{
 	    	if (type1 == IdType.ERR || type2 == IdType.ERR)
@@ -498,6 +498,7 @@ public class SemanticChecker extends Visitor
 	
 	public Object visit(ArrayCallNode node) 
 	{
+		System.out.println("Array Call Node.");
 		int varDim;
 		int nodeDim;		
 		

@@ -124,6 +124,7 @@ non terminal IdType simple_type, type, fun_ret, ret_type;
 non terminal ExprNode expr, if_condition, while_condition; 
 non terminal VarNode var;
 non terminal FunctionExtNode ext;
+non terminal ArrayCallNode array_call;
 
 non terminal array_dim, br_cg, br_og;
 
@@ -259,7 +260,7 @@ stmt ::= block:b					{: RESULT = b; :}
         ;
 
 assign_stmt ::= var:x ASSIGN expr:y SEMI				{: RESULT = new AssignNode(x, y, getBlockNumber(), xleft, xright); :}            
-		| var:x array_index ASSIGN expr:y SEMI  		{: RESULT = new AssignNode(x, y, getBlockNumber(), xleft, xright); :}
+		| array_call:x ASSIGN expr:y SEMI  			{: RESULT = new AssignNode(x, y, getBlockNumber(), xleft, xright); :}
 		| var ASSIGN error SEMI						{: PrintError("Error in expression"); :}
 		| error ASSIGN expr SEMI 					{: PrintError("Error in assigment"); :}
         ;
@@ -302,6 +303,9 @@ expr_list ::= expr:x 					{: RESULT = new ListNode(x,null); :}
         | expr_list:l COMMA expr:x    	{: RESULT = new ListNode(l,x); :}    // for argument in function call
         ;
 
+array_call ::= var:x array_index:l 		{: RESULT = new ArrayCallNode(x, l, xleft, xright); :}
+	;
+
 expr ::=								{: RESULT = new NullNode(); :}  
 		|expr:x OP_PLUS:n expr:y		{: RESULT = new AddNode(x, y, nleft, nright); :}             
         | expr:x OP_DIFF:n expr:y    	{: RESULT = new SubNode(x, y, nleft, nright); :}
@@ -324,7 +328,7 @@ expr ::=								{: RESULT = new NullNode(); :}
         | BRA_O expr:x BRA_C				{: RESULT = new BracketNode(x, xleft, xright); :}
         | BRA_O error BRA_C					{: PrintError("Error in expression"); :}   //errore da gestire
         | func_call:x 						{: RESULT = x; :}                  
-        | var:x array_index:l				{: RESULT = new ArrayCallNode(x, l, xleft, xright); :}                     
+        | array_call:x						{: RESULT = x; :}                     
         | NEW simple_type:t array_index:l 	{: RESULT = new ArrayNewNode(t, l, tleft, tright); :}
         									             
         | var:x 				{: RESULT = x; :}                                         

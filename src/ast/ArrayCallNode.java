@@ -42,4 +42,8 @@ public class ArrayCallNode extends ExprNode{
     {
     	return varNode.toString();
     }
+    public VarNode getVar()
+    {
+    	return this.varNode;
+    }
 }

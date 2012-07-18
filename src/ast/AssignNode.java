@@ -5,10 +5,10 @@ import compiler.Visitor;
 
 public class AssignNode extends ExprNode
 {
-    private VarNode var;
+    private ExprNode var;
     private ExprNode value;   
     
-    public AssignNode(VarNode var, ExprNode e, int block, int lineNumber, int colNumber)
+    public AssignNode(ExprNode var, ExprNode e, int block, int lineNumber, int colNumber)
     {    	
         super(lineNumber, colNumber);
         
