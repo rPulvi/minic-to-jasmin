@@ -51,4 +51,8 @@ public class GenNodeInfo {
 	public void setKind(IdType kind) {
 		this.kind = kind;
 	}
+	
+	public String toString() {
+		return "Name:" + name + ", Kind:" + kind + ", Value:" + value + ", Type:" + type + ", Dim:" + dim;
+	}
 }

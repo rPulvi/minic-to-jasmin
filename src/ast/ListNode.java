@@ -38,7 +38,10 @@ public final class ListNode extends Node
             return right.toString();
         if (right == null)
             return left.toString();
-
+        if (right instanceof ArraySizeNode)
+        	return left.toString() + " " + right.toString();
+        if (right instanceof ExprNode) 
+        	return left.toString() + right.toString();
         return left + "\n" + right;
     }
 
