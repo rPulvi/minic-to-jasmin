@@ -52,6 +52,7 @@ public class FuncCallNode extends ExprNode implements InvocNode
 
         Node[] paramList = params.toArray();
         Object[] result = new Object[paramList.length];
+
         for (int i = 0; i < paramList.length; ++i)
             result[i] = paramList[i].accept(v);
 
@@ -65,7 +66,12 @@ public class FuncCallNode extends ExprNode implements InvocNode
 
         return params.toArray();
     }
-
+    
+//    public ListNode getParams()
+//    {
+//    	return this.params;
+//    }
+    
     public int getNumberOfParams()
     {
         if (params == null)

@@ -24,7 +24,7 @@ public class FunctionNode extends SlotNode
     }
 
     public void visitParams(Visitor v)
-    {
+    {    	
         if (params != null)
             params.accept(v);
     }

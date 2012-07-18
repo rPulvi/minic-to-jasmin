@@ -55,6 +55,12 @@ public enum IdType {
 			return "Function";
 		}
 	},
+	EXTERN{
+		public String toString()
+		{
+			return "Extern";
+		}
+	},
 	CONST{
 		public String toString()
 		{

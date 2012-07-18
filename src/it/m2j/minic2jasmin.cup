@@ -110,9 +110,9 @@ terminal Float   CONST_FLOAT;
 terminal String  CONST_STRING;
 
 // Non terminal tokens
-non terminal ListNode param_list, stmt_list, expr_list, decl_param, decl_param_list, array_index;
+non terminal ListNode prog, param_list, stmt_list, expr_list, decl_param, decl_param_list, array_index, funExtList;
 non terminal DeclNode decl; 
-non terminal Node prog, function, stmt;
+non terminal Node function, stmt;
 non terminal FuncCallNode func_call;
 non terminal BlockNode block;
 non terminal ReturnNode ret_stmt;
@@ -123,6 +123,7 @@ non terminal IfElseNode if_then_else_stmt;
 non terminal IdType simple_type, type, fun_ret, ret_type;
 non terminal ExprNode expr, if_condition, while_condition; 
 non terminal VarNode var;
+non terminal FunctionExtNode ext;
 
 non terminal array_dim, br_cg, br_og;
 
@@ -141,8 +142,20 @@ precedence nonassoc OP_SIGN;
 /*-------------------------------- GRAMMAR ----------------------------------*/
 start with prog;
 
-prog ::= function:x	{: RESULT = x; :}	
+prog ::= function:x						{: RESULT = new ListNode(x, null); :}
+		| funExtList:x function:y		{: RESULT = new ListNode(x, y); :}	
         ;
+
+funExtList ::= 	ext:x					{: RESULT = new ListNode(x, null); :}
+													
+				| funExtList:x ext:y	{: RESULT = new ListNode(x, y); :}
+		;
+					
+ext ::= EXTERN CONST_STRING:c fun_ret:x ID:y BRA_O decl_param:params BRA_C SEMI				{: 
+																								RESULT = new FunctionExtNode(y, x, c, funDim, params, yleft, yright);
+																								braCounter = 0; 
+																							:}
+	;
 
 decl ::= type:t var:x      			{: 										
 										RESULT = new DeclNode(x, t, xleft, xright); 
@@ -177,11 +190,6 @@ function ::= fun_ret:x ID:y BRA_O param_list:params BRA_C block:b     						{:
 																								braCounter = 0;
 																								funDim = 0;
 																							:}  
-		
-		| EXTERN CONST_STRING fun_ret:x ID:y BRA_O decl_param:params BRA_C SEMI				{: 
-																								RESULT = new FunctionExtNode(y, x, funDim, params, yleft, yright);
-																								braCounter = 0; 
-																							:}
 		
 		| fun_ret ID param_list /* error */ 												{: PrintError("Error in function definition "); :}				
 		;
