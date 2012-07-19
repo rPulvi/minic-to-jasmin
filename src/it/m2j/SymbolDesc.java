@@ -20,6 +20,7 @@ public class SymbolDesc{
     private ArrayList<NodeInfo> paramList;
     private int dim;
     private int jvmVar;
+    private String className;
     
     public SymbolDesc(){
     	this.type = IdType.VOID;
@@ -27,6 +28,7 @@ public class SymbolDesc{
     	this.nBlock = 0;
     	this.paramList = null;
     	this.jvmVar = 0;
+    	this.className = "";
     }    
     
 	/**
@@ -49,7 +51,7 @@ public class SymbolDesc{
      * @param typeList the arguments of the function
      * @param dim indicates the return value dimension. A value greater than zero means array.
      */
-    public void setFunctionSymbol(IdType type, ArrayList<NodeInfo> typeList, int dim){
+    public void setFunctionSymbol(IdType type, ArrayList<NodeInfo> typeList, int dim, String className){
         this.type = type;
         this.dim = dim;
         this.paramList = new ArrayList<NodeInfo>();
@@ -57,7 +59,8 @@ public class SymbolDesc{
         if(typeList!=null)
         	this.paramList = (ArrayList<NodeInfo>) typeList.clone();
         
-        this.kind = IdType.FUNCTION;        
+        this.kind = IdType.FUNCTION;
+        this.className = className;
     }        
 
     /**
@@ -83,6 +86,16 @@ public class SymbolDesc{
     public int getBlock(){
     	return nBlock;
     }
+    
+    public void setClassName(String className)
+	{
+		this.className = className;
+	}
+	
+    public String getClassName()
+	{
+		return this.className;
+	}
     
     /**
      * Return params list

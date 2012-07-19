@@ -15,16 +15,17 @@ public class SymbolTableConstructor extends Visitor
     //pointer to the current symbol table
     private SymbolTable sTable;
     private int varCounter;
+    private String className;
 
     /**
      * Create a new Symbol table constructor
      * @param out PrintWriter to be used for output
      */
-    public SymbolTableConstructor(PrintWriter out)
+    public SymbolTableConstructor(String className, int registerCounter)
     {
-        super(out);
         sTable = new SymbolTable();
-        varCounter = 0; //the first 5 register are left free for code generation purposes
+        varCounter = registerCounter;
+        this.className = className;
     }
 
     /**
@@ -77,16 +78,33 @@ public class SymbolTableConstructor extends Visitor
      * @return null
      */
     public Object visit(FunctionNode node)
-    {    	
-        visitFunction(node);
+    {    	    	
+    	if (sTable.get(node.getName()) != null)
+    		error("Function '" + node.getName() + "' already declared.", node);    
+    	else
+    	{
+    		String name = node.getName();
+    		
+    		//function parameters must start with 0
+    		int oldCounter = varCounter;
+    		
+    		varCounter = 0;
+    		
+    		node.visitParams(this);
+    		
+    		//restore the counter
+    		varCounter = oldCounter;
+    		
+    		String fullPath = name + "/" + this.className;
+    		sTable.putFunction(name, fullPath, node.getType(), functionParams, node.getDimension());
+    		
+        	node.visitBody(this);        	        	
+    	}
 
         return null;
     }
 
-    private ArrayList<NodeInfo> functionParams = new ArrayList<NodeInfo>();
-    
-    //visit a function definition
-    private void visitFunction(FunctionNode node)
+    public Object visit(FunctionExtNode node)
     {
     	if (sTable.get(node.getName()) != null)
     		error("Function '" + node.getName() + "' already declared.", node);    
@@ -94,11 +112,13 @@ public class SymbolTableConstructor extends Visitor
     	{
     		node.visitParams(this);
     		
-    		sTable.putFunction(node.getName(), node.getType(), functionParams, node.getDimension());
-    		
-        	node.visitBody(this);        	        	
+    		sTable.putFunction(node.getName(), node.getClassName(), node.getType(), functionParams, node.getDimension());
     	}
+    	
+    	return null;
     }
+    
+    private ArrayList<NodeInfo> functionParams = new ArrayList<NodeInfo>();
 
     /**
      * visits a node representing a single parameter to a function, adding it to the symbol table

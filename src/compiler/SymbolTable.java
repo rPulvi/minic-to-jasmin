@@ -89,10 +89,10 @@ public class SymbolTable
      */
     public boolean putFunction(String id, SymbolDesc symbolDesc)
     {
-    	return putFunction(id, symbolDesc.getType(),symbolDesc.getParamList(), symbolDesc.getDim());
+    	return putFunction(id, symbolDesc.getClassName(), symbolDesc.getType(),symbolDesc.getParamList(), symbolDesc.getDim());
     }
     
-    public boolean putFunction(String id, IdType type, ArrayList<NodeInfo> params, int dim)
+    public boolean putFunction(String id, String className, IdType type, ArrayList<NodeInfo> params, int dim)
     {
     	boolean bRet = false;
     	ArrayList<SymbolDesc> funDesc = this.getSpecific(id, IdType.FUNCTION);
@@ -102,7 +102,7 @@ public class SymbolTable
 	    	SymbolDesc symbol = new SymbolDesc();
 	    	ArrayList<SymbolDesc> descList = new ArrayList<SymbolDesc>();    	
 
-	    	symbol.setFunctionSymbol(type, params, dim);
+	    	symbol.setFunctionSymbol(type, params, dim, className);
 	
 	    	descList.add(symbol);
 	
@@ -197,16 +197,25 @@ public class SymbolTable
     {
     	SymbolDesc retDesc = null;
     	
-    	retDesc = lookupVar(key, blockNumber);
+    	retDesc = lookupVar(key, blockNumber, IdType.VARIABLE);
 
     	if(retDesc == null)
-    		retDesc = lookupVar(key, 1);
+    		retDesc = lookupVar(key, 1, IdType.VARIABLE);
     	
     	return retDesc;
     	
     }
     
-    private SymbolDesc lookupVar(String key, int blockNumber)
+    public SymbolDesc getFuncDesc(String key)
+    {
+    	SymbolDesc retDesc = null;
+    	
+    	retDesc = lookupVar(key, 0, IdType.FUNCTION);
+    	
+    	return retDesc;
+    }
+    
+    private SymbolDesc lookupVar(String key, int blockNumber, IdType type)
     {
     	SymbolDesc sdRet = null;
     	ArrayList<SymbolDesc> varDesc = get(key);
@@ -220,7 +229,7 @@ public class SymbolTable
 				while (it.hasNext()) {
 					SymbolDesc s = it.next();
 					
-					if(s.getBlock() == blockNumber && s.getKind() == IdType.VARIABLE){
+					if(s.getBlock() == blockNumber && s.getKind() == type){
 						sdRet = s;
 						break;
 					}

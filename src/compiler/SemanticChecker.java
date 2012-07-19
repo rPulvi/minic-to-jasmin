@@ -15,9 +15,8 @@ public class SemanticChecker extends Visitor
     //pointer to the global symbol table
     private SymbolTable sTable;    
 
-    public SemanticChecker(SymbolTable sTable, PrintWriter out)
+    public SemanticChecker(SymbolTable sTable)
     {
-        super(out);
         this.sTable = sTable;
     }
 
@@ -65,6 +64,11 @@ public class SemanticChecker extends Visitor
     	return null;
     }
 
+	public Object visit(FunctionExtNode node) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+    
     public Object visit(FuncCallNode node)
     {    	
     	Object[] paramsCall = node.visitParams(this); //Call Params

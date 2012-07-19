@@ -7,19 +7,18 @@ public class FunctionExtNode extends SlotNode{
 	
 	protected ListNode params;
 	private int dim;
-	private String path;
+	private String className;
 	
 	public FunctionExtNode(String name, IdType type, String path, int dim, ListNode params, int lineNumber, int colNumber) {
 		super(name, type, lineNumber, colNumber);
 		this.params = params;
 		this.dim = dim;
-		this.path = path;
+		this.className = path;
 	}
 
-	@Override
 	public Object accept(Visitor v) {
-		// TODO Auto-generated method stub
-		return null;
+		
+		return v.visit(this);
 	}
 
     public void setParams(ListNode params)
@@ -58,8 +57,8 @@ public class FunctionExtNode extends SlotNode{
     	return this.dim;
     }
     
-    public String getPath()
+    public String getClassName()
     {
-    	return path;
+    	return this.className;
     }
 }

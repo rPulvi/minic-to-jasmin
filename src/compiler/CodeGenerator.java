@@ -29,7 +29,8 @@ public class CodeGenerator extends Visitor
     private String jasminClassName;
     private int labelCounter;
     private int ifLabelCounter;
-    private boolean isCondition;
+    private int ifRegister;
+    private int whileCounter;
     
     private ArrayList<String> arrayNames;
     private int arrayCounter;
@@ -39,17 +40,15 @@ public class CodeGenerator extends Visitor
      * @param st The global symbol table for the program
      * @param err a PrintWriter to output error messages to
      */
-    public CodeGenerator( SymbolTable st, PrintWriter err, String className /* , CodeGenerator codeGen */)
+    public CodeGenerator( SymbolTable st, String className /* , CodeGenerator codeGen */)
     {
-        super(err);
-
         sTable = st;
         jasminClassName = className;
         labelCounter = 0;
         ifLabelCounter = 0;
-        isCondition = false;
         arrayNames = new ArrayList<String>();
         arrayCounter = 0;
+        ifRegister = 0;
         
         writeJasminHeader();
     }
@@ -176,12 +175,7 @@ public class CodeGenerator extends Visitor
 
     public Object visit(BlockNode node)
     {
-    	if(isCondition){
-    		//writeLabel();
-    		isCondition = false;
-    	}
-    	
-        node.visitChildren(this);
+    	node.visitChildren(this);
         
         return null;
     }
@@ -216,11 +210,13 @@ public class CodeGenerator extends Visitor
     	
         numLocals = sTable.varCount();
         
+        ifRegister = numLocals;
+        
         writeStmt(".limit locals " + numLocals*3);
         writeStmt(".limit stack " + numLocals);
         
         writeStmt("ldc 0");
-        writeStmt("istore 0");
+        writeStmt("istore " + ifRegister);
         
         node.visitBody(this);
         
@@ -249,20 +245,19 @@ public class CodeGenerator extends Visitor
 
     public Object visit(FunctionExtNode node)
     {
-    	ExtNodeInfo ext = new ExtNodeInfo(node.getName(), node.getPath(), null, node.getDimension(), node.getType());
-    	return ext;
+    	return null;
     }
     
     public Object visit(FuncCallNode node)
     {       	
     	String name = node.getName();
-    	IdType retType = sTable.getFunctionType(name);
-    	
-    	
+    	SymbolDesc fDesc = sTable.getFuncDesc(name);
+    	IdType retType = fDesc.getType();
+    	String className = fDesc.getClassName();
     	
     	//No params
     	if(node.getParams() == null)
-            writeStmt("invokestatic " + jasminClassName + "/" + name + "()" + getJVMType(retType));
+            writeStmt("invokestatic " + className + "()" + getJVMType(retType));
     	
     	//Params
     	else
@@ -277,7 +272,7 @@ public class CodeGenerator extends Visitor
     			pushInStack(node, (GenNodeInfo)params[i]);
     		}
     		
-            writeStmt("invokestatic " + jasminClassName + "/" + name +  "(" + s +
+            writeStmt("invokestatic " + className +  "(" + s +
             		")" + getJVMType(retType));
     	}
 
@@ -332,7 +327,7 @@ public class CodeGenerator extends Visitor
 
     public Object visit(IfNode node)
     {
-    	isCondition = true;    	    	
+    	ifLabelCounter++;
     	
     	GenNodeInfo info = (GenNodeInfo) node.visitTest(this);
     	
@@ -348,16 +343,19 @@ public class CodeGenerator extends Visitor
     	//write exit block
     	writeLabel();
     	
-    	writeStmt("iload 99");
+    	writeStmt("iload " + ifRegister);
     	writeStmt("ifgt STMT_" + ifLabelCounter);
     	writeStmt("goto EXIT_" + ifLabelCounter);
     	
     	writeStmt("\rSTMT_" + ifLabelCounter + ":");
+    	
+    	int tempCounter = ifLabelCounter;
+    	
     	node.visitThen(this);    	    	    	
-    	writeStmt("\rEXIT_" + ifLabelCounter + ":"); // TODO: Fix with labelCreator class
+    	
+    	writeStmt("\rEXIT_" + tempCounter + ":"); // TODO: Fix with labelCreator class
     
     	labelCounter++;
-    	ifLabelCounter++;
 
         return null;
     }
@@ -577,7 +575,7 @@ public class CodeGenerator extends Visitor
         	writeLabel();
         	labelCounter++;
 
-    		writeStmt("iload 99");
+    		writeStmt("iload " + ifRegister);
     		writeStmt("ifle EXIT_" + ifLabelCounter);
     		writeStmt("goto #" + labelCounter);
     	}
@@ -895,14 +893,12 @@ public class CodeGenerator extends Visitor
   		return new GenNodeInfo("", IdType.NULL, "", type, 0);//TODO: FIxXx
   	}
 
-  	@Override
   	public Object visit(LETNode node) {
-  		visitBinaryNode(node, Operator.LET);
-          
-  		return null;
+  		IdType type = visitBinaryNode(node, Operator.LET);
+        
+  		return new GenNodeInfo("", IdType.NULL, "", type, 0);
   	}
 
-  	@Override
   	public Object visit(GTNode node) {
 //  		writeLabel();
 //  		labelCounter++;
@@ -912,11 +908,10 @@ public class CodeGenerator extends Visitor
   		return new GenNodeInfo("", IdType.NULL, "", type, 0);//TODO: FIxXx
   	}
 
-  	@Override
   	public Object visit(GETNode node) {
-  		visitBinaryNode(node, Operator.GET);
-          
-  		return null;
+  		IdType type = visitBinaryNode(node, Operator.GET);
+        
+  		return new GenNodeInfo("", IdType.NULL, "", type, 0);
   	}
   	
   	public Object visit(EqNode node)
@@ -1041,10 +1036,45 @@ public class CodeGenerator extends Visitor
 		return null;
 	}
 
-	@Override
-	public Object visit(WhileNode letNode) {
-		// TODO Auto-generated method stub
-		return null;
+	public Object visit(WhileNode node) 
+	{
+		ifLabelCounter++;
+		
+    	writeStmt("\rWHILE_" + ifLabelCounter + ":");
+    	
+    	GenNodeInfo info = (GenNodeInfo) node.visitTest(this);
+    	
+    	if (info.getKind() == IdType.VARIABLE || info.getKind() == IdType.CONST)
+    	{
+    		pushInStack(node, info);
+    		writeStmt("ifgt #" + ++labelCounter);
+    		writeStmt("goto #" + ++labelCounter);
+    		
+    		GenerateWriteBlock();
+    	}
+    	
+    	//write exit block
+    	writeLabel();
+    	
+    	writeStmt("iload " + ifRegister);
+    	writeStmt("ifgt STMT_" + ifLabelCounter);
+    	writeStmt("goto EXIT_" + ifLabelCounter);
+    	
+    	writeStmt("\rSTMT_" + ifLabelCounter + ":");
+    	
+    	int tempCounter = ifLabelCounter;
+    	
+    	node.visitWhile(this);    	    	    	
+    	
+    	writeStmt("ldc 0");
+        writeStmt("istore " + ifRegister);
+    	writeStmt("goto WHILE_" + tempCounter);
+    	
+    	writeStmt("\rEXIT_" + tempCounter + ":"); // TODO: Fix with labelCreator class
+    
+    	labelCounter++;
+
+        return null;
 	}
 
 	@Override
@@ -1089,7 +1119,7 @@ public class CodeGenerator extends Visitor
     	labelCounter++;
 
     	writeStmt("iconst_1");
-    	writeStmt("istore 99");
+    	writeStmt("istore " + ifRegister);
     }
     
 	public Object visit(ArrayNewNode node) {

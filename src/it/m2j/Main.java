@@ -22,7 +22,8 @@ public class Main {
 	public static void main(String[] args) {
 		        		
     	FileWriter fstream;        
-        
+    	String jasminFile = getJasminFileName(args[0]);
+    	
 		try {
 			Symbol result;
 			Node root;
@@ -42,20 +43,20 @@ public class Main {
 			result = parser.parse();
 			root = (Node)result.value;
 			
-			SymbolTableConstructor stc = new SymbolTableConstructor(null);
+			SymbolTableConstructor stc = new SymbolTableConstructor(className, parser.registerCounter);
 			root.accept(stc);
 			
 			if (stc.getErrorCount() == 0)
 			{
-				SemanticChecker tsc = new SemanticChecker(stc.getSymbolTable(), null);
+				SemanticChecker tsc = new SemanticChecker(stc.getSymbolTable());
 				root.accept(tsc);
 				
 				if (tsc.getErrorCount() == 0)
 				{			
 		            // Create output file: 
-		            fstream = new FileWriter(getJasminFileName(args[0]));
+		            fstream = new FileWriter(jasminFile);
 		            
-		            CodeGenerator cg = new CodeGenerator(stc.getSymbolTable(), null, className);
+		            CodeGenerator cg = new CodeGenerator(stc.getSymbolTable(), className);
 		            root.accept(cg);
 		            
 		            fstream.write(cg.getOutput());

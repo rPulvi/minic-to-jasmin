@@ -23,7 +23,7 @@ public class ArgNode extends Node
     public ArgNode(IdType type, int dim, int lineNumber, int colNumber)
     {
         super(lineNumber, colNumber);
-        this.name = "";
+        this.name = "_" + lineNumber + "_" + colNumber; //temp variables.
         this.type = type;
         this.dim = dim;
     }

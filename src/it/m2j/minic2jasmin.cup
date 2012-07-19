@@ -9,6 +9,8 @@ import ast.*;
 
 /*--------------------------------PARSER CODE ----------------------------------*/
 parser code {:
+    public int registerCounter = 0;
+    	
     	
 	// Redefinition of error functions
     public void report_error(String message, Object info) {
@@ -54,7 +56,7 @@ parser code {:
 /*--------------------------------ACTION CODE ----------------------------------*/
 action code {:
 	
-    int blockCounter = 0; //The official
+    int blockCounter = 0; //The official 
     
     int tempBlockCounter = 0; //keeps track of the max block number. Never decreases.
     int tempBlockRem = 0; //+1 on "{" and -1 on "}". Always.
@@ -148,7 +150,7 @@ prog ::= function:x						{: RESULT = new ListNode(x, null); :}
         ;
 
 funExtList ::= 	ext:x					{: RESULT = new ListNode(x, null); :}
-													
+
 				| funExtList:x ext:y	{: RESULT = new ListNode(x, y); :}
 		;
 					
@@ -220,11 +222,13 @@ decl_param_list ::= type:t					{:
 param_list ::= /* empty */						{: RESULT = null; :} 
 		| type:t ID:x  							{: 
 													RESULT = new ListNode(new ArgNode(x, t, braCounter, xleft, xright), null);
-													braCounter=0;													 
+													braCounter=0;	
+													parser.registerCounter++;												 
 												:}                                    
 		| param_list:l COMMA type:t ID:x  		{: 
 													RESULT = new ListNode(l,new ArgNode(x, t, braCounter, xleft, xright));
-													braCounter=0;													 
+													braCounter=0;	
+													parser.registerCounter++;												 
 												:}                      
 		| param_list type ID /* error */ 		{: PrintError("Missing ',' before identifier"); :}            
 		;

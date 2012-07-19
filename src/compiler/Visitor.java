@@ -6,16 +6,8 @@ import java.io.PrintWriter;
 
 public abstract class Visitor
 {
-    //output
-    protected PrintWriter err;
-
     //keep track of the number of errors
     protected int errorCount = 0;
-
-    public Visitor(PrintWriter out)
-    {
-        this.err = out;
-    }
 
     /**
      * returns the number of errors that occured during the visit
@@ -71,4 +63,5 @@ public abstract class Visitor
 	public abstract Object visit(ArrayCallNode node);
 	public abstract Object visit(SimpleVarNode node);
 	public abstract Object visit(ArraySizeNode node);
+	public abstract Object visit(FunctionExtNode node);
 }
