@@ -196,10 +196,6 @@ public class SymbolTableConstructor extends Visitor
     {
         return null;
     }
-    public Object visit(PrintNode node)
-    {
-        return null;
-    }
     
     public Object visit(AssignNode node)
     {

@@ -472,11 +472,6 @@ public class SemanticChecker extends Visitor
 		return info;
 	}
 
-	public Object visit(PrintNode node) 
-	{
-		return null;
-	}
-
 	public Object visit(NullNode node)
 	{
 		NodeInfo info = new NodeInfo(node.getType(), 0);
