@@ -238,14 +238,31 @@ public class SemanticChecker extends Visitor
 	public Object visit(SimpleVarNode node) 
 	{
     	SymbolDesc varDesc = sTable.getVarDesc(node.getName(), node.getBlockNumber());
-    	NodeInfo info = new NodeInfo(varDesc.getType(), varDesc.getDim());    	    	
+    	NodeInfo info = null;
+    	
+    	if(varDesc == null)
+    	{
+    		error("Variable not declared: ", node);
+    		info = new NodeInfo(IdType.ERR, 0);
+    	}
+    	else
+    		info = new NodeInfo(varDesc.getType(), varDesc.getDim());    	    	
     	
     	return info;
 	}	
 	
 	public Object visit(ArrayNode node) {
     	SymbolDesc varDesc = sTable.getVarDesc(node.getName(), node.getBlockNumber());
-    	NodeInfo info = new NodeInfo(varDesc.getType(), varDesc.getDim());
+    	NodeInfo info = null;
+    	
+    	if(varDesc == null)
+    	{
+    		error("Variable not declared: ", node);
+    		info = new NodeInfo(IdType.ERR, 0);
+    	}
+    	else
+    		info = new NodeInfo(varDesc.getType(), varDesc.getDim());    	    	
+    	
     	
     	return info;	
 	}
