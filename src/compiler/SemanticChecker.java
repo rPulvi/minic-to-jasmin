@@ -497,7 +497,6 @@ public class SemanticChecker extends Visitor
 	
 	public Object visit(ArrayCallNode node) 
 	{
-		System.out.println("Array Call Node.");
 		int varDim;
 		int nodeDim;		
 		
