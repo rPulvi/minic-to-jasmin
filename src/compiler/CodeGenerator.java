@@ -157,20 +157,25 @@ public class CodeGenerator extends Visitor
     	GenNodeInfo left = (GenNodeInfo)node.visitVar(this);
     	GenNodeInfo right = (GenNodeInfo)node.visitValue(this);
     	
-    	if(right.getKind() != IdType.NULL) {
+		// If the right hand is a constant or a variable
+		if ((right.getKind() != IdType.NULL) && (right.getKind() != IdType.NEW)) {
+
     		
     		pushInStack(node, right);
     	}    	
-    	else
-    		//when the left hand type of assignment is int and the right is float we prom the left to float 
-	    	if(left.getType() == IdType.FLOAT && right.getType() == IdType.INT) {
-	    		writeStmt("i2f");
-	    	}
+		else if (left.getType() == IdType.FLOAT && right.getType() == IdType.INT) {
+			writeStmt("i2f");
+		}
 
-    	//pop from stack and store in local variable
-    	popFromStack(node, left);
- 
-        return null;
+		if (right.getKind() == IdType.NEW)
+			writeStmt("astore "
+					+ sTable.getVarDesc(left.getName(), node.getBlockNumber())
+							.getJvmVar());
+		else
+			// pop from stack and store in local variable
+			popFromStack(node, left);
+
+		return null;
     }
 
     public Object visit(BlockNode node)
@@ -191,21 +196,36 @@ public class CodeGenerator extends Visitor
     {
     	IdType retType = node.getType();
     	String name = node.getName();
+		int dim = node.getDimension();
+		String brackets = "";
     	Node [] params;
     	
     	int numLocals = 0;
     	
     	//No params
     	if(node.getParams() == null)
-            writeStmt(".method public static " + name + "()" + getJVMType(retType));
+		{			
+			//check if it's an array to return the correct value type
+			if (dim>=1) {
+				for (int i = 0; i < dim; i++)
+					brackets += "[";
+			}
+			writeStmt(".method public static " + name + "()" + brackets + getJVMType(retType));		
+		}
     	//Params
     	else{
     		params = node.getParams().toArray();
 
             node.visitParams(this);
 
-            writeStmt(".method public static " + name + "(" + getParamTypes(params) +
-            		")" + getJVMType(retType));
+			//check if it's an array to return the correct value type
+			if (dim>=1) {
+				for (int i = 0; i < dim; i++)
+					brackets += "[";
+			}
+			writeStmt(".method public static " + name + "("
+					+ getParamTypes(params) + ")" + brackets + getJVMType(retType));
+
     	}
     	
         numLocals = sTable.varCount();
@@ -278,53 +298,7 @@ public class CodeGenerator extends Visitor
 
         return new GenNodeInfo(name, IdType.NULL, "", retType, 0);
     }
-    
-    private int pushPreMethodCall(InvocNode node, int target)
-    {
-//        //save 'this' and local variables on to the stack
-//        saveVariables();
-//
-//        //push the return address
-//        int retAdd = NumberGenerator.getInstance().getRetAddress();
-//        CodeGenerator.pushConst(retAdd, out);
-//
-//        //push the target, to become 'this'
-//        CodeGenerator.pushVar(target, out);
-//        //push the params in l --> r order
-//        Node[] params = node.getParams();
-//        for (int i = 0; i < params.length; ++i)
-//        {
-//            params[i].accept(this);
-//            CodeGenerator.pushFromStack(out);
-//        }
-//
-//        return retAdd;
-    	
-    	return 0;
-    }
-
-    //saves variables and this on the stack before a method call
-    private void saveVariables()
-    {
-//        writeStmt(";save variables");
-//        CodeGenerator.pushVar(0, out);
-//        for (int i = 11; i < NumberGenerator.getInstance().getTotalLocals(); ++i)
-//            CodeGenerator.pushVar(i, out);
-    }
-
-    //restores variables and this from the stack after a method call
-    private void restoreVariables()
-    {
-//        writeStmt(";restore variables");
-//        for (int i = NumberGenerator.getInstance().getTotalLocals()-1; i >= 11; --i)
-//        {
-//            CodeGenerator.popToStack(out);
-//            writeStmt("istore " + i);
-//        }
-//        CodeGenerator.popToStack(out);
-//        writeStmt("istore 0");
-    }
-
+ 
     public Object visit(IfNode node)
     {
     	ifLabelCounter++;
@@ -367,139 +341,27 @@ public class CodeGenerator extends Visitor
     	if(retInfo != null)
     		pushInStack(node, retInfo);
     	
-    	switch(retInfo.getType())
-    	{
-    		case INT:
-    		case BOOL:
-    			writeStmt("ireturn");
-    			break;
-    		case FLOAT:
-    			writeStmt("freturn");
-    			break;
-    		case STRING:
-    			writeStmt("areturn");
-    			break;
-    		default:
-    			writeStmt("return");
-    			break;
-    	}
-    	
-    	return null;      
-    }
+    	if(retInfo.getDim() == 0) {
 
-    public Object visit(PrintNode node)
-    {
-//        boolean oldExpr = inExpr;
-//        inExpr = true;
-//
-//        writeStmt(";" + node.toString());
-//        node.visitValue(this);
-//
-//        //we have either an int, a boolean or an Object* on the stack, and we need java.lang.String*
-//        unknownToString(node.getType());
-//
-//        writeStmt("getstatic java/lang/System/out Ljava/io/PrintStream;");
-//        writeStmt("swap");
-//        writeStmt("invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V");
-//
-//        inExpr = oldExpr;
-        
-        return null;
-    }
-
-    //we have either an int, a boolean or an Object pointer on top of the stack
-    //and we want a java.lang.String pointer
-    private void unknownToString(String type)
-    {
-//        if (type.equals("int"))
-//        {
-//            writeStmt(";converting int to String*");
-//            writeStmt("new java/lang/StringBuffer");
-//            writeStmt("dup"); //duplicate it
-//            writeStmt("invokenonvirtual java/lang/StringBuffer/<init>()V"); //call its constructor
-//            writeStmt("swap");
-//            writeStmt("invokevirtual java/lang/StringBuffer/append(I)Ljava/lang/StringBuffer;");
-//            writeStmt("invokevirtual java/lang/StringBuffer/toString()Ljava/lang/String;");
-//        }
-//        else if (type.equals("boolean"))
-//        {
-//            writeStmt(";converting boolean to String*");
-//            String notZeroLabel = NumberGenerator.getInstance().getLabel();
-//            String endLabel = NumberGenerator.getInstance().getLabel();
-//            writeStmt("ifeq " + notZeroLabel); //jump if 0 ---------+
-//            writeStmt("ldc \"true\""); //not 0 so push true         |
-//            writeStmt("goto " + endLabel);  //jump to end label ----+--+
-//            writeStmt(notZeroLabel + ":");  //  <-------------------+  |
-//            writeStmt("ldc \"false\""); //    0 so push false          |
-//            writeStmt(endLabel + ":");    //    <----------------------+
-//        }
-//        else  //Object*
-//        {
-//            writeStmt(";converting Object* to String*");
-//
-//            saveVariables();
-//
-//            //execute Object.toString to get a String on top of the stack
-//            int retAdd = NumberGenerator.getInstance().getRetAddress();
-//            CodeGenerator.pushConst(retAdd, out);
-//
-//            //copy and push the target pointer
-//            writeStmt("dup");
-//            CodeGenerator.pushFromStack(out);
-//
-//            //method dispatch
-//            writeStmt("aload 1");
-//            writeStmt("swap");
-//            writeStmt("iaload"); //class number now on top of the stack
-//            writeStmt("aload 1");
-//            writeStmt("swap");
-//            writeStmt("iaload"); //get the pointer to the class descriptor
-//            int offset = ((ClassSymbol)sTable.get("Object")).getMethodOffset(1) + 2;
-//            writeStmt("ldc " + offset);
-//            writeStmt("iadd");
-//            writeStmt("aload 1");
-//            writeStmt("swap");
-//            writeStmt("iaload");  //now have the method number on top of the stack
-//
-//            writeStmt("goto jumpTable");
-//            writeStmt(NumberGenerator.getInstance().makeRetAdd(retAdd) + ":");
-//
-//            CodeGenerator.popToStack(out);
-//            //we now have a String* on top of the stack
-//
-//            restoreVariables();
-//
-//            //get the java.lang.String out of the String
-//            getjavaString();
-//        }
-    }
-
-    //code to extract a java.lang.String pointer from a String pointer
-    //expects a String* to be on top of the stack
-    private void getjavaString()
-    {
-//        writeStmt(";converting String* to Ljava.lang.String");
-//        writeStmt("iconst_2");  //we know the field offset is 2
-//        writeStmt("iadd");  //field address is now on the stack
-//        writeStmt("aload 1");
-//        writeStmt("swap");
-//        writeStmt("iaload");   //get the string pool pointer
-//        writeStmt("aload 3");
-//        writeStmt("swap");
-//        writeStmt("aaload"); //now have a java.lang.String* on top of the stack
-    }
-
-    //expects a Ljava/lang/String on top of the stack and leaves a string pool index on the stack
-    private void addToStringPool()
-    {
-        writeStmt(";addToStringPool()");
-        writeStmt("aload 3");
-        writeStmt("swap");
-        writeStmt("iload 4");
-        writeStmt("swap");
-        writeStmt("aastore");
-        writeStmt("iload 4");
-        writeStmt("iinc 4 1");
+			switch (retInfo.getType()) {
+			case INT:
+			case BOOL:
+				writeStmt("ireturn");
+				break;
+			case FLOAT:
+				writeStmt("freturn");
+				break;
+			case STRING:
+				writeStmt("areturn");
+				break;
+			default:
+				writeStmt("return");
+				break;
+			}
+		}
+		else
+			writeStmt("areturn");
+		return null;
     }
 
     public Object visit(SubNode node)
@@ -546,14 +408,6 @@ public class CodeGenerator extends Visitor
     private void visitLogic(BinaryNode node, Operator op)
     {    	
     	//Left Hand
-//    	writeLabel();
-//    	labelCounter++;
-//
-//    	//Check the condition register.
-//    	writeStmt("iload 99");
-//    	writeStmt("ifgt STMT_" + ifLabelCounter);
-//    	writeStmt("goto #" + labelCounter);	
-
     	writeLabel();
     	labelCounter++;
     	
@@ -581,14 +435,6 @@ public class CodeGenerator extends Visitor
     	}
     	
     	//Right Hand
-//    	writeLabel();
-//    	labelCounter++;
-//    	
-//    	//Check the condition register.
-//    	writeStmt("iload 99");
-//    	writeStmt("ifgt STMT_" + ifLabelCounter);
-//    	writeStmt("goto #" + labelCounter);	
-
     	writeLabel();
     	labelCounter++;
 
@@ -775,119 +621,145 @@ public class CodeGenerator extends Visitor
 		return retType;
     }
         
-    private void pushInStack(Node node, GenNodeInfo info) 
-    {
-    	SymbolDesc varDesc = null;
-    	
-    	String name = info.getName();
-    	IdType type = info.getType();
-    	String value = info.getValue();
-    	IdType kind = info.getKind();
-    	
+	private void pushInStack(Node node, GenNodeInfo info) {
+		SymbolDesc varDesc = null;
 
-    	if (kind == IdType.VARIABLE)
-    	{
-    		varDesc = sTable.getVarDesc(name, node.getBlockNumber());
-    		
-    		switch(type)
-    		{
-    			case BOOL:
-	    		case INT:
-	    			writeStmt("iload " + varDesc.getJvmVar());
-	    			break;
-	    		case FLOAT:
-	    			writeStmt("fload " + varDesc.getJvmVar());
-	    			break;
-	    		case STRING:
-	    			writeStmt("aload " + varDesc.getJvmVar());
-	    			break;
-    		}
-    	}
-    	else if(kind == IdType.CONST)
-    	{
-    			switch(type)
-    			{
-    				case BOOL:
-    				case INT:
-    					int iValue = Integer.parseInt(value);
-    					
-    				      if(iValue == -1) {
-    				          writeStmt("iconst_m1");
-    				       } else if(iValue >= 0 && iValue <= 5) {
-    				    	  writeStmt("iconst_" + iValue);
-    				       } else if(iValue >= -128 && iValue <= 127) {
-    				          writeStmt("bipush " + iValue);
-    				       } else if(iValue >= -32768 && iValue <= 32767) {
-    				          writeStmt("sipush " + iValue);
-    				       } else {
-    				          writeStmt("ldc " + iValue);
-    				       }
-    				      
-    					break;
-    					
-    				case FLOAT:
-    					float fValue = Float.parseFloat(value);
-    					
-    				      if(fValue == 0.0) {
-    				          writeStmt("fconst_0");
-    				       } else if(fValue == 1.0) {
-    				    	   writeStmt("fconst_1");
-    				       } else if(fValue == 2.0) {
-    				    	   writeStmt("fconst_2");
-    				       } else {
-    				    	   writeStmt("ldc " + fValue);
-    				       }
-    				      
-    					break;
-    					
-    				case STRING:
-    					writeStmt("ldc " + "\"" + value + "\"");
-    					break;
-    					
-    				default:
-    					break;
-    			}
-    		}
+		String name = info.getName();
+		IdType type = info.getType();
+		String value = info.getValue();
+		IdType kind = info.getKind();
+		int dim = info.getDim();
+
+		if (dim == 0) {
+
+			if (kind == IdType.VARIABLE) {
+				varDesc = sTable.getVarDesc(name, node.getBlockNumber());
+
+				switch (type) {
+				case BOOL:
+				case INT:
+					writeStmt("iload " + varDesc.getJvmVar());
+					break;
+				case FLOAT:
+					writeStmt("fload " + varDesc.getJvmVar());
+					break;
+				case STRING:
+					writeStmt("aload " + varDesc.getJvmVar());
+					break;
+				}
+			} else if (kind == IdType.CONST) {
+				switch (type) {
+				case BOOL:
+				case INT:
+					int iValue = Integer.parseInt(value);
+
+					if (iValue == -1) {
+						writeStmt("iconst_m1");
+					} else if (iValue >= 0 && iValue <= 5) {
+						writeStmt("iconst_" + iValue);
+					} else if (iValue >= -128 && iValue <= 127) {
+						writeStmt("bipush " + iValue);
+					} else if (iValue >= -32768 && iValue <= 32767) {
+						writeStmt("sipush " + iValue);
+					} else {
+						writeStmt("ldc " + iValue);
+					}
+
+					break;
+
+				case FLOAT:
+					float fValue = Float.parseFloat(value);
+
+					if (fValue == 0.0) {
+						writeStmt("fconst_0");
+					} else if (fValue == 1.0) {
+						writeStmt("fconst_1");
+					} else if (fValue == 2.0) {
+						writeStmt("fconst_2");
+					} else {
+						writeStmt("ldc " + fValue);
+					}
+
+					break;
+
+				case STRING:
+					writeStmt("ldc " + "\"" + value + "\"");
+					break;
+
+				default:
+					break;
+				}
+			}
+		} else if (dim >= 1) {
+			switch (type) {
+			case BOOL:
+				writeStmt("baload");
+				break;
+			case INT:
+				writeStmt("iaload");
+				break;
+			case FLOAT:
+				writeStmt("faload");
+				break;
+			case STRING:
+				writeStmt("aaload");
+				break;
+			}
+		}
 	}
 
-    private void popFromStack(Node node, GenNodeInfo info) 
-    {
-    	SymbolDesc varDesc = null;
-    	
-    	String name = info.getName();
-    	IdType type = info.getType();
-    	
-    	/*
-    	 * If it has name, it is variable.
-    	 * If name is empty, it is number.
-    	 */
-    	if (!name.equals(""))
-    	{
-    		varDesc = sTable.getVarDesc(name, node.getBlockNumber());
-    		
-    		switch(type)
-    		{
-    			case BOOL: 
-	    		case INT:	    			
-	    			writeStmt("istore " + varDesc.getJvmVar());
-	    			break;
-	    		case FLOAT:
-	    			writeStmt("fstore " + varDesc.getJvmVar());
-	    			break;
-	    		case STRING:
-	    			writeStmt("astore " + varDesc.getJvmVar());
-	    			break;
-    		}
-    	}
+	private void popFromStack(Node node, GenNodeInfo info) {
+		SymbolDesc varDesc = null;
+
+		String name = info.getName();
+		IdType type = info.getType();
+		IdType kind = info.getKind();
+		int dim = info.getDim();
+
+		if (kind == IdType.VARIABLE) {
+			varDesc = sTable.getVarDesc(name, node.getBlockNumber());
+
+			// if it's a simple variable (not an array)
+			if (dim == 0) {
+				switch (type) {
+				case BOOL:
+				case INT:
+					writeStmt("istore " + varDesc.getJvmVar());
+					break;
+				case FLOAT:
+					writeStmt("fstore " + varDesc.getJvmVar());
+					break;
+				case STRING:
+					writeStmt("astore " + varDesc.getJvmVar());
+					break;
+				}
+			}
+			// if it's an array
+			else if (dim >= 1) {
+
+				switch (type) {
+				case BOOL:
+					writeStmt("bastore");
+					break;
+				case INT:
+					writeStmt("iastore");
+					break;
+				case FLOAT:
+					writeStmt("fastore");
+					break;
+				case STRING:
+					writeStmt("aastore");
+					break;
+				}
+			}
+		}
 	}
-    
+
   //*************************************** Comparison Nodes **********************************************
 	
   	@Override
-  	public Object visit(LTNode node) {
-//  		writeLabel();
-//  		labelCounter++;
-  		
+  	public Object visit(LTNode node) 
+	{	
   		IdType type = visitBinaryNode(node, Operator.LT);
           
   		return new GenNodeInfo("", IdType.NULL, "", type, 0);//TODO: FIxXx
@@ -899,13 +771,11 @@ public class CodeGenerator extends Visitor
   		return new GenNodeInfo("", IdType.NULL, "", type, 0);
   	}
 
-  	public Object visit(GTNode node) {
-//  		writeLabel();
-//  		labelCounter++;
-  		
+  	public Object visit(GTNode node) 
+	{	
   		IdType type = visitBinaryNode(node, Operator.GT);
           
-  		return new GenNodeInfo("", IdType.NULL, "", type, 0);//TODO: FIxXx
+  		return new GenNodeInfo("", IdType.NULL, "", type, 0);
   	}
 
   	public Object visit(GETNode node) {
@@ -915,65 +785,17 @@ public class CodeGenerator extends Visitor
   	}
   	
   	public Object visit(EqNode node)
-      {
-  		visitBinaryNode(node, Operator.EQ);
-          
-  		return null;
-  		
-//          writeStmt(";" + node.toString());
-  //
-//          //save register 5
-//          CodeGenerator.pushVar(5, out);
-  //
-//          //visit the left and right nodes and push them onto the stack
-//          node.visitLeft(this);
-//          writeStmt("istore 5");
-//          node.visitRight(this);
-//          writeStmt("iload 5");
-//          writeStmt("swap");
-  //
-//          String notEqLabel = NumberGenerator.getInstance().getLabel();
-//          String endLabel = NumberGenerator.getInstance().getLabel();
-//          writeStmt("if_icmpne " + notEqLabel); //jump if not equal
-//          writeStmt("iconst_1"); //equal so push 1            //  |
-//          writeStmt("goto " + endLabel);  //jump to end label ----+--+
-//          writeStmt(notEqLabel + ":");  //    <-------------------+  |
-//          writeStmt("iconst_0"); //not equal so push 0               |
-//          writeStmt(endLabel + ":");    //    <----------------------+
-  //
-//          //restore register 5
-//          CodeGenerator.popToVar(5, out);
-      }
+    {
+		visitBinaryNode(node, Operator.EQ);
+        
+		return null;
+    }
 
   	public Object visit(NotEqNode node)
   	{
   		visitBinaryNode(node, Operator.NEQ);
 
   		return null;
-
-  		//          writeStmt(";" + node.toString());
-  		//
-  		//          //save register 5
-  		//          CodeGenerator.pushVar(5, out);
-  		//
-  		//          //visit the left and right nodes and push them onto the stack
-  		//          node.visitLeft(this);
-  		//          writeStmt("istore 5");
-  		//          node.visitRight(this);
-  		//          writeStmt("iload 5");
-  		//          writeStmt("swap");
-  		//
-  		//          String eqLabel = NumberGenerator.getInstance().getLabel();
-  		//          String endLabel = NumberGenerator.getInstance().getLabel();
-  		//          writeStmt("if_icmpeq " + eqLabel);          //jump if equal
-  		//          writeStmt("iconst_1"); //equal so push 1            //  |
-  		//          writeStmt("goto " + endLabel);  //jump to end label ----+--+
-  		//          writeStmt(eqLabel + ":");     //    <-------------------+  |
-  		//          writeStmt("iconst_0"); //not equal so push 0               |
-  		//          writeStmt(endLabel + ":");    //    <----------------------+
-  		//
-  		//          //restore register 5
-  		//          CodeGenerator.popToVar(5, out);
   	}
 	
   	public Object visit(NotNode node)
@@ -1129,30 +951,37 @@ public class CodeGenerator extends Visitor
 		int dim = node.getDimension();
 		GenNodeInfo info = (GenNodeInfo) node.visitDim(this); //dovrebbe tornare la size dell'array, il valore da settare sotto
 		
-		if (dim == 1) 
-		{
-			 //we use anewarray for string type
+		if (dim == 1) {
+			// we use anewarray for string type
 			if (type == IdType.STRING)
 				writeStmt("anewarray " + "java/lang/String");
+			else if (type == IdType.BOOL)
+				writeStmt("newarray boolean");
 			else
 				// we use newarray for types int, float and bool
 				writeStmt("newarray " + type);
-		}
-		else if (dim > 1) 
-		{
+		} else if (dim > 1) {
 			String brackets = "";
-			for (int i=0; i<dim; i++)
+			for (int i = 0; i < dim; i++)
 				brackets += "[";
 			// we use multianewarray for n-dimension array
-			writeStmt("multianewarray " + brackets + getJVMType(type) + " " + dim);
+			writeStmt("multianewarray " + brackets + getJVMType(type) + " "
+					+ dim);
 		}
-		return new GenNodeInfo(name, IdType.NULL, "", type, dim);
-		
+		return new GenNodeInfo(name, IdType.NEW, "", type, dim);
+
 	}
 
 	public Object visit(ArrayCallNode node) {
-		//System.out.println("*************Sono Dentro!!!");
-		return null;
+		SymbolDesc arrayDesc = sTable.getVarDesc(node.getName(),
+				node.getBlockNumber());
+		writeStmt("aload " + arrayDesc.getJvmVar());
+
+		GenNodeInfo infoVar = (GenNodeInfo) node.visitVar(this);
+		GenNodeInfo infoDim = (GenNodeInfo) node.visitDim(this);
+
+		return new GenNodeInfo(infoVar.getName(), IdType.VARIABLE, "",
+				infoVar.getType(), infoVar.getDim());
 	}
 
 	public Object visit(SimpleVarNode node) 
