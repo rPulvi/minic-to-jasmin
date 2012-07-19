@@ -43,8 +43,7 @@ public abstract class Visitor
     public abstract Object visit(NotEqNode node);
     public abstract Object visit(NotNode node);
     public abstract Object visit(IntNode node);
-    public abstract Object visit(OrNode node);
-    public abstract Object visit(PrintNode node);
+    public abstract Object visit(OrNode node);    
     public abstract Object visit(ReturnNode node);
     public abstract Object visit(StringNode node);
     public abstract Object visit(SubNode node);
