@@ -224,14 +224,14 @@ public class SemanticChecker extends Visitor
     }
 
 	public Object visit(CastNode node) {
-		IdType type = (IdType) node.visitChild(this);
+		NodeInfo info = (NodeInfo)node.visitChild(this);
 		
 		
-		if (type == IdType.FLOAT || type == IdType.INT)
-			return IdType.INT;
+		if (info.getType() == IdType.FLOAT || info.getType() == IdType.INT)
+			return new NodeInfo(IdType.INT, info.getDim());
 		else 
-			error("Cannot cast " + type + " to int.", node);
-		return IdType.ERR;
+			error("Cannot cast " + info.getType() + " to int.", node);
+		return new NodeInfo(IdType.ERR, info.getDim());
 
 	}
 	

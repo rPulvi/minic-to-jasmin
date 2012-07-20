@@ -61,6 +61,12 @@ public enum IdType {
 			return "New";
 		}
 	},
+	ARRAYNODE{
+		public String toString()
+		{
+			return "Array_Node";
+		}		
+	},
 	CONST{
 		public String toString()
 		{
