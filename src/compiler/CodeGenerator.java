@@ -303,6 +303,10 @@ public class CodeGenerator extends Visitor
     {
     	ifLabelCounter++;
     	
+    	//Reset register for Exit Condition
+    	writeStmt("ldc 0");
+        writeStmt("istore " + ifRegister);
+    	
     	GenNodeInfo info = (GenNodeInfo) node.visitTest(this);
     	
     	if (info.getKind() == IdType.VARIABLE || info.getKind() == IdType.CONST)
@@ -325,7 +329,11 @@ public class CodeGenerator extends Visitor
     	
     	int tempCounter = ifLabelCounter;
     	
-    	node.visitThen(this);    	    	    	
+    	node.visitThen(this); 
+    	
+		//Reset register for Exit Condition
+    	writeStmt("ldc 0");
+        writeStmt("istore " + ifRegister);
     	
     	writeStmt("\rEXIT_" + tempCounter + ":"); // TODO: Fix with labelCreator class
     
@@ -334,6 +342,54 @@ public class CodeGenerator extends Visitor
         return null;
     }
 
+	public Object visit(IfElseNode node) 
+	{
+		ifLabelCounter++;
+    	
+    	//Reset register for Exit Condition
+    	writeStmt("ldc 0");
+        writeStmt("istore " + ifRegister);
+    	
+    	GenNodeInfo info = (GenNodeInfo) node.visitTest(this);
+    	
+    	if (info.getKind() == IdType.VARIABLE || info.getKind() == IdType.CONST)
+    	{
+    		pushInStack(node, info);
+    		writeStmt("ifgt #" + ++labelCounter);
+    		writeStmt("goto #" + ++labelCounter);
+    		
+    		GenerateWriteBlock();
+    	}
+    	
+    	//write exit block
+    	writeLabel();
+    	
+    	writeStmt("iload " + ifRegister);
+    	writeStmt("ifgt STMT_" + ifLabelCounter);
+    	writeStmt("goto ELSE_" + ifLabelCounter);
+    	
+    	writeStmt("\rSTMT_" + ifLabelCounter + ":");
+    	
+    	int tempCounter = ifLabelCounter;
+    	
+    	node.visitThen(this); 
+    	
+    	writeStmt("\rgoto EXIT_" + tempCounter);
+    	writeStmt("\rELSE_" + ifLabelCounter + ":");
+    	
+    	node.visitElse(this);
+    	
+		//Reset register for Exit Condition
+    	writeStmt("ldc 0");
+        writeStmt("istore " + ifRegister);
+    	
+    	writeStmt("\rEXIT_" + tempCounter + ":"); // TODO: Fix with labelCreator class
+    
+    	labelCounter++;
+
+        return null;
+	}
+    
     public Object visit(ReturnNode node)
     {
     	GenNodeInfo retInfo = (GenNodeInfo)node.visitValue(this);
@@ -381,7 +437,7 @@ public class CodeGenerator extends Visitor
         IdType type = visitBinaryNode(node, Operator.PLUS);
         return new GenNodeInfo("", IdType.NULL, "", type, 0);
     }
-    
+     
     public Object visit(MulNode node)
     {
     	IdType type = visitBinaryNode(node, Operator.MUL);
@@ -590,33 +646,44 @@ public class CodeGenerator extends Visitor
 
         			break;
         			
-//        		case EQ:
-//        			if(sOperator.equals("f")) {
-//        				sOperator = "fcmpg\n";
-//        				sOperator+= "ifgt " + "#" + labelCounter;
-//        			}
-//        			else
-//        				sOperator = "if_icmpgt " + "#" + labelCounter;
-//        			
-//        			break;
-//        			
-//        		case NEQ:
-//        			if(sOperator.equals("f")) {
-//        				sOperator = "fcmpg\n";
-//        				sOperator+= "ifgt " + "#" + labelCounter;
-//        			}
-//        			else
-//        				sOperator = "if_icmpgt " + "#" + labelCounter;
-//        			
-//        			break;  
+    		case EQ:
+	    			if(sOperator.equals("f")) {
+	    				sOperator = "fsub\n";
+	    				sOperator+= "ifeq " + "#" + labelCounter;
+	    				sOperator+= "\n\tgoto #"+ ++labelCounter;
+	    			}
+	    			else
+	    			{
+	    				sOperator = "if_icmpeq " + "#" + labelCounter;
+	    				sOperator+= "\n\tgoto #"+ ++labelCounter;
+	    			}
+	    			
+        			writeStmt(sOperator);
+        			GenerateWriteBlock();
+	    			
+	    			break;
+        			
+        	case NEQ:
+	        		if(sOperator.equals("f")) {
+	    				sOperator = "fsub\n";
+	    				sOperator+= "ifne " + "#" + labelCounter;
+	    				sOperator+= "\n\tgoto #"+ ++labelCounter;
+	    			}
+	    			else
+	    			{
+	    				sOperator = "if_icmpne " + "#" + labelCounter;
+	    				sOperator+= "\n\tgoto #"+ ++labelCounter;
+	    			}
+	    			
+	    			writeStmt(sOperator);
+	    			GenerateWriteBlock();
+	    			
+	    			break;  
         		
-        		default:
+        	default:
         			sOperator = "";
         			break;        			
     	}
-
-    	//if (sOperator.length()>0)
-    		//writeStmt(sOperator);
 		
 		return retType;
     }
@@ -765,7 +832,8 @@ public class CodeGenerator extends Visitor
   		return new GenNodeInfo("", IdType.NULL, "", type, 0);//TODO: FIxXx
   	}
 
-  	public Object visit(LETNode node) {
+  	public Object visit(LETNode node) 
+  	{
   		IdType type = visitBinaryNode(node, Operator.LET);
         
   		return new GenNodeInfo("", IdType.NULL, "", type, 0);
@@ -778,7 +846,8 @@ public class CodeGenerator extends Visitor
   		return new GenNodeInfo("", IdType.NULL, "", type, 0);
   	}
 
-  	public Object visit(GETNode node) {
+  	public Object visit(GETNode node) 
+  	{
   		IdType type = visitBinaryNode(node, Operator.GET);
         
   		return new GenNodeInfo("", IdType.NULL, "", type, 0);
@@ -786,29 +855,35 @@ public class CodeGenerator extends Visitor
   	
   	public Object visit(EqNode node)
     {
-		visitBinaryNode(node, Operator.EQ);
+  		IdType type = visitBinaryNode(node, Operator.EQ);
         
-		return null;
+  		return new GenNodeInfo("", IdType.NULL, "", type, 0);
     }
 
   	public Object visit(NotEqNode node)
   	{
-  		visitBinaryNode(node, Operator.NEQ);
-
-  		return null;
+  		IdType type = visitBinaryNode(node, Operator.NEQ);
+        
+  		return new GenNodeInfo("", IdType.NULL, "", type, 0);
   	}
 	
-  	public Object visit(NotNode node)
-  	{
-  		//          node.visitChild(this);
-  		//
-  		//          //push true onto the stack and xor the top two values
-  		//          //effectivly negating the previous top of the stack (if it was 0 or 1)
-  		//          writeStmt("iconst_1");
-  		//          writeStmt("ixor");
+	public Object visit(NotNode node) 
+	{
+		GenNodeInfo info = (GenNodeInfo)node.visitChild(this);
 
-  		return null;
-  	}
+		pushInStack(node, info);
+		
+		//writeStmt("iload " + ifRegister);
+		
+		// push true onto the stack and xor the top two values
+		// effectivly negating the previous top of the stack (if it was 0 or 1)
+		writeStmt("iconst_1");
+		writeStmt("ixor");
+		
+		//writeStmt("istore " + ifRegister);
+
+		return new GenNodeInfo("", IdType.NULL, "", info.getType(), info.getDim());
+	}
       
   //********************************************************************************************************
     
@@ -842,11 +917,7 @@ public class CodeGenerator extends Visitor
 		GenNodeInfo info = new GenNodeInfo("",IdType.CONST, node.toString(), node.getType(), 0);
         return info;
 	}
-	@Override
-	public Object visit(IfElseNode node) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	
 	@Override
 	public Object visit(CastNode node) {
 		// TODO Auto-generated method stub
@@ -854,13 +925,17 @@ public class CodeGenerator extends Visitor
 	}
 
 	public Object visit(SignNode letNode) {
-		// TODO Auto-generated method stub
+		
 		return null;
 	}
 
 	public Object visit(WhileNode node) 
 	{
 		ifLabelCounter++;
+		
+		//Reset register for Exit Condition
+    	writeStmt("ldc 0");
+        writeStmt("istore " + ifRegister);
 		
     	writeStmt("\rWHILE_" + ifLabelCounter + ":");
     	
@@ -886,10 +961,12 @@ public class CodeGenerator extends Visitor
     	
     	int tempCounter = ifLabelCounter;
     	
-    	node.visitWhile(this);    	    	    	
+    	node.visitWhile(this);  
     	
+		//Reset register for Exit Condition
     	writeStmt("ldc 0");
         writeStmt("istore " + ifRegister);
+    	
     	writeStmt("goto WHILE_" + tempCounter);
     	
     	writeStmt("\rEXIT_" + tempCounter + ":"); // TODO: Fix with labelCreator class
