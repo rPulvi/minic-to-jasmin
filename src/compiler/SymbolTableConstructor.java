@@ -219,10 +219,6 @@ public class SymbolTableConstructor extends Visitor
         return varDesc;
     }
     
-	public Object visit(BracketNode node) {
-		node.visitChild(this);
-		return null;
-	}
     
     //all the below methods do nothing, since none of these nodes define new symbols
     /////////////////////////////////////////////////////////////////////////////////////////////////

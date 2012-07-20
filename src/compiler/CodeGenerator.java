@@ -1075,8 +1075,4 @@ public class CodeGenerator extends Visitor
 		return info;
 	}
 	
-	public Object visit(BracketNode node) {
-		GenNodeInfo info = (GenNodeInfo)node.visitChild(this);
-		return new GenNodeInfo("", info.getKind(), info.getValue(), info.getType(), info.getDim());
-	}
 }

@@ -264,11 +264,6 @@ public class SemanticChecker extends Visitor
     	return info;	
 	}
 	
-	public Object visit(BracketNode node) {
-		NodeInfo info = (NodeInfo)node.visitChild(this);
-		
-		return new NodeInfo(info.getType(), info.getDim());
-	}
 	
     //------------------------------------- BINARY OPERATORS ------------------------------------- 
     public Object visit(ModNode node)
