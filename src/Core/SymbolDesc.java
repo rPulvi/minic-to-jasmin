@@ -1,10 +1,7 @@
 package aux;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
-import java.util.Vector;
-
 import utils.StuffCreator;
 
 /**
