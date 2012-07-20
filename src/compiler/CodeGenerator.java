@@ -897,10 +897,6 @@ public class CodeGenerator extends Visitor
 		if (info.getKind() != IdType.NULL && info.getKind() != IdType.NEW)
 			pushInStack(node, info);
 		writeStmt("f2i");
-		//info.setType(IdType.INT);
-//		 value = Float.parseFloat(info.getValue());
-//		info.setValue(Integer.toString(value));
-		//popFromStack(node, info);
 		return new GenNodeInfo("", IdType.NULL, info.getValue(), info.getType(), info.getDim());
 	}
 
