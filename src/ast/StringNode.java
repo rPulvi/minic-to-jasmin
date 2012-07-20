@@ -1,9 +1,7 @@
 package ast;
 
-import it.m2j.IdType;
 import compiler.Visitor;
-//import utils.ParamUtils;
-
+import aux.IdType;
 
 public class StringNode extends ExprNode
 {

@@ -1,4 +1,4 @@
-package it.m2j;
+package m2j;
 
 import java.io.BufferedWriter;
 import java.io.File;

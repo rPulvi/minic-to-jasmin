@@ -1,12 +1,9 @@
 package compiler;
 
-import it.m2j.IdType;
-import it.m2j.NodeInfo;
-import it.m2j.Operator;
-import it.m2j.SymbolDesc;
-
-import java.io.PrintWriter;
+import aux.*;
 import java.util.ArrayList;
+
+import utils.StuffCreator;
 
 import ast.*;
 
@@ -38,7 +35,7 @@ public class SemanticChecker extends Visitor
     	int dim2 = right.getDim();
 
     	if (dim1 != dim2)
-    		error("Type mismatch. Cannot convert from " + type2 + getBrackets(dim2) + " to " + type1 + getBrackets(dim1) + " ", node);
+    		error("Type mismatch. Cannot convert from " + type2 + StuffCreator.getBrackets(dim2) + " to " + type1 + StuffCreator.getBrackets(dim1) + " ", node);
     	else
     	{
 	    	if (type1 == IdType.ERR || type2 == IdType.ERR)
@@ -214,7 +211,7 @@ public class SemanticChecker extends Visitor
             else
             {
             	if(valueDim != returnDim)
-            		error("Return type does not match function declaration expected: '" + returnType + getBrackets(returnDim) + "' found: '" + (IdType)valueType + getBrackets(valueDim) + "'. ", node);
+            		error("Return type does not match function declaration expected: '" + returnType + StuffCreator.getBrackets(returnDim) + "' found: '" + (IdType)valueType + StuffCreator.getBrackets(valueDim) + "'. ", node);
             }
         }
 
@@ -351,7 +348,7 @@ public class SemanticChecker extends Visitor
     	IdType t = IdType.ERR;
 
     	if (dim1 != dim2)
-    		error("Type mismatch. Cannot convert from " + type1 + getBrackets(dim1) + " to " + type2 + getBrackets(dim2), node);
+    		error("Type mismatch. Cannot convert from " + type1 + StuffCreator.getBrackets(dim1) + " to " + type2 + StuffCreator.getBrackets(dim2), node);
     	else
     	{
 	    	if (type1 == IdType.ERR || type2 == IdType.ERR)
@@ -531,17 +528,5 @@ public class SemanticChecker extends Visitor
 
 		NodeInfo info = new NodeInfo(varInfo.getType(), varDim - nodeDim);
     	return info;			
-	}
-		
-	private String getBrackets(int dim)
-	{
-		String sRet = "";	
-		
-		for(int i=0;i<dim;i++)
-		{
-			sRet += "[]";
-		}
-		
-		return sRet;
 	}
 }

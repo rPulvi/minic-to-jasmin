@@ -1,5 +1,6 @@
 package ast;
-import it.m2j.IdType;
+
+import aux.IdType;
 import compiler.Visitor;
 
 

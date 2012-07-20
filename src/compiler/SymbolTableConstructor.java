@@ -1,14 +1,46 @@
 package compiler;
 
-import ast.*;
-
-import it.m2j.IdType;
-import it.m2j.NodeInfo;
-import it.m2j.SymbolDesc;
-
-import java.io.*;
 import java.util.ArrayList;
 
+import ast.AddNode;
+import ast.AndNode;
+import ast.ArgNode;
+import ast.ArrayCallNode;
+import ast.ArrayNewNode;
+import ast.ArrayNode;
+import ast.ArraySizeNode;
+import ast.AssignNode;
+import ast.BlockNode;
+import ast.BoolNode;
+import ast.CastNode;
+import ast.DeclNode;
+import ast.DivNode;
+import ast.EqNode;
+import ast.FloatNode;
+import ast.FuncCallNode;
+import ast.FunctionExtNode;
+import ast.FunctionNode;
+import ast.GETNode;
+import ast.GTNode;
+import ast.IfElseNode;
+import ast.IfNode;
+import ast.IntNode;
+import ast.LETNode;
+import ast.LTNode;
+import ast.ListNode;
+import ast.ModNode;
+import ast.MulNode;
+import ast.NotEqNode;
+import ast.NotNode;
+import ast.NullNode;
+import ast.OrNode;
+import ast.ReturnNode;
+import ast.SignNode;
+import ast.SimpleVarNode;
+import ast.StringNode;
+import ast.SubNode;
+import ast.WhileNode;
+import aux.*;
 
 public class SymbolTableConstructor extends Visitor
 {

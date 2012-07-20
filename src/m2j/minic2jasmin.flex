@@ -1,13 +1,13 @@
 /* scanner.flex */
 
-package it.m2j;
+package m2j;
 
 import java_cup.runtime.*;
 import java.io.IOException;
 
 
-import it.m2j.minic2jasminSym;
-import static it.m2j.minic2jasminSym.*;
+import m2j.minic2jasminSym;
+import static m2j.minic2jasminSym.*;
 
 
 %% //----------------------------------------------------------------------------------------
@@ -21,7 +21,7 @@ import static it.m2j.minic2jasminSym.*;
 
 %standalone
 
-%cupsym it.m2j.minic2jasminSym
+%cupsym m2j.minic2jasminSym
 %cup
 
 %xstate comment

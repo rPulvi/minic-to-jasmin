@@ -2,8 +2,8 @@
 <project name="minic-to-jasmin" default="build" basedir=".">
 	<property name="conflicts.expected" value="300" />
 	<property name="project.location" location="." />
-	<property name="project.packagepath" value="it/m2j" />
-	<property name="project.packagename" value="it.m2j" />
+	<property name="project.packagepath" value="m2j" />
+	<property name="project.packagename" value="m2j" />
 
 	<property name="src.dir" location="${project.location}/src" />
 	<property name="gen.dir" location="${project.location}/generated-src" />

@@ -1,14 +1,6 @@
 package compiler;
 
-import it.m2j.ExtNodeInfo;
-import it.m2j.GenNodeInfo;
-import it.m2j.IdType;
-import it.m2j.NodeInfo;
-import it.m2j.Operator;
-import it.m2j.SymbolDesc;
-
-import java.io.FileWriter;
-import java.io.PrintWriter;
+import aux.*;
 import java.util.ArrayList;
 
 import ast.*;

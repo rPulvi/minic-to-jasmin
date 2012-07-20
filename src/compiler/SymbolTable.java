@@ -1,8 +1,8 @@
 package compiler;
 
 import java.util.*;
-
-import it.m2j.*;
+import m2j.*;
+import aux.*;
 
 /**
  * <p>Title: MiniC to Jasmin</p>
