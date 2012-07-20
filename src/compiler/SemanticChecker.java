@@ -264,6 +264,12 @@ public class SemanticChecker extends Visitor
     	return info;	
 	}
 	
+	public Object visit(BracketNode node) {
+		NodeInfo info = (NodeInfo)node.visitChild(this);
+		
+		return new NodeInfo(info.getType(), info.getDim());
+	}
+	
     //------------------------------------- BINARY OPERATORS ------------------------------------- 
     public Object visit(ModNode node)
     {
@@ -430,7 +436,7 @@ public class SemanticChecker extends Visitor
     {
         return visitUnaryOp(Operator.NOT, node);    	
     }
-
+	
     //shared functionality for - and ! operators
     private NodeInfo visitUnaryOp(Operator op, UnaryNode node)
     {    	    	    	

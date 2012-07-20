@@ -12,6 +12,7 @@ import ast.ArraySizeNode;
 import ast.AssignNode;
 import ast.BlockNode;
 import ast.BoolNode;
+import ast.BracketNode;
 import ast.CastNode;
 import ast.DeclNode;
 import ast.DivNode;
@@ -217,6 +218,11 @@ public class SymbolTableConstructor extends Visitor
         
         return varDesc;
     }
+    
+	public Object visit(BracketNode node) {
+		node.visitChild(this);
+		return null;
+	}
     
     //all the below methods do nothing, since none of these nodes define new symbols
     /////////////////////////////////////////////////////////////////////////////////////////////////

@@ -17,5 +17,5 @@ public class BracketNode extends UnaryNode
     public String toString()
     {
         return "(" + child + ")";
-    }
+    }        
 }

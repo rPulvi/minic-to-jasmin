@@ -61,4 +61,5 @@ public abstract class Visitor
 	public abstract Object visit(SimpleVarNode node);
 	public abstract Object visit(ArraySizeNode node);
 	public abstract Object visit(FunctionExtNode node);
+	public abstract Object visit(BracketNode node);
 }
