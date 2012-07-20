@@ -36,7 +36,7 @@ EOL = \r|\n|\r\n
 
 %{
 	minic2jasminSym symClass;
-	StringBuffer string = new StringBuffer();
+	String retString = "";
 	
 	private Symbol sym(int type)
 	{
@@ -76,14 +76,14 @@ EOL = \r|\n|\r\n
 "\""                { yybegin(quote); }
 
 <quote>"\""         { 	yybegin(YYINITIAL); 
-						return sym(CONST_STRING, string.toString()); 	
+						return sym(CONST_STRING, retString); 	
 					}
   
 
 <quote>"\\".        { ; } // gestire sequenza di escape all'interno di una stringa quotata
 <quote><<EOF>>      { error("Fine inattesa della stringa"); }
 
-<quote>[^\\\n\"]+   { string.append( yytext() ); }
+<quote>[^\\\n\"]+   { retString = yytext(); }
 
 
 "bool"              { return sym(TYPE_BOOL); }
