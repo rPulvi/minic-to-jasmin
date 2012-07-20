@@ -1,7 +1,6 @@
 package ast;
 
 import aux.IdType;
-import compiler.*;
 
 public abstract class SlotNode extends Node
 {

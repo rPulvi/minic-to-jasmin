@@ -4,7 +4,7 @@ import compiler.*;
 //import utils.ParamUtils;
 
 
-public class FuncCallNode extends ExprNode implements InvocNode
+public class FuncCallNode extends ExprNode
 {    
     private String functionName;
     private ListNode params;

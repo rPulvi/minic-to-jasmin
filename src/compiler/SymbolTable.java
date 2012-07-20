@@ -1,7 +1,6 @@
 package compiler;
 
 import java.util.*;
-import m2j.*;
 import aux.*;
 
 /**

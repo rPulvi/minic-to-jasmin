@@ -21,8 +21,7 @@ public class CodeGenerator extends Visitor
     private String jasminClassName;
     private int labelCounter;
     private int ifLabelCounter;
-    private int ifRegister;
-    private int whileCounter;
+    private int ifRegister;    
     
     private ArrayList<String> arrayNames;
     private int arrayCounter;
@@ -75,11 +74,6 @@ public class CodeGenerator extends Visitor
     
     private void writeLabel() {
     	out.append("#" + labelCounter + ":");
-    	out.append("\n");
-    }
-    
-    private void writeLabel(String label) {
-    	out.append(label + labelCounter + ":");
     	out.append("\n");
     }
 
@@ -757,8 +751,7 @@ public class CodeGenerator extends Visitor
 		SymbolDesc varDesc = null;
 
 		String name = info.getName();
-		IdType type = info.getType();
-		IdType kind = info.getKind();
+		IdType type = info.getType();		
 		varDesc = sTable.getVarDesc(name, node.getBlockNumber());
 		int dim = info.getDim();
 
@@ -1020,7 +1013,7 @@ public class CodeGenerator extends Visitor
 		String name = arrayNames.get(arrayCounter++);
 		IdType type = node.getType();
 		int dim = node.getDimension();
-		GenNodeInfo info = (GenNodeInfo) node.visitDim(this); //dovrebbe tornare la size dell'array, il valore da settare sotto
+		node.visitDim(this);
 
 		if (dim == 1) {
 			// we use anewarray for string type
@@ -1048,7 +1041,7 @@ public class CodeGenerator extends Visitor
 		writeStmt("aload " + arrayDesc.getJvmVar());
 
 		GenNodeInfo infoVar = (GenNodeInfo) node.visitVar(this);
-		GenNodeInfo infoDim = (GenNodeInfo) node.visitDim(this);
+		node.visitDim(this);
 
 		return new GenNodeInfo(infoVar.getName(), IdType.VARIABLE, "", infoVar.getType(), infoVar.getDim());
 	}

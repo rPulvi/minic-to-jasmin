@@ -1,8 +1,6 @@
 package compiler;
 
 import ast.*;
-import java.io.PrintWriter;
-
 
 public abstract class Visitor
 {
