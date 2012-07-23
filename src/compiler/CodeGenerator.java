@@ -305,6 +305,7 @@ public class CodeGenerator extends Visitor
     	setAuxRegister(0);
     	
     	writeStmt("\rEXIT_" + tempCounter + ":");
+    	writeStmt("nop");
     
     	labelCounter++;
 
@@ -351,6 +352,7 @@ public class CodeGenerator extends Visitor
     	setAuxRegister(0);
     	
     	writeStmt("\rEXIT_" + tempCounter + ":");
+    	writeStmt("nop");
     
     	labelCounter++;
 
