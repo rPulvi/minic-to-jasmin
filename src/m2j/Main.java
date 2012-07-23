@@ -1,5 +1,6 @@
 package m2j;
 
+import java.awt.Toolkit;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
@@ -21,18 +22,24 @@ public class Main {
 	
 	public static void main(String[] args) {
 		        		
-    	FileWriter fstream;        
+    	FileWriter fstream;
     	String jasminFile = getJasminFileName(args[0]);
     	
 		try {
 			Symbol result;
 			Node root;
-	        /*
+	        
+			/*
+			Toolkit tk = Toolkit.getDefaultToolkit();
+			int xSize = ((int) tk.getScreenSize().getWidth());  
+			int ySize = ((int) tk.getScreenSize().getHeight()); 
 			JFrame win = new GUI();
 	        win.setVisible(true);
 	        win.setLocationRelativeTo(null);
-	        */		
 
+	        win.setSize(xSize, ySize);
+			*/
+			
 			// Istanzio lo scanner aprendo il file d'ingresso args[0]
 			m2jLex scanner = new m2jLex(new FileReader(args[0]));
 

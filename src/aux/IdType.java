@@ -49,6 +49,12 @@ public enum IdType {
 			return "Variable";
 		}
 	},
+	CONST{
+		public String toString()
+		{
+			return "Constant";
+		}
+	},
 	FUNCTION{
 		public String toString()
 		{
@@ -64,13 +70,13 @@ public enum IdType {
 	ARRAYNODE{
 		public String toString()
 		{
-			return "Array_Node";
+			return "Array Node";
 		}		
 	},
-	CONST{
+	NOTNODE{
 		public String toString()
 		{
-			return "Constant";
+			return "Not Node";
 		}
 	};	
 	
