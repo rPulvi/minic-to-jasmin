@@ -128,7 +128,7 @@ public class SymbolTableConstructor extends Visitor
     		//restore the counter
     		varCounter = oldCounter;
     		
-    		String fullPath = name + "/" + this.className;
+    		String fullPath = this.className + "/" + name;
     		sTable.putFunction(name, fullPath, node.getType(), functionParams, node.getDimension());
     		
         	node.visitBody(this);        	        	
