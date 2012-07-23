@@ -15,6 +15,7 @@ public abstract class BinaryNode extends ExprNode
         super(lineNumber, colNumber);
         this.left = left;
         this.right = right;
+        //System.out.println("Left ---> " + left + ", Right ---> " + right);
     }
 
     public Object visitLeft(Visitor v)
