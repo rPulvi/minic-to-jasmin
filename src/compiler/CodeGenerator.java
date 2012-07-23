@@ -350,7 +350,7 @@ public class CodeGenerator extends Visitor
 		//Reset register for Exit Condition
     	setAuxRegister(0);
     	
-    	writeStmt("\rEXIT_" + tempCounter + ":"); // TODO: Fix with labelCreator class
+    	writeStmt("\rEXIT_" + tempCounter + ":");
     
     	labelCounter++;
 
@@ -750,8 +750,6 @@ public class CodeGenerator extends Visitor
 		// if it's a simple variable (not an array)
 		if (dim == 0) {
 			
-			//if (kind == IdType.VARIABLE) {
-			
 				switch (type) {
 				case BOOL:
 				case INT:
@@ -764,7 +762,6 @@ public class CodeGenerator extends Visitor
 					writeStmt("astore " + varDesc.getJvmVar());
 					break;
 				}
-			//}
 		}
 		// if it's an array
 		else if (dim >= 1) {
