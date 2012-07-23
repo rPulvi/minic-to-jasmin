@@ -25,6 +25,7 @@ public class CodeGenerator extends Visitor
     
     private ArrayList<String> arrayNames;
     private int arrayCounter;
+    private int multiArrayDim; //global variable to store the dimension of array n-dimension
 
     /**
      * Creates a new Code Generation visitor object
@@ -38,6 +39,7 @@ public class CodeGenerator extends Visitor
         labelCounter = 0;
         ifLabelCounter = 0;
         arrayNames = new ArrayList<String>();
+        multiArrayDim = 0;
         arrayCounter = 0;
         ifRegister = 0;
         
@@ -142,7 +144,7 @@ public class CodeGenerator extends Visitor
     	
     	GenNodeInfo left = (GenNodeInfo)node.visitVar(this);
     	GenNodeInfo right = (GenNodeInfo)node.visitValue(this);
-    	
+    	    	
 		// If the right hand is a constant or a variable
 		if ((right.getKind() != IdType.NULL) && (right.getKind() != IdType.NEW)) {    		
     		pushInStack(node, right);
@@ -488,7 +490,7 @@ public class CodeGenerator extends Visitor
     	GenNodeInfo left = (GenNodeInfo) node.visitLeft(this);
     	
     	//Right Hand
-    	GenNodeInfo right = (GenNodeInfo) node.visitRight(this);    	
+    	GenNodeInfo right = (GenNodeInfo) node.visitRight(this); 
 
     	// if one or both operands are float
     	if(left.getType() == IdType.FLOAT || right.getType() == IdType.FLOAT) {
@@ -505,9 +507,18 @@ public class CodeGenerator extends Visitor
     		
     		else if(right.getType() == IdType.INT) {
     			//push in stack using iload or fload or ldc and check float type
-	        	pushInStack(node, left);
-	        	pushInStack(node, right);
-	        	writeStmt("i2f");
+    			
+    			// if the right hand is not a variable or a constant (it's a complex node)
+    			if ((right.getKind() == IdType.NULL) || (right.getKind() == IdType.NEW)) {
+    				writeStmt("i2f");
+    				pushInStack(node, left);
+		        	pushInStack(node, right);
+    			}
+    			else {
+		        	pushInStack(node, left);
+		        	pushInStack(node, right);
+		        	writeStmt("i2f");
+    			}
     		}
     		else {
     			pushInStack(node, left);
@@ -1037,7 +1048,11 @@ public class CodeGenerator extends Visitor
 		writeStmt("aload " + arrayDesc.getJvmVar());
 
 		GenNodeInfo infoVar = (GenNodeInfo) node.visitVar(this);
+		multiArrayDim = infoVar.getDim();
+		
 		node.visitDim(this);
+		
+
 
 		return new GenNodeInfo(infoVar.getName(), IdType.VARIABLE, "", infoVar.getType(), infoVar.getDim());
 	}
@@ -1067,7 +1082,13 @@ public class CodeGenerator extends Visitor
 	public Object visit(ArraySizeNode node) {
 
 		GenNodeInfo info = (GenNodeInfo) node.visitExpr(this);
+		
 		pushInStack(node, info);
+		
+		if (multiArrayDim > 1) 
+			writeStmt("aaload");
+		multiArrayDim--;
+		
 		return info;
 	}
 	
