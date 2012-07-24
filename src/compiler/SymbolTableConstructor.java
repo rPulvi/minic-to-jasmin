@@ -131,7 +131,9 @@ public class SymbolTableConstructor extends Visitor
     		String fullPath = this.className + "/" + name;
     		sTable.putFunction(name, fullPath, node.getType(), functionParams, node.getDimension());
     		
-        	node.visitBody(this);        	        	
+        	node.visitBody(this);
+        	
+        	functionParams.clear();
     	}
 
         return null;
@@ -146,6 +148,8 @@ public class SymbolTableConstructor extends Visitor
     		node.visitParams(this);
     		
     		sTable.putFunction(node.getName(), node.getClassName(), node.getType(), functionParams, node.getDimension());
+    		
+    		functionParams.clear();
     	}
     	
     	return null;
