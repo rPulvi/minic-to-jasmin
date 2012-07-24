@@ -75,7 +75,7 @@ public class SemanticChecker extends Visitor
     	if(funcDesc.size() > 0)
     	{
     		ArrayList<NodeInfo> paramsDecl = funcDesc.get(0).getParamList();//Declaration Params
-    		
+    		    		
     		if(paramsDecl.size() == paramsCall.length)
     		{    		    			
         		for(int i=0; i< paramsCall.length; i++)
