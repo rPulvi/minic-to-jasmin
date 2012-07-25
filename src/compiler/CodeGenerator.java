@@ -158,7 +158,7 @@ public class CodeGenerator extends Visitor
 		if ((right.getKind() != IdType.NULL) && (right.getKind() != IdType.NEW)) {    		
     		pushInStack(node, right);
     	}    	
-		else if (left.getType() == IdType.FLOAT && right.getType() == IdType.INT) {
+		/*else*/ if (left.getType() == IdType.FLOAT && right.getType() == IdType.INT) {
 			writeStmt("i2f");
 		}
 
@@ -365,8 +365,6 @@ public class CodeGenerator extends Visitor
         return null;
 	}
 	
-	
-	//0935950152
     
     public Object visit(ReturnNode node)
 	{    	
