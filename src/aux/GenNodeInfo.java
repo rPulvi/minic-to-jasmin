@@ -3,28 +3,45 @@ package aux;
 public class GenNodeInfo {
 	private String name;
 	private IdType kind;
-	private String value;
+	private Object value;
 	private IdType type;
+	private String jvmCode;
 	private int dim;
 	
-	public GenNodeInfo(String name, IdType kind, String value, IdType type, int dimension)
+	public GenNodeInfo(String name, IdType kind, Object value, IdType type, int dimension)
 	{
 		this.name = name;
 		this.kind = kind;
 		this.value = value;
 		this.type = type;
 		this.dim = dimension;
+		this.jvmCode = "";
 	}
+	
+	public GenNodeInfo(String name, IdType kind, String value, IdType type, int dimension, String jvmCode)
+	{
+		this.name = name;
+		this.kind = kind;
+		this.value = value;
+		this.type = type;
+		this.dim = dimension;
+		this.jvmCode = jvmCode;
+	}	
 	
 	public String getName()
 	{
 		return name;
 	}
 	
-	public String getValue()
+	public Object getValue()
 	{
 		return value;
 	}
+	
+//	public String getValue()
+//	{
+//		return (String) value;
+//	}
 	
 	public IdType getType()
 	{
@@ -50,6 +67,16 @@ public class GenNodeInfo {
 	
 	public void setKind(IdType kind) {
 		this.kind = kind;
+	}
+	
+	public void setJvmCode(String jvmCode)
+	{
+		this.jvmCode = jvmCode;
+	}
+	
+	public String getJvmCode()
+	{
+		return this.jvmCode;
 	}
 	
 	public String toString() {

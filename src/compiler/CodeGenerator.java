@@ -145,7 +145,14 @@ public class CodeGenerator extends Visitor
     	writeComment(node + " ----------------------------");
     	
     	GenNodeInfo left = (GenNodeInfo)node.visitVar(this);
+    	
+    	if(left.getKind() == IdType.ARRAYCALLNODE)
+    		visitArrayCallNode(left);
+
     	GenNodeInfo right = (GenNodeInfo)node.visitValue(this);
+    	
+    	if(right.getKind() == IdType.ARRAYCALLNODE)
+    		visitArrayCallNode(right);
     	    	
 		// If the right hand is a constant or a variable
 		if ((right.getKind() != IdType.NULL) && (right.getKind() != IdType.NEW)) {    		
@@ -238,8 +245,7 @@ public class CodeGenerator extends Visitor
     	
     	//No params
     	if(node.getParams() == null)
-            writeStmt("invokestatic " + className + "()" + StuffCreator.getJVMType(retType));
-    	
+            writeStmt("invokestatic " + className + "()" + StuffCreator.getJVMType(retType));    	
     	//Params
     	else
     	{    	
@@ -358,36 +364,40 @@ public class CodeGenerator extends Visitor
 
         return null;
 	}
+	
+	
+	//0935950152
     
     public Object visit(ReturnNode node)
-	{
-	    	GenNodeInfo retInfo = (GenNodeInfo)node.visitValue(this);
+	{    	
+    	GenNodeInfo retInfo = (GenNodeInfo)node.visitValue(this);
 
-	    	if(retInfo != null)
-	    		pushInStack(node, retInfo);
-
-	    	if(retInfo.getKind() == IdType.ARRAYNODE)
-	    		writeStmt("areturn");
-	    	else
-	    	{
-				switch (retInfo.getType()) {
-				case INT:
-				case BOOL:
-					writeStmt("ireturn");
-					break;
-				case FLOAT:
-					writeStmt("freturn");
-					break;
-				case STRING:
-					writeStmt("areturn");
-					break;
-				default:
-					writeStmt("return");
-					break;
-				}
+    	if(retInfo != null)    	    	  
+    		pushInStack(node, retInfo);
+    	
+    	
+    	if(retInfo.getKind() == IdType.ARRAYNODE)
+    		writeStmt("areturn");
+    	else
+    	{
+			switch (retInfo.getType()) {
+			case INT:
+			case BOOL:
+				writeStmt("ireturn");
+				break;
+			case FLOAT:
+				writeStmt("freturn");
+				break;
+			case STRING:
+				writeStmt("areturn");
+				break;
+			default:
+				writeStmt("return");
+				break;
 			}
+		}
 
-			return null;
+		return null;
     }
 
     public Object visit(SubNode node)
@@ -476,10 +486,10 @@ public class CodeGenerator extends Visitor
     	
     	//Left Hand
     	GenNodeInfo left = (GenNodeInfo) node.visitLeft(this);
-    	
+
     	//Right Hand
     	GenNodeInfo right = (GenNodeInfo) node.visitRight(this); 
-
+    	
     	// if one or both operands are float
     	if(left.getType() == IdType.FLOAT || right.getType() == IdType.FLOAT) {
 
@@ -657,11 +667,14 @@ public class CodeGenerator extends Visitor
 
 		String name = info.getName();
 		IdType type = info.getType();
-		String value = info.getValue();
+		String value = ""; 
 		IdType kind = info.getKind();
 		varDesc = sTable.getVarDesc(name, node.getBlockNumber());
 		int dim = info.getDim();
 
+		if(kind != IdType.ARRAYCALLNODE)
+			value = (String)info.getValue();
+		
 		if (dim == 0) {
 
 			if (kind == IdType.VARIABLE) {
@@ -722,9 +735,12 @@ public class CodeGenerator extends Visitor
 				}
 			}
 		} else if (dim >= 1) {
-			if (info.getKind() == IdType.ARRAYNODE)
+			if (kind == IdType.ARRAYNODE)
 				writeStmt("aload " + varDesc.getJvmVar());
-			else {
+			else if (kind == IdType.ARRAYCALLNODE)
+			{
+				visitArrayCallNode(info);
+
 				switch (type) {
 				case BOOL:
 				case INT:
@@ -740,7 +756,7 @@ public class CodeGenerator extends Visitor
 			}
 		}
 	}
-
+		
 	private void popFromStack(Node node, GenNodeInfo info) {
 		SymbolDesc varDesc = null;
 
@@ -1000,17 +1016,15 @@ public class CodeGenerator extends Visitor
 	}
 
 	public Object visit(ArrayCallNode node) {
-		SymbolDesc arrayDesc = sTable.getVarDesc(node.getName(),node.getBlockNumber());
-		writeStmt("aload " + arrayDesc.getJvmVar());
+		//SymbolDesc arrayDesc = sTable.getVarDesc(node.getName(),node.getBlockNumber());
+		//writeStmt("aload " + arrayDesc.getJvmVar());
 
 		GenNodeInfo infoVar = (GenNodeInfo) node.visitVar(this);
-		multiArrayDim = infoVar.getDim();
+//		multiArrayDim = infoVar.getDim();
 		
-		node.visitDim(this);
-		
+		//node.visitDim(this);
 
-
-		return new GenNodeInfo(infoVar.getName(), IdType.VARIABLE, "", infoVar.getType(), infoVar.getDim());
+		return new GenNodeInfo(infoVar.getName(), IdType.ARRAYCALLNODE, node, infoVar.getType(), infoVar.getDim());
 	}
 
 	public Object visit(SimpleVarNode node) 
@@ -1043,9 +1057,22 @@ public class CodeGenerator extends Visitor
 		
 		if (multiArrayDim > 1) 
 			writeStmt("aaload");
+
 		multiArrayDim--;
 		
 		return info;
 	}
+	
+	private void visitArrayCallNode(GenNodeInfo info)
+	{
+		ArrayCallNode n = (ArrayCallNode)info.getValue();
+		SymbolDesc arrayDesc = sTable.getVarDesc( n.getName(), n.getBlockNumber());
+		writeStmt("aload " + arrayDesc.getJvmVar());
+		
+		multiArrayDim = info.getDim();
+		
+		n.visitDim(this);
+	}
+
 	
 }

@@ -73,6 +73,12 @@ public enum IdType {
 			return "Array Node";
 		}		
 	},
+	ARRAYCALLNODE{
+		public String toString()
+		{
+			return "Array Call Node";
+		}		
+	},
 	NOTNODE{
 		public String toString()
 		{
