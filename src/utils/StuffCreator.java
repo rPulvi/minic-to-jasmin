@@ -46,5 +46,5 @@ public class StuffCreator {
 			default:
 				return "V";
 		}
-    }
+    }      
 }

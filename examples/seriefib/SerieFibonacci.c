@@ -9,7 +9,7 @@
 
 /* NOTA: nel main viene invocata la funzione Fib prima della definizione.
  * minic suppone che l'invocazione sia corretta, salva la locazione della
- * supposizione e prosegue. Nel momento in cui la funzione � definita si
+ * supposizione e prosegue. Nel momento in cui la funzione e' definita si
  * ripassano tutti i punti lasciati in sospeso.
  * Ovviamente se Fib non venisse mai definita sarebbe errore.
  */
@@ -17,6 +17,8 @@
 extern "MinicLib/println" void print_string(string);
 extern "MinicLib/print" void print(string);
 extern "MinicLib/int2string" string i2s(int);
+
+extern "MyMinicLib/Fib" int Fib(int);
 
 void main(){
 
@@ -28,20 +30,4 @@ void main(){
     print ("Risultato: ");
     print(i2s(Fib(i)));
     print(".\n\n");
-}
-
-int Fib (int i){
-
-    if (i == 0){
-
-        return 0;
-    }
-    else{
-        if (i == 1){
-            return 1;
-        }
-        else{
-            return (Fib(i-1) + Fib(i-2));
-        }
-    }
 }

@@ -161,7 +161,8 @@ public class CodeGenerator extends Visitor
 		if ((right.getKind() != IdType.NULL) && (right.getKind() != IdType.NEW)) {    		
     		pushInStack(node, right);
     	}    	
-		/*else*/ if (left.getType() == IdType.FLOAT && right.getType() == IdType.INT) {
+		
+		if (left.getType() == IdType.FLOAT && right.getType() == IdType.INT) {
 			writeStmt("i2f");
 		}
 
@@ -261,6 +262,7 @@ public class CodeGenerator extends Visitor
     		
     		for(int i=0;i<params.length;i++)
     		{
+    			s += StuffCreator.getOpenBrackets(((GenNodeInfo)params[i]).getDim());
     			s += StuffCreator.getJVMType(((GenNodeInfo)params[i]).getType());
     			pushInStack(node, (GenNodeInfo)params[i]);
     		}
@@ -997,7 +999,7 @@ public class CodeGenerator extends Visitor
     
 	public Object visit(ArrayNewNode node) {
 
-		String name = arrayNames.get(arrayCounter++);
+		//String name = arrayNames.get(arrayCounter++);
 		IdType type = node.getType();
 		int dim = node.getDimension();
 		node.visitDim(this);
@@ -1016,7 +1018,7 @@ public class CodeGenerator extends Visitor
 			writeStmt("multianewarray " + StuffCreator.getOpenBrackets(dim) + StuffCreator.getJVMType(type) + " "
 					+ dim);
 		}
-		return new GenNodeInfo(name, IdType.NEW, "", type, dim);
+		return new GenNodeInfo("", IdType.NEW, "", type, dim);
 
 	}
 

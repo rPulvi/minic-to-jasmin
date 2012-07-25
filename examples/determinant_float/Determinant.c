@@ -3,72 +3,9 @@ extern "MinicLib/print" void print(string);
 extern "MinicLib/float2string" string f2s(float);
 extern "MinicLib/int2string" string i2s(int);
 
-
-
-float sarrus(float[][] matrix, int size) {
-    int k, i, j, l, m;
-    float det, pos, neg;
-    det = 0.0;
-    i = 0;
-    while( i < (size )){
-    	pos = 1 + 0;
-    	j = 0;
-        while( (j < (size )) ){
-            k = (i+j) % size;
-            pos = pos * matrix[j][k];
-            j = j+1;
-        }
-
-        det = det + pos;
-        i = i+1;
-    }
-
-    l = 0;
-    while( l < (size)){
-        neg = 1;
-        m = 0;
-        while( m < (size )){
-            int j;
-            j = size - 1 - m;
-            k = (l + (size ) -j) % size;
-            neg = neg * matrix[j][k];
-            m = m+1;
-        }
-            
-        det = det - neg;
-        l = l+1;
-    }
-    return det;
-}
-
-float bidim(float[][] matrix){
-    float det;
-
-    det = matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
-
-    return det;
-}
-
-
-void print_matrix(float[][] matrix, int size){
-	print("Data la matrice (");
-	print(i2s(size));
-	print("*");
-	print(i2s(size));
-	print_string("):");
-	  int i,j;
-    i = 0;
-    while( i < (size)){
-    	 	j = 0;
-    	 while( j < (size )){
-    		 print("   ");
-            print(f2s(matrix[i][j]));
-            j = j+1;
-        }
-        print_string("");
-        i = i+1;
-    }
-}
+extern "MyMinicLib/sarrus" float sarrus(float[][],int);
+extern "MyMinicLib/bidim" float bidim(float[][]);
+extern "MyMinicLib/print_matrix" void print_matrix(float[][],int);
 
 void main(){
     float det;
@@ -84,8 +21,9 @@ void main(){
     matrix[1][0] = 3.3;
     matrix[0][1] = 1.1;
     matrix[1][1] = -1.1;
-    print_matrix(matrix, SIZE1);
+	print_matrix(matrix, SIZE1);
     det = bidim(matrix);
+
     print("Il suo determinante e':  ");
     print_string(f2s(det));
 
@@ -101,10 +39,10 @@ void main(){
     matrix[2][1] = 1.3;
     matrix[2][2] = -1.6;
 
-    print_matrix(matrix, SIZE2);
+   print_matrix(matrix, SIZE2);
 
     if (SIZE2 == 3){
-        det = sarrus(matrix, SIZE2);
+     	det = sarrus(matrix, SIZE2);
         print("Il suo determinante e':  ");
             print_string(f2s(det));
     }
