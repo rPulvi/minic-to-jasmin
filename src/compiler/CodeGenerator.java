@@ -20,6 +20,8 @@ public class CodeGenerator extends Visitor
     private StringBuffer out = new StringBuffer();
     private SymbolTable sTable; //the top level symbol table
     
+    private boolean returned;
+    
     private String jasminClassName;
     private int labelCounter;
     private int ifLabelCounter;
@@ -46,6 +48,7 @@ public class CodeGenerator extends Visitor
         auxRegister = 0;
         
         writeJasminHeader();
+        returned = false;
     }
 
     private void writeJasminHeader() {
@@ -213,16 +216,19 @@ public class CodeGenerator extends Visitor
         numLocals = sTable.varCount();
         
         auxRegister = numLocals;
-        
+
         writeStmt(".limit locals " + numLocals*3);
         writeStmt(".limit stack " + numLocals*3);
-        
+
         //Reset the auxRegister
     	writeStmt("ldc 0");
     	writeStmt("istore " + auxRegister);
-        
+
         node.visitBody(this);
-        
+
+        if(!returned)
+        	writeStmt("return");
+
         writeStmt("\n.end method");
     }
 
@@ -364,10 +370,11 @@ public class CodeGenerator extends Visitor
 
         return null;
 	}
-	
     
     public Object visit(ReturnNode node)
-	{    	
+	{
+    	returned = true;
+    	
     	GenNodeInfo retInfo = (GenNodeInfo)node.visitValue(this);
 
     	if(retInfo != null)    	    	  
@@ -1070,7 +1077,5 @@ public class CodeGenerator extends Visitor
 		multiArrayDim = info.getDim();
 		
 		n.visitDim(this);
-	}
-
-	
+	}	
 }
