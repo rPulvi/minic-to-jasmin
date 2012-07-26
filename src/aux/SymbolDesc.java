@@ -6,9 +6,9 @@ import utils.StuffCreator;
 
 /**
  * <p>Title: MiniC to Jasmin</p>
- * <p>Description: a MiniC to Jasmin Compiler developed for the "Progetto di Compilatori e interpreti" course at the Universit� degli studi di Catania</p>
+ * <p>Description: a MiniC to Jasmin Compiler developed for the "Progetto di Compilatori e interpreti" course at the Universita' degli studi di Catania</p>
  * <p>Website: http://code.google.com/p/minic-to-jasmin/ </p>
- * @author Alessandro Nicolosi, Riccardo Pulvirenti, Giuseppe Ravid�
+ * @author Alessandro Nicolosi, Riccardo Pulvirenti, Giuseppe Ravida'
  * @version 1.0
  */
 
@@ -63,7 +63,7 @@ public class SymbolDesc{
     }        
 
     /**
-     * Set the type of a specific entry.
+     * Sets the type of a specific entry.
      * @param t the type.
      */
     public void setType(IdType t){
@@ -71,7 +71,7 @@ public class SymbolDesc{
     }
 
     /**
-     * Get the type of a specific entry.
+     * Gets the type of a specific entry.
      * @return the type.
      */
     public IdType getType(){
@@ -79,25 +79,33 @@ public class SymbolDesc{
     }
 
     /**
-     * Return the block number for a specific entry
+     * Returns the block number for a specific entry
      * @return the block Number.
      */
     public int getBlock(){
     	return nBlock;
     }
     
+    /**
+     * Sets the className for a function. If extern, the className is the name of the class including the name of the function. Only the name of the funcion otherwise.
+     * @param className
+     */
     public void setClassName(String className)
 	{
 		this.className = className;
 	}
-	
+
+    /**
+     * Returns the className for a specific function.
+     * @return
+     */
     public String getClassName()
 	{
 		return this.className;
 	}
     
     /**
-     * Return params list
+     * Returns params list
      * @return the params as type list.
      */
     public ArrayList<NodeInfo> getParamList(){
@@ -105,7 +113,7 @@ public class SymbolDesc{
     }
 
     /**
-     * Return if an entry is relatedo to a Function or a Variable.
+     * Returns if an entry is relatedo to a Function or a Variable.
      * @return the kind of a specific entry.
      */
     public IdType getKind(){
@@ -120,7 +128,7 @@ public class SymbolDesc{
     }
     
     /**
-     * Set an integer value that map a specific entry for the jvm code generation.
+     * Sets an integer value that map a specific entry for the jvm code generation.
      * @param var the jvm representation of the variable.
      */
     public void setJvmVar(int var)
@@ -129,7 +137,7 @@ public class SymbolDesc{
     }
     
     /**
-     * Get an integer value that map a specific entry for the jvm code generation.
+     * Gets an integer value that map a specific entry for the jvm code generation.
      * @return the jvm representation of the variable.
      */
     public int getJvmVar()
@@ -138,7 +146,7 @@ public class SymbolDesc{
     }
     
     /**
-     * Return the dimension for a specific entry. Value greater than zero means array.
+     * Returns the dimension for a specific entry. Value greater than zero means array.
      * @return the dimension.
      */
     public int getDim()
@@ -146,14 +154,22 @@ public class SymbolDesc{
     	return this.dim;
     }
     
+    /**
+     * Returns a a human readable String that list the parameters for a specific descriptor.
+     * @return the string.
+     */
     public String toString()
     {
     	if(kind == IdType.VARIABLE)
     		return "Type: " + type + ", Kind: " + kind + ", Block: " + ", Dimension: " + dim + ", JVM Name: " + jvmVar;
     	else
-    		return "Type: " + type + ", Kind: " + kind + ", Block: " + ", Params: " + getParams() + ", Dimension: " + dim + ", JVM Name: " + jvmVar;
+    		return "Type: " + type + ", Kind: " + kind + ", Block: " + ", Params: " + getParams() + ", Dimension: " + dim + ", JVM Name: " + jvmVar + ", Class Name: " + className;
     }
     
+    /**
+     * Returns the type of the pararameters in a function.
+     * @return a string like "(type1 par1, type2[]..[] par2, ...., typen parn)"
+     */
     private String getParams()
     {    	
     	String sRet = "(";
