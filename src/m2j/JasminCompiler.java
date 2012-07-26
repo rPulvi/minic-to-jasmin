@@ -43,7 +43,7 @@ public class JasminCompiler {
 			SymbolTableConstructor stc = new SymbolTableConstructor(className, parser.registerCounter);
 			root.accept(stc);
 			
-			if (stc.getErrorCount() == 0)
+			if (stc.getErrorCount() == 0 && parser.getErrors() == 0)
 			{
 				SemanticChecker tsc = new SemanticChecker(stc.getSymbolTable());
 				root.accept(tsc);

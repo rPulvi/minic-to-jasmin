@@ -11,8 +11,8 @@ import ast.*;
 /*--------------------------------PARSER CODE ----------------------------------*/
 parser code {:
     public int registerCounter = 0;
-    	
-    	
+	public int nErrors = 0;
+	
 	// Redefinition of error functions
     public void report_error(String message, Object info) {
         System.err.print("ERROR: Syntax error");
@@ -50,7 +50,11 @@ parser code {:
             return ((Symbol)stack.elementAt(tos)).right+1;
         }else return -1;
     }
-    
+        
+    public int getErrors()
+    {
+    	return nErrors;
+    }
     
 :};
 
@@ -62,7 +66,6 @@ action code {:
     int tempBlockCounter = 0; //keeps track of the max block number. Never decreases.
     int tempBlockRem = 0; //+1 on "{" and -1 on "}". Always.
     
-    int nErrors = 0;
     int braCounter=0;
     int funDim;
     	
@@ -90,9 +93,9 @@ action code {:
  	// Error management
     private void PrintError(String message){
         System.err.println("ERROR: line: "+parser.getLine()+" col: "+parser.getColumn()+": "+message);
-        nErrors++;
+        parser.nErrors++;
         //parser.done_parsing();
-    }    
+    }
 :}
 
 /*--------------------------------TERMINAL / NON TERMINAL ----------------------------------*/
