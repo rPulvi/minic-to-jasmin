@@ -45,8 +45,6 @@ EOL = \r|\n|\r\n
 
 	private Symbol sym(int type, Object value)
 	{
-		//System.out.println("Symbol found: "+ type + ", symbol name: " + symClass.getTT(type) +
-		//					", text: \"" + yytext() + "\"");
 		return new Symbol(type, yyline, yycolumn, value); 
 	}
 
@@ -54,7 +52,6 @@ EOL = \r|\n|\r\n
 	{
 		throw new IOException("Error at (" + ++yyline + "," + ++yycolumn +"). " + errMsg + " " + yytext() );
 	}
-
 %}
 
 %% //----------------------------------------------------------------------------------------
@@ -79,8 +76,10 @@ EOL = \r|\n|\r\n
 						return sym(CONST_STRING, retString); 	
 					}
   
+<quote>.+"\\n"	    { retString = yytext(); }
 
 <quote>"\\".        { ; } // gestire sequenza di escape all'interno di una stringa quotata
+
 <quote><<EOF>>      { error("Fine inattesa della stringa"); }
 
 <quote>[^\\\n\"]+   { retString = yytext(); }
@@ -136,12 +135,9 @@ EOL = \r|\n|\r\n
 {Float}             { return sym(CONST_FLOAT, new Float(yytext())); }
 {Identifier}        { return sym(ID); }
 
-/* whitespace */		//MODIFICATO ---------
-//{WhiteSpace} { }		//MODIFICATO ---------
 
-
-//"\n"                { ; }
 EOL					{ ; }
+"\n"      			{ retString = yytext();}
 "\t"				{ if (yycolumn==0) yycolumn+=4; 
 					  else yycolumn+=3;}
 " "					{ ; }
