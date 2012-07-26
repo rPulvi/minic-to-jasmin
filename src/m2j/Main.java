@@ -1,20 +1,7 @@
 package m2j;
 
 import java.awt.Toolkit;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.PrintWriter;
-import java_cup.runtime.Symbol;
-
 import javax.swing.JFrame;
-
-import ast.Node;
-
-import compiler.CodeGenerator;
-import compiler.SemanticChecker;
-import compiler.SymbolTableConstructor;
 
 public class Main {
 		

@@ -3,6 +3,7 @@ package m2j;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.PopupMenu;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -21,8 +22,10 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JLayeredPane;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
@@ -37,24 +40,30 @@ public class GUI extends JFrame implements ActionListener{
 	 */
 	private static final long serialVersionUID = 1L;
 
-	JTextArea myArea;
-	JButton compileButton;
+	private JTextArea resultArea;
+	
+	private JButton compileButton;
 
 	private JSplitPane splitPane;
 	private JFileChooser fileDialog;
 
 	private JTextArea minicFile;
 	private JTextArea jasminFile;		
-
+	private JScrollPane minicScrollPane;
+	private JScrollPane jasminScrollPane;
+	
+	private JPopupMenu popupMenu;
+	private JMenuItem compileItem;
+	
 	private JLabel minicLabel;
 	private JLabel jvmLabel;
 	
-	private String fileName;
+	private String fileName;	
 	
     public GUI(){
     	initComponent();
     	
-    	JScrollPane scrollArea = new JScrollPane(myArea);
+    	JScrollPane scrollArea = new JScrollPane(resultArea);
         //JPanel content = new JPanel();
     	JLayeredPane content = new JLayeredPane();	
     	content.add(minicLabel, new Integer(500));
@@ -75,11 +84,30 @@ public class GUI extends JFrame implements ActionListener{
 
     private void initComponent()
     {
-    	myArea  = new JTextArea(10,70);
-    	myArea.setText("Compilation Result:\n");    	    	
+    	//Result Area
+    	resultArea  = new JTextArea(10,70);
+    	resultArea.setFont(new Font("Courier", Font.PLAIN, 16));
+    	resultArea.setForeground(Color.BLUE);
+    	resultArea.setText("Compilation Result:\n");    	    	
+    	//
     	
+    	//Setting up popup menu
+    	popupMenu = new JPopupMenu();
+    	compileItem = new JMenuItem("Compile");
+    	popupMenu.add(compileItem);
+    	
+    	compileItem.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0) {}
+		});
+    	
+    	
+    	//
     	fileDialog = new JFileChooser();
+    	//
     	
+    	//MiniC Panel
     	minicFile = new JTextArea();
     	minicFile.setColumns(53);
     	minicFile.setLineWrap(true);
@@ -87,7 +115,7 @@ public class GUI extends JFrame implements ActionListener{
     	minicFile.setWrapStyleWord(true);
     	minicFile.setEditable(false);
     	minicFile.setBackground(Color.GRAY);
-    	minicFile.setFont(new Font("Courier", Font.PLAIN, 12));
+    	minicFile.setFont(new Font("Courier", Font.PLAIN, 14));
 
     	minicFile.addMouseListener(new MouseAdapter() {
     		public void mouseClicked(MouseEvent e) {
@@ -120,12 +148,23 @@ public class GUI extends JFrame implements ActionListener{
 						e1.printStackTrace();
 					}                        
                 }
+                if(e.getButton() == MouseEvent.BUTTON3)
+                {
+                	//JOptionPane.showMessageDialog(null, "ciao");
+                	popupMenu.show(e.getComponent(),e.getX(),e.getY());
+                }
             }    		
 		});
-    	    	
+    	  
+    	minicScrollPane = new JScrollPane(minicFile);    	
+    	//
+    	
+    	//Compile Button
     	compileButton = new JButton("Click me now!");
     	compileButton.addActionListener(this);    	
+    	//
     	
+    	//Jasmin Panel
     	jasminFile = new JTextArea();
     	jasminFile.setColumns(53);
     	jasminFile.setLineWrap(true);
@@ -133,35 +172,42 @@ public class GUI extends JFrame implements ActionListener{
     	jasminFile.setWrapStyleWord(true);
     	jasminFile.setEditable(false);
     	jasminFile.setBackground(Color.GRAY); 
-    	jasminFile.setFont(new Font("Courier", Font.PLAIN, 12));
+    	jasminFile.setFont(new Font("Courier", Font.PLAIN, 14));
     	jasminFile.addMouseListener(new MouseAdapter() {
     		public void mouseClicked(MouseEvent e) {
                 if (e.getButton() == MouseEvent.BUTTON1) {
                 	;//jvmLabel.setVisible(false);
                 }
             }    		
-		});    	
-    	    	
-    	splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,minicFile,jasminFile);
+		});
+    	
+    	jasminScrollPane = new JScrollPane(jasminFile);    	
+    	//    	    	
+    	
+    	//Split Panel
+    	splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,minicScrollPane,jasminScrollPane);
     	splitPane.setResizeWeight(0.5);
     	splitPane.setOneTouchExpandable(true);
     	splitPane.setContinuousLayout(true);
-          
+    	//
+    	    	
+    	//Labels
     	minicLabel = new JLabel(".c");
     	minicLabel.setFont(new Font("Verdana", Font.BOLD, 52));
     	minicLabel.setForeground(Color.WHITE);
     	minicLabel.setBounds(300, 300, 80, 80);
-    	
+    	//-------
     	jvmLabel = new JLabel(".j");
     	jvmLabel.setFont(new Font("Verdana", Font.BOLD, 52));
     	jvmLabel.setForeground(Color.WHITE);
-    	jvmLabel.setBounds(950, 300, 80, 80);    	    	 
+    	jvmLabel.setBounds(950, 300, 80, 80);
+    	//
     }
     
     private void updateTextArea(final String text) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-            myArea.append(text);
+            resultArea.append(text);
             }
         });
     }
@@ -201,7 +247,6 @@ public class GUI extends JFrame implements ActionListener{
 		    stream.close();
 		  }
 		}
-
 	
 	@Override
 	public void actionPerformed(ActionEvent arg0) {

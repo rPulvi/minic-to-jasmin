@@ -58,10 +58,14 @@ public class JasminCompiler {
 		            
 		            fstream.write(cg.getOutput());
 		            fstream.close();
+		            
+		            System.out.println("Compilation Succedeed. " + jasminFile + " file created correctly.");
 				}
 				else
 					System.out.println("Compilation failed. Found " + tsc.getErrorCount() + " error(s).");
 			}
+			else
+				System.out.println("Compilation failed. Found " + stc.getErrorCount() + " error(s).");
 		}
 		catch(Exception e) {
 			e.printStackTrace();
