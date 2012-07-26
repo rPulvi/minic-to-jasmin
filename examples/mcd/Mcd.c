@@ -20,11 +20,11 @@ void main()
     print(" e ");
     print(i2s(j));
     print(".\n");
-
+    
     print ("\nIl risultato e': ");
     print(i2s(mcd(i,j)));
     
     print ("\nIl risultato usando il metodo di Euclide e': ");
     print(i2s(mcd(i,j)));
-    print("\n\n");    
+    print("\n\n");
 }
