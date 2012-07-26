@@ -7,12 +7,12 @@ extern "MinicLib/int2string" string i2s(int);
 extern "MyMinicLib/swap" void swap(int[],int,int);
 extern "MyMinicLib/heapify" void heapify(int[],int,int);
 extern "MyMinicLib/buildheap" void buildheap(int[],int);
-extern "MyMinicLib/heapsort" void heapsort(int[],int);
+extern "MyMinicLib/heapsort" void heapsort(int,int[]);
 extern "MyMinicLib/print_vector" void print_vector(int[],int);
 
 void main(){
 
-	int size;
+    int size;
     size = 10;
     int[] vect;
     vect = new int[size];
@@ -31,7 +31,7 @@ void main(){
     print_string("\nIl vettore iniziale e':\n");
     print_vector(vect, size);
     
-    heapsort(vect, size - 1);
+    heapsort(size - 1, vect);
 
     print_string("\nIl vettore ordinato tramite Heapsort e':\n");
     print_vector(vect, size);
