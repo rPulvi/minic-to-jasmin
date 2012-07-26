@@ -5,9 +5,9 @@ import aux.*;
 
 /**
  * <p>Title: MiniC to Jasmin</p>
- * <p>Description: a MiniC to Jasmin Compiler developed for the "Progetto di Compilatori e interpreti" course at the Universit� degli studi di Catania</p>
+ * <p>Description: a MiniC to Jasmin Compiler developed for the "Progetto di Compilatori e interpreti" course at the Universita' degli studi di Catania</p>
  * <p>Website: http://code.google.com/p/minic-to-jasmin/ </p>
- * @author Alessandro Nicolosi, Riccardo Pulvirenti, Giuseppe Ravid�
+ * @author Alessandro Nicolosi, Riccardo Pulvirenti, Giuseppe Ravida'
  * @version 1.0
  */
 
