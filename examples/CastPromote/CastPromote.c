@@ -2,7 +2,7 @@ extern "MinicLib/println" void print_string(string);
 extern "MinicLib/int2string" string i2s(int);
 extern "MinicLib/float2string" string f2s(float);
 
-void main( void ){
+void main(){
 	float[][] array;
 	float result;
 	array = new float[2][2];
@@ -32,7 +32,6 @@ void main( void ){
 
 	//esempio di promozione con prima somma non floating point
 	float_promote = 15 + intero + espressione_complessa;
-
 
 	print_string(i2s(intero));
 	print_string(f2s(espressione_complessa));

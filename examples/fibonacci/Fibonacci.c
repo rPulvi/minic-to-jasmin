@@ -16,7 +16,6 @@ void main (){
     print ("\n");
     print("La serie di Fibonacci (limite = ");
     print(i2s(LIMIT));
-    
     print(") e':\n\n");
     print("0\n1\n");
     fiboRec(0,1,LIMIT);

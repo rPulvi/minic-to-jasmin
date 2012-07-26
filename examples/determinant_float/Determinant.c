@@ -21,9 +21,8 @@ void main(){
     matrix[1][0] = 3.3;
     matrix[0][1] = 1.1;
     matrix[1][1] = -1.1;
-	print_matrix(matrix, SIZE1);
+    print_matrix(matrix, SIZE1);
     det = bidim(matrix);
-
     print("Il suo determinante e':  ");
     print_string(f2s(det));
 
@@ -39,10 +38,10 @@ void main(){
     matrix[2][1] = 1.3;
     matrix[2][2] = -1.6;
 
-   print_matrix(matrix, SIZE2);
+    print_matrix(matrix, SIZE2);
 
     if (SIZE2 == 3){
-     	det = sarrus(matrix, SIZE2);
+        det = sarrus(matrix, SIZE2);
         print("Il suo determinante e':  ");
             print_string(f2s(det));
     }
