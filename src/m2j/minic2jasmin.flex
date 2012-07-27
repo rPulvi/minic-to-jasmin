@@ -78,7 +78,7 @@ EOL = \r|\n|\r\n
   
 <quote>.+"\\n"	    { retString = yytext(); }
 
-<quote>"\\".        { ; } // gestire sequenza di escape all'interno di una stringa quotata
+<quote>"\\".        { ; }
 
 <quote><<EOF>>      { error("Fine inattesa della stringa"); }
 
