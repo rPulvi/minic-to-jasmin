@@ -162,6 +162,7 @@ ext ::= EXTERN CONST_STRING:c fun_ret:x ID:y BRA_O decl_param:params BRA_C SEMI	
 																								RESULT = new FunctionExtNode(y, x, c, funDim, params, yleft, yright);
 																								braCounter = 0; 
 																							:}
+		| EXTERN CONST_STRING ID BRA_O decl_param BRA_C SEMI								{: PrintError("Error in extern function declaration. Missing return type"); :}
 	;
 
 decl ::= type:t var:x      			{: 										
@@ -199,7 +200,9 @@ function ::= fun_ret:x ID:y BRA_O param_list:params BRA_C block:b     						{:
 																							:}  
 		
 		| fun_ret ID param_list /* error */ 												{: PrintError("Error in function definition "); :}				
+		| ID BRA_O param_list BRA_C block													{: PrintError("Error in function definition. Missing return type"); :}
 		;
+		
 
 fun_ret ::= ret_type:f 		{:
 								RESULT = f;

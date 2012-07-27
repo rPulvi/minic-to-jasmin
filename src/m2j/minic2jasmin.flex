@@ -61,7 +61,7 @@ EOL = \r|\n|\r\n
 <comment>"/*"       { yybegin(comment); }
 <comment>"*/"       { yybegin(YYINITIAL); }
 <comment>"\n"       { ; }
-<comment><<EOF>>    { error("Manca il token di fine commento '*/'"); }
+<comment><<EOF>>    { error("Manca il token di fine commento '*/'"); } 
 <comment>.          { ; }
 
 "*/"             	{ error("Fine inattesa del commento"); }

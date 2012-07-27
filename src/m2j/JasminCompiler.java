@@ -43,12 +43,16 @@ public class JasminCompiler {
 			SymbolTableConstructor stc = new SymbolTableConstructor(className, parser.registerCounter);
 			root.accept(stc);
 			
-			if (stc.getErrorCount() == 0 && parser.getErrors() == 0)
+			int totErrors = stc.getErrorCount() + parser.getErrors();
+			
+			if (totErrors == 0)
 			{
 				SemanticChecker tsc = new SemanticChecker(stc.getSymbolTable());
 				root.accept(tsc);
 				
-				if (tsc.getErrorCount() == 0)
+				totErrors += tsc.getErrorCount();
+				
+				if (totErrors == 0)
 				{			
 		            // Create output file: 
 		            fstream = new FileWriter(jasminFile);
@@ -62,10 +66,10 @@ public class JasminCompiler {
 		            System.out.println("Compilation Succedeed. " + jasminFile + " file created correctly.");
 				}
 				else
-					System.out.println("Compilation failed. Found " + tsc.getErrorCount() + " error(s).");
+					System.out.println("Compilation failed. Found " + totErrors + " error(s).");
 			}
 			else
-				System.out.println("Compilation failed. Found " + stc.getErrorCount() + " error(s).");
+				System.out.println("Compilation failed. Found " + totErrors + " error(s).");
 		}
 		catch(Exception e) {
 			e.printStackTrace();
