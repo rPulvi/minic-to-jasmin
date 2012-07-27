@@ -19,6 +19,7 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.util.EventObject;
+import java.util.Map;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -241,7 +242,22 @@ public class GUI extends JFrame{
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
 					compileMiniC();
-					//Run();
+					
+				ProcessBuilder pb = new ProcessBuilder("sh run.sh", "examples/fibonacci/Fibonacci.c");
+				 Map<String, String> env = pb.environment();
+				 env.put("VAR1", "myValue");
+				 env.remove("OTHERVAR");
+				 env.put("VAR2", env.get("VAR1") + "suffix");
+				 pb.directory(new File("/Users/pulvi/Documents/workspace/minic-to-jasmin/"));
+				 try {
+					Process p = pb.start();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+					
+					
+					
 				}
 			});    		    		
     		popupMenu.add(menuItem);
@@ -321,6 +337,8 @@ public class GUI extends JFrame{
 			minicFile.setEditable(false);
 			minicFile.setBackground(Color.WHITE);
 
+			jasminFile.setText("");
+			
 			InitResultArea();
 		}
 		
