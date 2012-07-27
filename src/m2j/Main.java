@@ -2,6 +2,7 @@ package m2j;
 
 import java.awt.Toolkit;
 import javax.swing.JFrame;
+import gui.*;
 
 public class Main {
 		
