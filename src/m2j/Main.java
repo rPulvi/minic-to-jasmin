@@ -1,6 +1,8 @@
 package m2j;
 
 import java.awt.Toolkit;
+import java.io.IOException;
+
 import javax.swing.JFrame;
 import gui.*;
 
@@ -12,7 +14,7 @@ public class Main {
 		{
 			Toolkit tk = Toolkit.getDefaultToolkit();
 			int xSize = ((int) tk.getScreenSize().getWidth());  
-			int ySize = ((int) tk.getScreenSize().getHeight()); 
+			int ySize = ((int) tk.getScreenSize().getHeight());
 			JFrame win = new GUI();
 			win.setSize(xSize, ySize);
 			win.setVisible(true);
