@@ -236,25 +236,12 @@ public class GUI extends JFrame{
 			});    		
     		popupMenu.add(menuItem);    	
     		
-    		menuItem = new JMenuItem("Run");
+    		menuItem = new JMenuItem("Run test");
 	    	menuItem.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
 					compileMiniC();
-					
-					String[] commands = new String[2];
-					commands[0]="../gui.sh";
-					commands[1]="examples/CastPromote/CastPromote.c";
-					
-					ProcessBuilder pb = new ProcessBuilder(commands);
-					Process process = null;
-					try {
-						process = pb.start();
-						redirectOutput(process);
-					} catch (IOException e1) {
-						e1.printStackTrace();
-					}
-									
+					RunTest();
 				}
 			});    		    		
     		popupMenu.add(menuItem);
@@ -301,12 +288,12 @@ public class GUI extends JFrame{
 			});    		
     		popupMenu.add(menuItem);    	
     		
-    		menuItem = new JMenuItem("Run");
+    		menuItem = new JMenuItem("Run test");
 	    	menuItem.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
 					compileMiniC();
-					//Run();
+					RunTest();
 				}
 			});
     		popupMenu.add(menuItem);
@@ -361,9 +348,8 @@ public class GUI extends JFrame{
     	File f = null;
 
     	try {
-			f = new File(new File(".").getCanonicalPath());
-
-        	fileDialog.setCurrentDirectory(f);
+    		f = new File("../examples/");
+        	fileDialog.setCurrentDirectory(f);			
         	fileDialog.addChoosableFileFilter(new MyFilter());	                	
 
         	int retVal = fileDialog.showOpenDialog(null);
@@ -441,7 +427,8 @@ public class GUI extends JFrame{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		System.out.println("Program terminated!");
+		
+		System.out.println("Program terminated.");
 	}
 
 	//From: http://stackoverflow.com/questions/326390/how-to-create-a-java-string-from-the-contents-of-a-file
@@ -482,6 +469,22 @@ public class GUI extends JFrame{
 		
 		return nRet;
 	}	
+
+	private void RunTest()
+	{
+		String[] commands = new String[2];
+		commands[0] = "../gui.sh";
+		commands[1] = fileName;		
+		
+		ProcessBuilder pb = new ProcessBuilder(commands);
+		Process process = null;
+		try {
+			process = pb.start();
+			redirectOutput(process);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}	
+	}
 }
 
 class MyFilter extends javax.swing.filechooser.FileFilter {
