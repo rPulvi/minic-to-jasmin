@@ -2,11 +2,13 @@ package gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.TextListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -22,18 +24,25 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.util.EventObject;
 
+import javax.swing.BoxLayout;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JLayeredPane;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.border.BevelBorder;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
+import javax.swing.text.BadLocationException;
 
 import m2j.JasminCompiler;
 import gui.GuiState;
@@ -51,23 +60,36 @@ public class GUI extends JFrame{
 	private JFileChooser fileDialog;
 
 	private JTextArea minicFile;
-	private JTextArea jasminFile;		
+	private JTextArea jasminFile;
+	private TextLineNumber miniCLineNumber;
+	private TextLineNumber jasminLineNumber;
 	private JScrollPane minicScrollPane;
-	private JScrollPane jasminScrollPane;
+	private JScrollPane jasminScrollPane;	
+	private JScrollPane scrollArea;
+	private JPanel statusPanel;
+	private JPanel southPanel;
 	
 	private JPopupMenu popupMenu;
 	private JMenuItem menuItem;
 	
 	private JLabel minicLabel;
 	private JLabel jvmLabel;
+	private JLabel clmnCount;
+	private JLabel lblFileName;	
 	
-	private String fileName;	
+	private String filePath;
+	private String fileName;
 	private GuiState guiState;
 	
 	private GuiEventSource ev;
 	
+	private int tabCnt = 0; //patch
+	
     public GUI(){
-    	    	
+    	    
+    	fileName = "";
+    	filePath = "";
+    	
     	initComponent();
     	
     	ev = new GuiEventSource();
@@ -81,18 +103,22 @@ public class GUI extends JFrame{
 		});
     	
     	ev.stateChanged(GuiState.INIT);
-    	
-    	JScrollPane scrollArea = new JScrollPane(resultArea);
+    	    	 
         //JPanel content = new JPanel();
     	JLayeredPane content = new JLayeredPane();	
+
     	content.add(minicLabel, new Integer(500));
     	content.add(jvmLabel);
-    	content.setLayout(new BorderLayout());
-        
-    	content.add(splitPane, BorderLayout.CENTER);      
-    	content.add(scrollArea, BorderLayout.PAGE_END);
     	
-        this.setContentPane(content);
+    	content.setLayout(new BorderLayout());        
+    	content.add(splitPane, BorderLayout.CENTER);
+    	    	
+    	southPanel.add(scrollArea, BorderLayout.NORTH);
+    	southPanel.add(statusPanel, BorderLayout.SOUTH);
+    	
+    	content.add(southPanel, BorderLayout.PAGE_END);
+        
+    	this.setContentPane(content);
         this.setTitle("MiniC to Jasmin Compiler");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.pack();
@@ -106,17 +132,23 @@ public class GUI extends JFrame{
     	resultArea  = new JTextArea(10,70);
     	resultArea.setFont(new Font("Courier", Font.PLAIN, 16));
     	resultArea.setForeground(Color.BLUE);
-    	InitResultArea();    	    	
+    	InitResultArea(); 
+    	//
+    	southPanel = new JPanel();
+    	southPanel.setLayout(new BorderLayout());
+    	//
+    	scrollArea = new JScrollPane(resultArea);
     	//        	
     	fileDialog = new JFileChooser();
-    	//
+    	//    	    	
     	
     	//MiniC Panel
     	minicFile = new JTextArea();
-    	minicFile.setColumns(53);
+    	minicFile.setColumns(53);    	
     	minicFile.setLineWrap(true);
     	minicFile.setRows(15);
-    	minicFile.setWrapStyleWord(true);    	
+    	minicFile.setWrapStyleWord(true); 
+    	minicFile.setTabSize(4);    	
     	minicFile.setBackground(Color.GRAY);
     	minicFile.setFont(new Font("Courier", Font.PLAIN, 14));
 
@@ -135,8 +167,38 @@ public class GUI extends JFrame{
                 }
             }     		
 		});
-    	  
+
+    	minicFile.addCaretListener(new CaretListener() {
+			
+			@Override
+			public void caretUpdate(CaretEvent e) {
+				JTextArea editArea = (JTextArea)e.getSource();				 
+				int c = 0;
+				
+				try {
+					c = editArea.getCaretPosition() - editArea.getLineStartOffset(editArea.getLineOfOffset(editArea.getCaretPosition()));
+					
+				} catch (BadLocationException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				
+				try {
+					if(editArea.getText(editArea.getCaretPosition()-1, 1).equals("\t"))
+						tabCnt = 4;
+					if(c==0)
+						tabCnt = 0;
+				} catch (BadLocationException e1) {
+						
+				}
+				 
+				clmnCount.setText("Column: " + (c + tabCnt));	
+			}
+		});
+    	
+    	miniCLineNumber = new TextLineNumber(minicFile);
     	minicScrollPane = new JScrollPane(minicFile);
+    	minicScrollPane.setRowHeaderView(miniCLineNumber);
 
     	//
     	    	
@@ -156,7 +218,9 @@ public class GUI extends JFrame{
             }    		
 		});
     	
-    	jasminScrollPane = new JScrollPane(jasminFile);    	
+    	jasminLineNumber = new TextLineNumber(jasminFile);    	
+    	jasminScrollPane = new JScrollPane(jasminFile);
+    	jasminScrollPane.setRowHeaderView(jasminLineNumber);
     	//    	    	
     	
     	//Split Panel
@@ -176,7 +240,18 @@ public class GUI extends JFrame{
     	jvmLabel.setFont(new Font("Verdana", Font.BOLD, 52));
     	jvmLabel.setForeground(Color.WHITE);
     	jvmLabel.setBounds(950, 300, 80, 80);
-    	//
+    	//-------
+    	clmnCount = new JLabel("Column: " + minicFile.getCaretPosition());
+    	clmnCount.setForeground(Color.BLACK);
+    	//    	    	    	    	
+    	statusPanel = new JPanel();
+    	statusPanel.setBorder(new BevelBorder(BevelBorder.LOWERED));    	
+    	statusPanel.setPreferredSize(new Dimension(southPanel.getWidth(), 20));
+    	statusPanel.setLayout(new BorderLayout());
+    	lblFileName = new JLabel("File name: " + fileName);
+    	clmnCount.setHorizontalAlignment(SwingConstants.RIGHT);
+    	statusPanel.add(clmnCount, BorderLayout.LINE_END);
+    	statusPanel.add(lblFileName, BorderLayout.LINE_START);
     }
     
     private void updateTextArea(final String text) {
@@ -204,7 +279,7 @@ public class GUI extends JFrame{
 	    	popupMenu.add(menuItem);
     	}
     	
-    	if(guiState == GuiState.FILE_OPEN || guiState == GuiState.FILE_SAVED || guiState == GuiState.COMPILED)
+    	if(guiState == GuiState.FILE_OPEN || guiState == GuiState.FILE_SAVED || guiState == GuiState.COMPILED || guiState == GuiState.RUN)
     	{
     		menuItem = new JMenuItem("Open...");
 	    	menuItem.addActionListener(new ActionListener() {
@@ -246,6 +321,7 @@ public class GUI extends JFrame{
 			});    		    		
     		popupMenu.add(menuItem);
     	}
+    	
     	if(guiState == GuiState.EDIT)
     	{
     		menuItem = new JMenuItem("Open...");
@@ -283,6 +359,19 @@ public class GUI extends JFrame{
 	    	menuItem.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
+					int retVal = JOptionPane.showOptionDialog(null, "Do you want to save " + fileName + " before running?", "MiniC to Jasmin", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, null, null);
+					
+					if (retVal == JOptionPane.YES_OPTION)
+						SaveFile();
+					else{
+						try {
+							minicFile.setText(readFile(filePath));
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+					
 					compileMiniC();
 				}
 			});    		
@@ -292,6 +381,19 @@ public class GUI extends JFrame{
 	    	menuItem.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
+					int retVal = JOptionPane.showOptionDialog(null, "Do you want to save " + fileName + " before running?", "MiniC to Jasmin", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, null, null);
+					
+					if (retVal == JOptionPane.YES_OPTION)
+						SaveFile();
+					else{
+						try {
+							minicFile.setText(readFile(filePath));
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+					
 					compileMiniC();
 					RunTest();
 				}
@@ -322,6 +424,8 @@ public class GUI extends JFrame{
 			minicFile.setBackground(Color.WHITE);
 
 			jasminFile.setText("");
+			lblFileName.setText("File name: " + fileName);
+			
 			
 			InitResultArea();
 		}
@@ -336,9 +440,10 @@ public class GUI extends JFrame{
 			minicFile.setEditable(true);
 		}
 		
-		if(guiState == GuiState.COMPILED)
+		if(guiState == GuiState.COMPILED || guiState == GuiState.RUN)
 		{
-			jvmLabel.setVisible(false);			
+			jvmLabel.setVisible(false);
+			minicFile.setEditable(false);			
 		}
     }
         
@@ -358,8 +463,9 @@ public class GUI extends JFrame{
                 File file = fileDialog.getSelectedFile();	                        	                        
 
                 minicFile.setText("");
-                fileName = file.getPath();
-                minicFile.setText(readFile(fileName));
+                filePath = file.getPath();
+                fileName = file.getName();
+                minicFile.setText(readFile(filePath));
 
 				ev.stateChanged(GuiState.FILE_OPEN);
 
@@ -374,7 +480,7 @@ public class GUI extends JFrame{
     
     private void compileMiniC()
     {
-		JasminCompiler jc = new JasminCompiler(fileName);
+		JasminCompiler jc = new JasminCompiler(filePath);
 		jc.Compile();
 		ev.stateChanged(GuiState.COMPILED);
 		
@@ -409,8 +515,7 @@ public class GUI extends JFrame{
 	  System.setOut(new PrintStream(out, true));
 	  System.setErr(new PrintStream(out, true));
 	}
-	
-	
+		
 	private void redirectOutput(Process process) {
 		
 		InputStream is = process.getInputStream();
@@ -456,7 +561,7 @@ public class GUI extends JFrame{
 		int nRet = 0;
 		
 		try{						
-			FileWriter outFile = new FileWriter(fileName);
+			FileWriter outFile = new FileWriter(filePath);
 			PrintWriter out = new PrintWriter(outFile);						
 
 			out.print(minicFile.getText());
@@ -474,16 +579,17 @@ public class GUI extends JFrame{
 	{
 		String[] commands = new String[2];
 		commands[0] = "../gui.sh";
-		commands[1] = fileName;		
+		commands[1] = filePath;		
 		
 		ProcessBuilder pb = new ProcessBuilder(commands);
 		Process process = null;
 		try {
 			process = pb.start();
 			redirectOutput(process);
+			ev.stateChanged(GuiState.RUN);
 		} catch (IOException e1) {
 			e1.printStackTrace();
-		}	
+		}				
 	}
 }
 
