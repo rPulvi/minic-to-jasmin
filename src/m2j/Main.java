@@ -1,8 +1,6 @@
 package m2j;
 
 import java.awt.Toolkit;
-import java.io.IOException;
-
 import javax.swing.JFrame;
 import gui.*;
 

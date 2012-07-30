@@ -9,18 +9,23 @@ NAME_CLASS=${NAME/%c/class}
 PATH_DEST=$DIR"/"$NAME_JASMIN
 
 cd bin
-java m2j.Main ../$1
 
-if [ -e $NAME_JASMIN ];			#if the file .j generated exists
+if [ -n "$1" ];			#string not empty (argument passed)
 then
-	mv $NAME_JASMIN ../$DIR		#Move the generated file .j from bin directory to the correct directory in examples
+	java m2j.Main ../$1
 
-
-	java -jar $JASMIN_PATH  ../$PATH_DEST	#Creation of the .class file from .j file
-	mv $NAME_CLASS ../$DIR  #Move the generated file .class from bin directory to the correct directory in examples
-
-	cd ../$DIR				# go to the directory where are placed the .j and .class files generated 
-
-	javac *.java 			#Compile
-	java TestJasmin			#Run
+	if [ -e $NAME_JASMIN ];			#if the file .j generated exists
+	then
+		mv $NAME_JASMIN ../$DIR		#Move the generated file .j from bin directory to the correct directory in examples
+		
+		java -jar $JASMIN_PATH  ../$PATH_DEST	#Creation of the .class file from .j file
+		
+		mv $NAME_CLASS ../$DIR  #Move the generated file .class from bin directory to the correct directory in examples
+		cd ../$DIR				# go to the directory where are placed the .j and .class files generated 
+	
+		javac *.java 			#Compile
+		java TestJasmin			#Run
+	fi
+else
+	java m2j.Main
 fi
