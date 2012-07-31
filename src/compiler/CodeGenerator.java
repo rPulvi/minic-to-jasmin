@@ -9,7 +9,7 @@ import ast.*;
 
 /**
  * <p>Title: MiniC to Jasmin</p>
- * <p>Description: a MiniC to Jasmin Compiler developed for the "Progetto di Compilatori e interpreti" course at the Universit� degli studi di Catania</p>
+ * <p>Description: a MiniC to Jasmin Compiler developed for the "Progetto di Compilatori e interpreti" course at the Universita' degli studi di Catania</p>
  * <p>Website: http://code.google.com/p/minic-to-jasmin/ </p>
  * @author Alessandro Nicolosi, Riccardo Pulvirenti, Giuseppe Ravida'
  * @version 1.0
@@ -34,9 +34,9 @@ public class CodeGenerator extends Visitor
     /**
      * Creates a new Code Generation visitor object
      * @param st The global symbol table for the program
-     * @param err a PrintWriter to output error messages to
+     * @param className The name of current class file
      */
-    public CodeGenerator( SymbolTable st, String className /* , CodeGenerator codeGen */)
+    public CodeGenerator( SymbolTable st, String className)
     {
         sTable = st;
         jasminClassName = className;
@@ -51,6 +51,9 @@ public class CodeGenerator extends Visitor
         returned = false;
     }
 
+    /**
+     * Create header of Jasmin output file
+     */
     private void writeJasminHeader() {
     	writeStmt(".class public " + jasminClassName);
     	writeStmt(".super java/lang/Object");
@@ -67,42 +70,67 @@ public class CodeGenerator extends Visitor
     	writeStmt("");
 	}
 
-	//write a statement to the output StringBuffer
+    /**
+     * Write a statement to the output StringBuffer
+     */
     private void writeStmt(String stmt)
     {
         out.append("\t" + stmt);
         out.append("\n");
     }
     
+    /**
+     * Write a comment to the output StringBuffer
+     */
     private void writeComment(String comment) {
     	out.append("; " + comment);
     	out.append("\n");
     }
     
+    /**
+     * Write a label to the output StringBuffer
+     */
     private void writeLabel() {
     	out.append("#" + labelCounter + ":");
     	out.append("\n");
     }
 
+    /**
+     * Get output buffer off
+     */
     public String getOutput()
     {
         return out.toString();
     }
 
+    /**
+     * Visit the ListNode of the AST. Return a GenNodeInfo object with node type.
+     * The visitChildren method, throw the 'accept' method by left and right child.
+     * @param node The ListNode reference
+     */
     public Object visit(ListNode node)
     {
         node.visitChildren(this);
+        
         return new GenNodeInfo("", IdType.NULL, "", node.getType(), 0);
     }
 
+    /**
+     * Visit the DeclNode of the AST. It's used for instructions like 'int a;'
+     * @param node The DeclNode reference
+     */
     public Object visit(DeclNode node)
     {	
+    	// visit VarNode
     	GenNodeInfo varInfo = (GenNodeInfo)node.visitVar(this);
-    	GenNodeInfo initInfo;
+    	
     	IdType type = varInfo.getType();
     	String value = "";
     	
-    	if (varInfo.getDim() == 0) {	//if it's a simple variable declaration (it's not an array) 
+    	GenNodeInfo initInfo;
+    	
+    	//if it's a simple variable declaration (it's not an array)
+    	if (varInfo.getDim() == 0) { 
     	
 	    	writeComment(type + " " + varInfo.getName() + " ----------------------------");
 	    	
@@ -125,12 +153,11 @@ public class CodeGenerator extends Visitor
 					break;
 	    	}
 	    	
+	    	//create GenNodeInfo object with CONSTANT kind
 	    	initInfo = new GenNodeInfo("", IdType.CONST, value, type, varInfo.getDim());
 	    	
-	    	//init variable
+	    	//Initialize variable using push/pop operations in and from the stack  
 	    	pushInStack(node, initInfo);
-	    	
-	    	//load in local variable
 	    	popFromStack(node, varInfo);
     	}
     	
@@ -143,29 +170,37 @@ public class CodeGenerator extends Visitor
     	return null;
     }
     
+    /**
+     * Visit the AssignNode of the AST. It's used for instructions like 'x = y;'
+     * @param node The AssignNode reference
+     */
     public Object visit(AssignNode node)
     {	
     	writeComment(node + " ----------------------------");
     	
+    	// Visit LEFT hand of assignment
     	GenNodeInfo left = (GenNodeInfo)node.visitVar(this);
     	
+    	// If it is an array
     	if(left.getKind() == IdType.ARRAYCALLNODE)
     		visitArrayCallNode(left);
 
+    	// Visit RIGHT hand of assignment
     	GenNodeInfo right = (GenNodeInfo)node.visitValue(this);
     	
+    	// If it is an array
     	if(right.getKind() == IdType.ARRAYCALLNODE)
     		visitArrayCallNode(right);
     	    	
 		// If the right hand is a constant or a variable
-		if ((right.getKind() != IdType.NULL) && (right.getKind() != IdType.NEW)) {    		
+		if ((right.getKind() != IdType.NULL) && (right.getKind() != IdType.NEW))    		
     		pushInStack(node, right);
-    	}    	
 		
-		if (left.getType() == IdType.FLOAT && right.getType() == IdType.INT) {
+		// FLOAT = INT --> need convert integer to float
+		if (left.getType() == IdType.FLOAT && right.getType() == IdType.INT)
 			writeStmt("i2f");
-		}
 
+		// Allocate new array
 		if (right.getKind() == IdType.NEW)
 			writeStmt("astore "
 					+ sTable.getVarDesc(left.getName(), node.getBlockNumber())
@@ -177,6 +212,11 @@ public class CodeGenerator extends Visitor
 		return null;
     }
 
+    /**
+     * Visit the BlockNode of the AST. 
+     * It's call 'accept' method by his list of statements 
+     * @param node The BlockNode reference
+     */
     public Object visit(BlockNode node)
     {
     	node.visitChildren(this);
@@ -184,13 +224,22 @@ public class CodeGenerator extends Visitor
         return null;
     }
 
+    /**
+     * Visit the FunciontNode of the AST.
+     * @param node The Function node reference
+     */
     public Object visit(FunctionNode node)
     {
+    	// exploring the function block
     	visitFunction(node);
 
         return null;
     }
 
+    /**
+     * Visit params and body of current FunctionNode
+     * @param node The Function node reference
+     */
     private void visitFunction(FunctionNode node)
     {
     	Node [] params;
@@ -201,10 +250,11 @@ public class CodeGenerator extends Visitor
     	
 		int numLocals = 0;
     	
-    	//No params
+    	// If no params, write assembler code to declare method
     	if(node.getParams() == null)						
 			writeStmt(".method public static " + name + "()" + StuffCreator.getOpenBrackets(dim) + StuffCreator.getJVMType(retType));
-    	//Params
+    	
+    	// If params, visit them and check type and array dimension
     	else{
     		params = node.getParams().toArray();
 
@@ -214,10 +264,14 @@ public class CodeGenerator extends Visitor
 					+ getParamTypes(params) + ")" + StuffCreator.getOpenBrackets(dim) + StuffCreator.getJVMType(retType));
     	}
     	
+    	// Get number of all variable
         numLocals = sTable.varCount();
         
+        // Set JVM name for the auxiliary register
         auxRegister = numLocals;
 
+        // Set limits for stack and local variables
+        // We multiply them for 3 to fix stack size issue 
         writeStmt(".limit locals " + numLocals*3);
         writeStmt(".limit stack " + numLocals*3);
 
@@ -225,35 +279,54 @@ public class CodeGenerator extends Visitor
     	writeStmt("ldc 0");
     	writeStmt("istore " + auxRegister);
 
+    	// Visit function body
         node.visitBody(this);
 
+        // If function is VOID
         if(!returned)
         	writeStmt("return");
 
         writeStmt("\n.end method");
     }
 
+    /**
+     * Visit ArgNode of the AST. Do nothing
+     * @param node The ArgNode reference
+     */
     public Object visit(ArgNode node)
     {    	
     	return null;
     }
 
+    /**
+     * Visit FunctionExtNode of the AST. Do nothing
+     * @param node The FunctionExtNode reference
+     */
     public Object visit(FunctionExtNode node)
     {
     	return null;
     }
     
+    /**
+     * Visit FuncCallNode of the AST.
+     * It's used for calls methods.
+     * @param node The FunCallNode reference
+     */
     public Object visit(FuncCallNode node)
     {       	
+    	// Take function name
     	String name = node.getName();
+    	
+    	// Take function descriptor in the symbol table
     	SymbolDesc fDesc = sTable.getFuncDesc(name);
     	IdType retType = fDesc.getType();
     	String className = fDesc.getClassName();
     	
-    	//No params
+    	// If no params
     	if(node.getParams() == null)
             writeStmt("invokestatic " + className + "()" + StuffCreator.getJVMType(retType));    	
-    	//Params
+
+    	// If params, visit them
     	else
     	{    	
     		String s = "";
@@ -262,8 +335,12 @@ public class CodeGenerator extends Visitor
     		
     		for(int i=0;i<params.length;i++)
     		{
+    			// Return dimension ( '[' char for any dimension )
     			s += StuffCreator.getOpenBrackets(((GenNodeInfo)params[i]).getDim());
+    			// Return type
     			s += StuffCreator.getJVMType(((GenNodeInfo)params[i]).getType());
+    			
+    			// Push params in stack
     			pushInStack(node, (GenNodeInfo)params[i]);
     		}
     		
@@ -273,29 +350,38 @@ public class CodeGenerator extends Visitor
 
         return new GenNodeInfo(name, IdType.NULL, "", retType, 0);
     }
- 
+
+    /**
+     * Visit IfNode of the AST.
+     * @param node The IfNode reference
+     */
     public Object visit(IfNode node)
     {
+    	// Increase the label counter
     	ifLabelCounter++;
     	
     	//Reset register for Exit Condition
     	setAuxRegister(0);	
         
+    	// Visit IF condition
     	GenNodeInfo info = (GenNodeInfo) node.visitTest(this);
     	
+    	// If condition is a variable or a constant
     	if (info.getKind() == IdType.VARIABLE || info.getKind() == IdType.CONST)
     	{
     		pushInStack(node, info);
+    		
     		writeStmt("ifgt #" + ++labelCounter);
     		writeStmt("goto #" + ++labelCounter);
     		
+    		// Write exit condition
     		writeTrue();
     	}
     	
     	//write exit block
     	writeLabel();    	
     	
-		// push true onto the stack and xor the top two values
+		// Push true onto the stack and XOR the top two values
 		// effectivly negating the previous top of the stack (if it was 0 or 1)
     	if (info.getKind() == IdType.NOTNODE)
     	{
@@ -305,14 +391,18 @@ public class CodeGenerator extends Visitor
     		writeStmt("istore " + auxRegister);
     	}    	
     	
+    	// Load auxiliary register and check the exit condition
     	writeStmt("iload " + auxRegister);
     	writeStmt("ifgt STMT_" + ifLabelCounter);
     	writeStmt("goto EXIT_" + ifLabelCounter);
     	
     	writeStmt("\rSTMT_" + ifLabelCounter + ":");
     	
+    	// Freeze ifLabelCounter register value.
+    	// This fix issues in other use of this register
     	int tempCounter = ifLabelCounter;
     	
+    	// Visit IF body
     	node.visitThen(this); 
     	
 		//Reset register for Exit Condition
@@ -326,40 +416,54 @@ public class CodeGenerator extends Visitor
         return null;
     }
 
+    /**
+     * Visit IfElseNode of the AST.
+     * @param node The IfElseNode reference
+     */
 	public Object visit(IfElseNode node) 
 	{
+		// Increase the label counter
 		ifLabelCounter++;
     	
-    	//Reset register for Exit Condition
+    	// Reset register for Exit Condition
 		setAuxRegister(0);
     	
+		// Visit IF condition
     	GenNodeInfo info = (GenNodeInfo) node.visitTest(this);
     	
+    	// If condition is a variable or a constant
     	if (info.getKind() == IdType.VARIABLE || info.getKind() == IdType.CONST)
     	{
     		pushInStack(node, info);
+    		
     		writeStmt("ifgt #" + ++labelCounter);
     		writeStmt("goto #" + ++labelCounter);
     		
+    		// Write exit condition
     		writeTrue();
     	}
     	
     	//write exit block
     	writeLabel();
     	
+    	// Load auxiliary register and check the exit condition
     	writeStmt("iload " + auxRegister);
     	writeStmt("ifgt STMT_" + ifLabelCounter);
     	writeStmt("goto ELSE_" + ifLabelCounter);
     	
     	writeStmt("\rSTMT_" + ifLabelCounter + ":");
-    	
+
+    	// Freeze ifLabelCounter register value.
+    	// This fix issues in other use of this register
     	int tempCounter = ifLabelCounter;
     	
+    	// Visit IF body
     	node.visitThen(this); 
     	
     	writeStmt("\rgoto EXIT_" + tempCounter);
     	writeStmt("\rELSE_" + ifLabelCounter + ":");
     	
+    	// Visit Else body
     	node.visitElse(this);
     	
 		//Reset register for Exit Condition
@@ -372,17 +476,24 @@ public class CodeGenerator extends Visitor
 
         return null;
 	}
-    
+
+	/**
+	 * Visit ReturnNode of the AST.
+     * @param node The ReturnNode reference
+	 */
     public Object visit(ReturnNode node)
 	{
+    	// This is a flag to verify if 'return' key is needed.
     	returned = true;
     	
+    	// Visit value to return
     	GenNodeInfo retInfo = (GenNodeInfo)node.visitValue(this);
 
+    	// If it exists, push in stack and write code
     	if(retInfo != null)    	    	  
     		pushInStack(node, retInfo);
     	
-    	
+    	// If an array is returned, check the type to choose right keyword
     	if(retInfo.getKind() == IdType.ARRAYNODE)
     		writeStmt("areturn");
     	else
@@ -407,81 +518,134 @@ public class CodeGenerator extends Visitor
 		return null;
     }
 
+    /**
+     * Visit SubNode of the AST.
+     * @param node The SubNode reference
+     */
     public Object visit(SubNode node)
     {
+    	// Visit left and right hand of SubNode
     	IdType type = visitBinaryNode(node, Operator.DIFF);
+
     	return new GenNodeInfo("", IdType.NULL, "", type, 0);
     }
 
+    /**
+     * Visit DivNode of the AST.
+     * @param node The DivNode reference
+     */
     public Object visit(DivNode node)
     {
+    	// Visit left and right hand of DivNode
     	IdType type = visitBinaryNode(node, Operator.DIV);
+    	
         return new GenNodeInfo("", IdType.NULL, "", type, 0);
     }
 
+    /**
+     * Visit AddNode of the AST.
+     * @param node The AddNode reference
+     */
     public Object visit(AddNode node)
     {
+    	// Visit left and right hand of AddNode
         IdType type = visitBinaryNode(node, Operator.PLUS);
+        
         return new GenNodeInfo("", IdType.NULL, "", type, 0);
     }
-     
+
+    /**
+     * Visit MulNode of the AST.
+     * @param node The MulNode reference
+     */
     public Object visit(MulNode node)
     {
+    	// Visit left and right hand of MulNode
     	IdType type = visitBinaryNode(node, Operator.MUL);
         return new GenNodeInfo("", IdType.NULL, "", type, 0);
     }
     
-	public Object visit(ModNode node) {
+    /**
+     * Visit ModNode of the AST.
+     * @param node The ModNode reference
+     */
+	public Object visit(ModNode node) 
+	{
+    	// Visit left and right hand of MulNode
 		IdType type = visitBinaryNode(node, Operator.MOD);
+		
         return new GenNodeInfo("", IdType.NULL, "", type, 0);
 	}
 
+    /**
+     * Visit OrNode of the AST.
+     * @param node The OrNode reference
+     */
     public Object visit(OrNode node)
     {
+    	// Visit left hand
     	GenNodeInfo left = (GenNodeInfo) node.visitLeft(this);
     	analyzeCondition(node, left);
 		
+    	// Visit right hand
 		GenNodeInfo right = (GenNodeInfo) node.visitRight(this);
 		analyzeCondition(node, right);
 		
 		return new GenNodeInfo("", IdType.NULL, "", IdType.BOOL, 0);
     }
 
+    /**
+     * Visit AndNode of the AST.
+     * @param node The AndNode reference
+     */
     public Object visit(AndNode node)
     {    
+    	// Visit left hand
     	GenNodeInfo left = (GenNodeInfo) node.visitLeft(this);
     	analyzeCondition(node, left);
     	
-    	//
+    	// Write labels
     	writeLabel();
     	labelCounter++;
 
+    	// Load register to check previous condition
 		writeStmt("iload " + auxRegister);
+		
+		// If OK go to the next condition
 		writeStmt("ifle EXIT_" + ifLabelCounter);
 		writeStmt("goto #" + labelCounter);
-		//
 		
+		// Visit right hand
 		GenNodeInfo right = (GenNodeInfo) node.visitRight(this);
 		analyzeCondition(node, right);
         
 		return new GenNodeInfo("", IdType.NULL, "", IdType.BOOL, 0);
     }
     
-    
-    //Set the auxRegister if a condition is true.
+    /**
+     * Write branch condition
+     * @param node The OrNode/AndNode reference
+     * @param info The GenNodeInfo reference
+     */
     private void analyzeCondition(Node node, GenNodeInfo info)
     {   	
+    	// Write a label to the output StringBuffer
     	writeLabel();
+    	
+    	//increase the counter
     	labelCounter++;
     
+    	// if condition is a variable or a constant (boolean)
     	if (info.getKind() == IdType.VARIABLE || info.getKind() == IdType.CONST)
     	{
+    		// write in stack
     		pushInStack(node, info);
     		
     		//create a comparison with 0    		
     		writeStmt("ifgt #" + ++labelCounter);
     		writeStmt("goto #" + ++labelCounter);
     		
+    		// Write true condition
     		writeTrue();
     	}
     }        
@@ -971,6 +1135,19 @@ public class CodeGenerator extends Visitor
 		return null;
 	}
 	
+	public Object visit(SimpleVarNode node) 
+	{
+		SymbolDesc varDesc = sTable.getVarDesc(node.getName(), node.getBlockNumber());
+		GenNodeInfo info = null;
+
+		if(varDesc.getDim() > 0)
+			info = new GenNodeInfo(node.getName(), IdType.ARRAYNODE, "", varDesc.getType(), varDesc.getDim());
+		else
+			info = new GenNodeInfo(node.getName(), IdType.VARIABLE, "", varDesc.getType(), varDesc.getDim());
+
+		return info;
+	}
+	
     private String getParamTypes(Node[] nodes)
     {
     	String sRet = "";
@@ -981,12 +1158,17 @@ public class CodeGenerator extends Visitor
     	return sRet;
     }
 
+    /**
+     * Write true condition
+     */
     private void writeTrue()
     {
+    	// Set labelCounter to the previous value
     	labelCounter--;
     	writeLabel();
     	labelCounter++;
     	
+    	// write 1 in the register
     	setAuxRegister(1);
     }
     
@@ -1034,19 +1216,6 @@ public class CodeGenerator extends Visitor
 		return new GenNodeInfo(infoVar.getName(), IdType.ARRAYCALLNODE, node, infoVar.getType(), infoVar.getDim());
 	}
 
-	public Object visit(SimpleVarNode node) 
-	{
-		SymbolDesc varDesc = sTable.getVarDesc(node.getName(), node.getBlockNumber());
-		GenNodeInfo info = null;
-
-		if(varDesc.getDim() > 0)
-			info = new GenNodeInfo(node.getName(), IdType.ARRAYNODE, "", varDesc.getType(), varDesc.getDim());
-		else
-			info = new GenNodeInfo(node.getName(), IdType.VARIABLE, "", varDesc.getType(), varDesc.getDim());
-
-		return info;
-	}
-
 	public Object visit(ArrayNode node) {
 
 		SymbolDesc arrayDesc = sTable.getVarDesc(node.getName(), node.getBlockNumber());
@@ -1059,9 +1228,9 @@ public class CodeGenerator extends Visitor
 	public Object visit(ArraySizeNode node) {
 
 		GenNodeInfo info = (GenNodeInfo) node.visitExpr(this);
-		
+
 		pushInStack(node, info);
-		
+
 		if (multiArrayDim > 1) 
 			writeStmt("aaload");
 
@@ -1069,7 +1238,6 @@ public class CodeGenerator extends Visitor
 		
 		return info;
 	}
-	
 	private void visitArrayCallNode(GenNodeInfo info)
 	{
 		ArrayCallNode n = (ArrayCallNode)info.getValue();
