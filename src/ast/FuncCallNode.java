@@ -32,7 +32,10 @@ public class FuncCallNode extends ExprNode
     }
     public String toString()
     {    	
-    	return functionName + "(" + params +")";
+    	if (params != null)
+    		return functionName + "(" + params +")";
+    	else
+    		return functionName + "()";
     }
 
     public String getName()

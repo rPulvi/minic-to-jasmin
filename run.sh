@@ -1,6 +1,6 @@
 #!/bin/bash
 
-JASMIN_PATH=/home/alenico84/javaTools/jasmin-2.4/jasmin.jar		# <----- SET this to the correct Jasmin Path
+JASMIN_PATH=/Users/pulvi/Programming/jasmin-2.4/jasmin.jar		# <----- SET this to the correct Jasmin Path
 DIR=`dirname "$1"`
 NAME=`basename "$1"`
 

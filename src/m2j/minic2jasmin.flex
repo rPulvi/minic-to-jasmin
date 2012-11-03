@@ -19,8 +19,6 @@ import static m2j.minic2jasminSym.*;
 %line
 %column
 
-%standalone
-
 %cupsym m2j.minic2jasminSym
 %cup
 
@@ -49,8 +47,10 @@ EOL = \r|\n|\r\n
 	}
 
 	private void error(String errMsg) throws IOException
-	{
-		throw new IOException("Error at (" + ++yyline + "," + ++yycolumn +"). " + errMsg + " " + yytext() );
+	{		
+		System.out.println("ERROR: line: " + ++yyline + " col: " + ++yycolumn +": " + errMsg + " " + yytext() );
+		//System.exit(1);		
+		//throw new IOException();
 	}
 %}
 
@@ -144,6 +144,8 @@ EOL					{ ; }
 
 	
 	
-[0-9]+{Identifier}	{ error("identificatore non valido"); }
+[0-9]+{Identifier}	{ 						
+						error("Invalid identifier");
+					}
 
-.                   { error("Simbolo sconosciuto"); } // ERROR: unknown token
+.                   { error("Unknown symbol"); } // ERROR: unknown token

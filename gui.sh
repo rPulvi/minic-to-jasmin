@@ -18,8 +18,5 @@ then
 	cd $DIR				# go to the directory where are placed the .j and .class files generated 
 
 	javac *.java 			#Compile
-	
-	echo "Running " $NAME	
-	
 	java TestJasmin			#Run
 fi

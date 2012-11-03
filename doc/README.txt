@@ -31,24 +31,11 @@ Linux/MacOs:
  
  - Modalitˆ testuale
 	Aprire il terminale e posizionarsi al percorso ".../minic-to-jasmin/". 
-	Modificare i permessi dei files run.sh e gui.sh con il comando "chmod 777 run.sh" 
-	e "chmod 777 gui.sh". Scrivere da terminale "./run.sh examples/<dir>/<file.c>" 
-	dove <dir> rappresenta una delle cartelle contenente gli esempi e <file.c> 
-	il relativo file.c da compilare.
+	Verificare che siano presenti i permessi di esecuzione per i files run.sh e gui.sh. 
+	Scrivere da terminale "./run.sh examples/<dir>/<file.c>" dove <dir> rappresenta 
+	una delle cartelle contenente gli esempi e <file.c> il relativo file.c da compilare.
  
  - Modalitˆ grafica:
 	Aprire il terminale e posizionarsi al percorso ".../minic-to-jasmin/". 
-	Modificare i permessi dei files run.sh e gui.sh con il comando "chmod 777 run.sh" 
-	e "chmod 777 gui.sh". Immetere da terminale il comando "./run.sh".
-	
-Windows:
- 
- - Modalitˆ testuale
-	Aprire la shell dos e posizionarsi al percorso ".../minic-to-jasmin/bin/". 
-	Immettere il comando "java m2j.Main ../examples/<dir>/<file.c>" 
-	dove <dir> rappresenta una delle cartelle contenente gli esempi e <file.c> 
-	il relativo file.c da compilare.
- 
- - Modalitˆ grafica:
-	Aprire la shell dos e posizionarsi al percorso ".../minic-to-jasmin/bin/". 
-	Immettere il comando "java m2j.Main".
+	Verificare che siano presenti i permessi di esecuzione per i files run.sh e gui.sh. 
+	Immetere da terminale il comando "./run.sh".

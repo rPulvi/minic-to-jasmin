@@ -39,13 +39,13 @@ public class JasminCompiler {
 			//Avvio il parser
 			result = parser.parse();
 			root = (Node)result.value;
-			
+
 			SymbolTableConstructor stc = new SymbolTableConstructor(className, parser.registerCounter);
 			root.accept(stc);
 			
 			int totErrors = stc.getErrorCount() + parser.getErrors();
 			
-			if (totErrors == 0)
+			if (totErrors == 0) //Because Symbol table could be corrupted			
 			{
 				SemanticChecker tsc = new SemanticChecker(stc.getSymbolTable());
 				root.accept(tsc);

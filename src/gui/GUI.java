@@ -314,7 +314,7 @@ public class GUI extends JFrame{
     		menuItem = new JMenuItem("Run test");
 	    	menuItem.addActionListener(new ActionListener() {
 				@Override
-				public void actionPerformed(ActionEvent arg0) {
+				public void actionPerformed(ActionEvent arg0) {					
 					compileMiniC();
 					RunTest();
 				}
@@ -359,7 +359,7 @@ public class GUI extends JFrame{
 	    	menuItem.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
-					int retVal = JOptionPane.showOptionDialog(null, "Do you want to save " + fileName + " before running?", "MiniC to Jasmin", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, null, null);
+					int retVal = JOptionPane.showOptionDialog(null, "Do you want to save " + fileName + " before compile?", "MiniC to Jasmin", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, null, null);
 					
 					if (retVal == JOptionPane.YES_OPTION)
 						SaveFile();
@@ -392,8 +392,7 @@ public class GUI extends JFrame{
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
-					}
-					
+					}					
 					compileMiniC();
 					RunTest();
 				}
@@ -480,6 +479,7 @@ public class GUI extends JFrame{
     
     private void compileMiniC()
     {
+    	InitResultArea();
 		JasminCompiler jc = new JasminCompiler(filePath);
 		jc.Compile();
 		ev.stateChanged(GuiState.COMPILED);
@@ -579,7 +579,7 @@ public class GUI extends JFrame{
 	{
 		String[] commands = new String[2];
 		commands[0] = "../gui.sh";
-		commands[1] = filePath;		
+		commands[1] = filePath;
 		
 		ProcessBuilder pb = new ProcessBuilder(commands);
 		Process process = null;
