@@ -7,7 +7,7 @@ A.A. 2011/2012
 
 Prof.ssa V. Carchiolo
 --------------------------------------------
-Gruppo: Alessandro Nicolosi, Riccardo Pulvirenti, Giuseppe Ravidˆ
+Gruppo: Alessandro Nicolosi, Riccardo Pulvirenti, Giuseppe RavidË†
 --------------------------------------------
 
 Contenuto della cartella:
@@ -25,17 +25,17 @@ sostituendo il percorso di "JASMIN_PATH" con il percorso al quale si trova il fi
 
 Lanciare l'applicazione:
 ========================
-E' possibile lanciare l'applicazione in modalitˆ testuale o grafica.
+E' possibile lanciare l'applicazione in modalitË† testuale o grafica.
 
 Linux/MacOs: 
  
- - Modalitˆ testuale
+ - ModalitÃ  testuale
 	Aprire il terminale e posizionarsi al percorso ".../minic-to-jasmin/". 
 	Verificare che siano presenti i permessi di esecuzione per i files run.sh e gui.sh. 
 	Scrivere da terminale "./run.sh examples/<dir>/<file.c>" dove <dir> rappresenta 
 	una delle cartelle contenente gli esempi e <file.c> il relativo file.c da compilare.
  
- - Modalitˆ grafica:
+ - ModalitÃ  grafica:
 	Aprire il terminale e posizionarsi al percorso ".../minic-to-jasmin/". 
 	Verificare che siano presenti i permessi di esecuzione per i files run.sh e gui.sh. 
 	Immetere da terminale il comando "./run.sh".
